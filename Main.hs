@@ -23,6 +23,9 @@ getHeaders token =
   defaults & (header "x-auth-token" .~ [Char8.pack token]) &
   (header "Authorization" .~ ["JWT"])
 
+url :: String -> String
+url relativeUrl = (baseUri config) ++ relativeUrl
+
 request :: String -> String -> IO (Response ByteString)
 request token url = getWith (getHeaders token) url
 
@@ -31,5 +34,6 @@ main = do
   authToken <- Char8.readFile $ tokenFile config
   r <-
     let token = Char8.unpack authToken
-    in request token $ (baseUri config) ++ "casefiles"
+    in request token $ url "casefiles"
+  -- print $ r
   print $ r ^. responseStatus . statusCode
