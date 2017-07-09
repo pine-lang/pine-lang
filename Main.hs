@@ -6,20 +6,30 @@ import Data.ByteString.Lazy.Internal
 import Network.Wreq
 import System.Environment
 
+data Config = Config
+  { tokenFile :: String
+  , baseUri :: String
+  } deriving (Show)
+
+config :: Config
+config =
+  Config
+  { tokenFile = "/home/mandark/.penneo-auth-token-local"
+  , baseUri = "http://172.17.42.1:8000/app_dev.php/api/v1/"
+  }
+
 getHeaders :: String -> Options
 getHeaders token =
-  defaults & header "x-auth-token" .~ [Char8.pack token] &
-  header "Authorization" .~
-  ["JWT"]
+  defaults & (header "x-auth-token" .~ [Char8.pack token]) &
+  (header "Authorization" .~ ["JWT"])
 
 request :: String -> String -> IO (Response ByteString)
 request token url = getWith (getHeaders token) url
 
 main :: IO ()
 main = do
-  token <- Char8.readFile "/home/mandark/.penneo-auth-token-local"
+  authToken <- Char8.readFile $ tokenFile config
   r <-
-    request
-      (Char8.unpack token)
-      "http://172.17.42.1:8000/app_dev.php/api/v1/casefiles"
+    let token = Char8.unpack authToken
+    in request token $ (baseUri config) ++ "casefiles"
   print $ r ^. responseStatus . statusCode
