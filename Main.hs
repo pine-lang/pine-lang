@@ -8,14 +8,14 @@ import System.Environment
 
 data Config = Config
   { tokenFile :: String
-  , baseUri :: String
+  , baseUrl :: String
   } deriving (Show)
 
 config :: Config
 config =
   Config
   { tokenFile = "/home/mandark/.penneo-auth-token-local"
-  , baseUri = "http://172.17.42.1:8000/app_dev.php/api/v1/"
+  , baseUrl = "http://dev.penneo.com:8000/app_dev.php/api/v1/"
   }
 
 getHeaders :: String -> Options
@@ -24,7 +24,7 @@ getHeaders token =
   (header "Authorization" .~ ["JWT"])
 
 url :: String -> String
-url relativeUrl = (baseUri config) ++ relativeUrl
+url relativeUrl = (baseUrl config) ++ relativeUrl
 
 request :: String -> String -> IO (Response ByteString)
 request token url = getWith (getHeaders token) url
@@ -36,4 +36,5 @@ main = do
     let token = Char8.unpack authToken
     in request token $ url "casefiles"
   -- print $ r
-  print $ r ^. responseStatus . statusCode
+  -- print $ r ^. responseStatus . statusCode
+  print $ r ^. responseBody
