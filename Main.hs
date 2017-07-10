@@ -1,8 +1,10 @@
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE OverloadedStrings, DeriveGeneric #-}
 
 import Control.Lens
+import Data.Aeson
 import qualified Data.ByteString.Char8 as Char8
 import Data.ByteString.Lazy.Internal
+import GHC.Generics
 import Network.Wreq
 import System.Environment
 
@@ -10,6 +12,15 @@ data Config = Config
   { tokenFile :: String
   , baseUrl :: String
   } deriving (Show)
+
+data CaseFile = CaseFile
+  { id :: Int
+  , title :: String
+  } deriving (Show, Generic)
+
+instance FromJSON CaseFile
+
+instance ToJSON CaseFile
 
 config :: Config
 config =
@@ -27,14 +38,15 @@ url :: String -> String
 url relativeUrl = (baseUrl config) ++ relativeUrl
 
 request :: String -> String -> IO (Response ByteString)
-request token url = getWith (getHeaders token) url
+request token url =
+  let headers = getHeaders token
+  in getWith (getHeaders token) url
 
 main :: IO ()
 main = do
   authToken <- Char8.readFile $ tokenFile config
   r <-
-    let token = Char8.unpack authToken
-    in request token $ url "casefiles"
+    asJSON =<< request (Char8.unpack authToken) (url "casefiles") :: IO (Response [CaseFile])
   -- print $ r
   -- print $ r ^. responseStatus . statusCode
   print $ r ^. responseBody
