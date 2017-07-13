@@ -8,21 +8,36 @@ import Control.Lens
 import Data.Aeson
 import qualified Data.ByteString.Char8 as Char8
 import Data.ByteString.Lazy.Internal
-import Model
+import qualified Model.CaseFile as CF
+import qualified Model.Document as D
 import Network.Wreq
 
-getHeaders :: String -> Options
-getHeaders token =
+getOptions :: String -> Options
+getOptions token =
   defaults & (header "x-auth-token" .~ [Char8.pack token]) &
   (header "Authorization" .~ ["JWT"])
 
-request :: Options -> String -> IO (Response ByteString)
-request headers url = getWith headers url
+request :: String -> Options -> IO (Response ByteString)
+request url options = getWith options url
 
-run :: String -> String -> IO ()
+extract :: Response [a] -> [a]
+extract response = response ^. responseBody
+
+getDocuments :: String -> Options -> CF.CaseFile -> IO [D.Document]
+getDocuments baseUrl options caseFile = do
+  response <-
+    asJSON =<<
+    request
+      (baseUrl ++ "casefiles/" ++ (show (CF.id caseFile)) ++ "/documents")
+      options :: IO (Response [D.Document])
+  return $ extract response
+
+run :: String -> String -> IO [D.Document]
 run token baseUrl = do
-  r <-
-    asJSON =<< request (getHeaders token) (baseUrl ++ "casefiles") :: IO (Response [CaseFile])
-  -- -- print $ r
-  -- -- print $ r ^. responseStatus . statusCode
-  print $ r ^. responseBody
+  caseFiles <-
+    asJSON =<< request (baseUrl ++ "casefiles") (getOptions token) :: IO (Response [CF.CaseFile])
+  -- return $ r
+  -- return $ response^. responseStatus . statusCode
+  documents <-
+    getDocuments baseUrl (getOptions token) (head $ extract caseFiles)
+  return $ documents
