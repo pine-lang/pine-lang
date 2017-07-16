@@ -10,6 +10,8 @@ import qualified Data.ByteString.Char8 as Char8
 import Data.ByteString.Lazy.Internal
 import qualified Model.CaseFile as CF
 import qualified Model.Document as D
+import qualified Model.Signer as S
+import qualified Model.SignatureLine as SL
 import Network.Wreq
 
 -- Request related
@@ -64,12 +66,56 @@ getDocuments baseUrl headers caseFile = do
       headers
   return $ extractList response
 
-run :: Token -> BaseUrl -> IO [D.Document]
+getSignersFromCaseFile :: BaseUrl -> Headers -> CF.CaseFile -> IO [S.Signer]
+getSignersFromCaseFile baseUrl headers caseFile = do
+  response <-
+    asJSON =<<
+    request
+      (getUrl
+         baseUrl
+         ("casefiles/" ++ (show (CF.id caseFile)) ++ "/signers")
+         Nothing)
+      headers
+  return $ extractList response
+
+getSignatureLinesFromDocument ::
+     BaseUrl -> Headers -> D.Document -> IO [SL.SignatureLine]
+getSignatureLinesFromDocument baseUrl headers document = do
+  response <-
+    asJSON =<<
+    request
+      (getUrl
+         baseUrl
+         ("documents/" ++ (show (D.id document)) ++ "/signaturelines")
+         Nothing)
+      headers
+  return $ extractList response
+
+getSignersFromSignatureLine ::
+     BaseUrl -> Headers -> D.Document -> SL.SignatureLine -> IO [S.Signer]
+getSignersFromSignatureLine baseUrl headers document signatureLine = do
+  response <-
+    asJSON =<<
+    request
+      (getUrl
+         baseUrl
+         ("documents/" ++
+          (show (D.id document)) ++
+          "/signaturelines/" ++ (show (SL.id signatureLine) ++ "/signers"))
+         Nothing)
+      headers
+  return $ extractList response
+
+
+run :: Token -> BaseUrl -> IO ([D.Document], [S.Signer])
 run token url =
   let headers = getHeaders token
   in do caseFile <- getCaseFiles url headers (Just (Left 1))
         documents <- getDocuments url headers caseFile
-        return documents
+        -- signers <- getSignersFromCaseFile url headers caseFile
+        signatureLines <- getSignatureLinesFromDocument url headers (head documents)
+        signers <- getSignersFromSignatureLine url headers (head documents) (head signatureLines)
+        return (documents, signers)
   --
   -- return $ r
   -- return $ response^. responseStatus . statusCode
