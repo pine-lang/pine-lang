@@ -15,16 +15,25 @@ cabal-version:       >=1.10
 
 library
   hs-source-dirs:      src
-  exposed-modules:     Lib
-                     , Model.CaseFile
+  exposed-modules:     Model.CaseFile
                      , Model.Document
                      , Model.Signer
                      , Model.SignatureLine
+                     -- http
+                     , Connector.Http.Http
+                     -- database
+                     , Connector.Database.Database
+                     , Connector.Database.Query
   build-depends:       base >= 4.7 && < 5
+                     -- http
                      , lens
                      , aeson
                      , bytestring
                      , wreq
+                     -- database
+                     , mysql-simple
+                     , containers
+
   default-language:    Haskell2010
 
 executable pine-exe
@@ -34,6 +43,7 @@ executable pine-exe
   build-depends:       base
                      , pine
                      , bytestring
+                     , mysql-simple
   default-language:    Haskell2010
 
 test-suite pine-test
