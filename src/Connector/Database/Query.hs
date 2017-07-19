@@ -1,0 +1,17 @@
+-- type Condition = (String, String)
+
+-- buildWhere :: [Condition] -> String
+-- buildWhere list =
+--   let helper =
+--         (\list acc ->
+--            case list of
+--              (k, v):xs ->
+--                helper
+--                  xs
+--                  (acc ++
+--                   (case acc of
+--                      "" -> " WHERE"
+--                      _ -> ",") ++
+--                   " " ++ k ++ " = '" ++ v ++ "'")
+--              _ -> acc)
+--   in helper list ""
