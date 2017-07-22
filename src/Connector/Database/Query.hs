@@ -1,6 +1,6 @@
 module Connector.Database.Query
   ( buildQueryString
-  , Condition(..)
+  , Filter(..)
   , Entity(..)
   ) where
 
@@ -20,23 +20,23 @@ data Entity
   | NoEntity
   deriving (Show)
 
-data Condition
+data Filter
   = Id Int
   | Title String
   | SomeEntity Entity
-  | NoCondition
+  | NoFilter
   deriving (Show)
 
-buildQueryString :: Table -> [Column] -> Condition -> String
-buildQueryString table columns condition =
+buildQueryString :: Table -> [Column] -> Filter -> String
+buildQueryString table columns filter =
     "SELECT " ++
      (intercalate ", " columns) ++
      " FROM " ++
      table ++
-     (case condition of
+     (case filter of
         Id id -> " WHERE id = " ++ (show id)
-        Title title -> " WHERE title LIKE '" ++ title ++ "'" -- FIXME: excape
+        Title title -> " WHERE title LIKE '" ++ title ++ "'" -- FIXME: escape
         SomeEntity (CaseFileEntity (CaseFile.CaseFile {CaseFile.id = id, CaseFile.title = title})) ->
           " WHERE caseFileId = " ++ (show id)
-        _ -> " LIMIT 1 -- no condition found")
+        _ -> " LIMIT 1 -- no filter found")
 

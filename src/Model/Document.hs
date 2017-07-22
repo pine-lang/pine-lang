@@ -2,6 +2,7 @@
 
 module Model.Document
   ( Document(..)
+  , fields
   ) where
 
 import Data.Aeson
@@ -15,3 +16,6 @@ data Document = Document
 instance FromJSON Document
 
 instance ToJSON Document
+
+fields :: [String]
+fields = ["id", "title"]

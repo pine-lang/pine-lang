@@ -2,6 +2,7 @@
 
 module Model.CaseFile
   ( CaseFile(..)
+  , fields
   ) where
 
 import Data.Aeson
@@ -15,3 +16,6 @@ data CaseFile = CaseFile
 instance FromJSON CaseFile
 
 instance ToJSON CaseFile
+
+fields :: [String]
+fields = ["id", "title"]

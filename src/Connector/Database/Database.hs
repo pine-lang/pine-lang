@@ -15,7 +15,9 @@ import Connector.Database.Query
 import Model.CaseFile as CaseFile
 import Model.Document as Document
 
-rowToEntity :: String -> (Int, String) -> Entity
+type Table = String
+
+rowToEntity :: Table -> (Int, String) -> Entity
 rowToEntity table (id, title) =
   case table of
     "documents" ->
@@ -26,12 +28,21 @@ rowToEntity table (id, title) =
          (CaseFile.CaseFile {CaseFile.id = id, CaseFile.title = title}))
     _ -> NoEntity
 
-getRows :: Connection -> String -> Condition -> IO [Entity]
-getRows connection table condition = do
-  rows <-
-    query_
-      connection
-      (fromString $ buildQueryString table ["id", "title"] condition)
+buildQuery :: Table -> Filter -> Query
+buildQuery table filter =
+  fromString $
+  buildQueryString
+    table
+    (case table of
+       "caseFiles" -> CaseFile.fields
+       "documents" -> Document.fields
+       _ -> ["*"]
+    )
+    filter
+
+getRows :: Connection -> Table -> Filter -> IO [Entity]
+getRows connection table filter = do
+  rows <- query_ connection (buildQuery table filter)
   return $ map (rowToEntity table) rows
 
 run :: Connection -> IO ([Entity])
