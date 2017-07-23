@@ -15,12 +15,13 @@ cabal-version:       >=1.10
 
 library
   hs-source-dirs:      src
-  exposed-modules:     Model.CaseFile
-                     , Model.Document
-                     , Model.Signer
-                     , Model.SignatureLine
+  exposed-modules:     Entity.CaseFile
+                     , Entity.Document
+                     -- , Entity.Signer
+                     -- , Entity.SignatureLine
+                     , Entity
                      -- http
-                     , Connector.Http.Http
+                     -- , Connector.Http.Http
                      -- database
                      , Connector.Database.Database
                      , Connector.Database.Query

@@ -8,8 +8,8 @@ import qualified Data.Map.Strict as Map
 import Database.MySQL.Simple.Types
 import Data.List
 
-import qualified Model.CaseFile as CaseFile
-import qualified Model.Document as Document
+import qualified Entity.CaseFile as CaseFile
+import qualified Entity.Document as Document
 
 type Table = String
 type Column = String

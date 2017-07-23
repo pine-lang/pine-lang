@@ -12,20 +12,17 @@ import Data.List
 
 import Connector.Database.Query
 
-import Model.CaseFile as CaseFile
-import Model.Document as Document
+import Entity
+import Entity.CaseFile as CaseFile
+import Entity.Document as Document
 
 type Table = String
 
 rowToEntity :: Table -> (Int, String) -> Entity
 rowToEntity table (id, title) =
   case table of
-    "documents" ->
-      (DocumentEntity
-         (Document.Document {Document.id = id, Document.title = title}))
-    "casefiles" ->
-      (CaseFileEntity
-         (CaseFile.CaseFile {CaseFile.id = id, CaseFile.title = title}))
+    "documents" -> DocumentEntity (Document id title)
+    "casefiles" -> CaseFileEntity (CaseFile id title)
     _ -> NoEntity
 
 buildQuery :: Table -> Filter -> Query
@@ -34,8 +31,8 @@ buildQuery table filter =
   buildQueryString
     table
     (case table of
-       "caseFiles" -> CaseFile.fields
-       "documents" -> Document.fields
+       "caseFiles" -> Entity.fields CaseFile.dummy
+       "documents" -> Entity.fields Document.dummy
        _ -> ["*"]
     )
     filter
