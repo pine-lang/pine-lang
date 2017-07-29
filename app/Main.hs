@@ -3,7 +3,7 @@
 module Main where
 
 -- import Connector.Http.Http
-import Connector.Database.Database
+import Connector.Database.Main
 
 -- database
 import Database.MySQL.Simple

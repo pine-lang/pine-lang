@@ -15,22 +15,18 @@ cabal-version:       >=1.10
 
 library
   hs-source-dirs:      src
-  exposed-modules:     Entity.CaseFile
+  exposed-modules:     Entity.Main
+                     , Entity.CaseFile
                      , Entity.Document
-                     -- , Entity.Signer
-                     -- , Entity.SignatureLine
-                     , Entity
-                     -- http
-                     -- , Connector.Http.Http
+                     -- -- Ast
+                     -- , Ast
                      -- database
-                     , Connector.Database.Database
-                     , Connector.Database.Query
+                     , Connector.Database.Main
+                     , Connector.Database.Query.Main
+                     , Connector.Database.Query.CaseFile
+                     , Connector.Database.Query.Document
+                     --
   build-depends:       base >= 4.7 && < 5
-                     -- http
-                     , lens
-                     , aeson
-                     , bytestring
-                     , wreq
                      -- database
                      , mysql-simple
                      , containers

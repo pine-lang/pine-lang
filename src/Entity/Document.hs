@@ -2,7 +2,6 @@
 
 module Entity.Document
   ( Document(..)
-  , dummy
   ) where
 
 import Data.Data
@@ -10,7 +9,6 @@ import Data.Data
 data Document = Document
   { id :: Int
   , title :: String
+  , status :: Int
   } deriving (Show, Data)
 
-dummy :: Document
-dummy = Document 0 ""
