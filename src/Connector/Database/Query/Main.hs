@@ -12,6 +12,8 @@ import Entity.Main
 import qualified Entity.CaseFile as CaseFile
 import qualified Entity.Document as Document
 
+import Debug.Trace
+
 type Table = String
 type Column = String
 
@@ -30,16 +32,15 @@ buildQueryString table columns filter entity =
   " WHERE " ++
   (case filter of
      Id id -> " id = " ++ (show id)
-     Desc desc -> " title LIKE '" ++ desc ++ "'" -- FIXME: escape
+     Desc desc -> " title LIKE '%" ++ desc ++ "%'" -- FIXME: escape
      _ -> "") ++
   (case entity of
-     CaseFileEntity (CaseFile.CaseFile id title) -> " caseFileId = " ++ (show id)
+     CaseFileEntity (CaseFile.CaseFile id title) -> " AND caseFileId = " ++ (show id)
      _ -> "") ++
   " LIMIT 10"
 
 
 buildQuery :: Table -> [Column] -> Filter -> Entity -> Query
 buildQuery table columns filter entity =
-  fromString $
-  buildQueryString
-    table columns filter entity
+  let query = buildQueryString table columns filter entity
+  in fromString (trace query query)
