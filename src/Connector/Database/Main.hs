@@ -10,6 +10,7 @@ import Database.MySQL.Simple
 import Data.List
 import Control.Monad.State
 
+import Ast
 import Entity.Main
 import Entity.CaseFile as CaseFile
 import Entity.Document as Document
@@ -60,10 +61,13 @@ exec connection ((table, filter):operations) = do
 initState :: IO [Entity]
 initState = return [NoEntity]
 
-ops = [("caseFiles", Id 1), ("documents", Desc "Sample")]
+-- Use test ops instead of the ops specified in arguments.
+-- @todo: remove
+--
+testOps = [("caseFiles", Id 1), ("documents", Desc "Sample")]
 
-run :: Connection -> IO [Entity]
-run connection = evalState (exec connection ops) initState
+run :: Connection -> [Operation] -> IO [Entity]
+run connection ops = evalState (exec connection ops) initState
 
 -- Hard coded tests
 --

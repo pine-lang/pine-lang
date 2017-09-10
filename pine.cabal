@@ -19,18 +19,21 @@ library
                      , Entity.CaseFile
                      , Entity.Document
                      -- -- Ast
-                     -- , Ast
+                     , Ast
                      -- database
                      , Connector.Database.Main
                      , Connector.Database.Query.Main
                      , Connector.Database.Query.CaseFile
                      , Connector.Database.Query.Document
+                     , Parser
                      --
   build-depends:       base >= 4.7 && < 5
                      -- database
                      , mysql-simple
                      , containers
                      , mtl
+                     -- parser
+                     , parsec
 
   default-language:    Haskell2010
 

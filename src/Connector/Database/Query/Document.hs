@@ -4,7 +4,8 @@ module Connector.Database.Query.Document
 
 import Database.MySQL.Simple
 
-import Connector.Database.Query.Main
+import Ast
+import Connector.Database.Query.Main (buildQuery)
 import Entity.Document as Document
 import Entity.Main
 

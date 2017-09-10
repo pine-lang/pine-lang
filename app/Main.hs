@@ -4,37 +4,36 @@ module Main where
 
 -- import Connector.Http.Http
 import Connector.Database.Main
-
--- database
 import Database.MySQL.Simple
+import Parser
 
-import qualified Data.ByteString.Char8 as Char8
-import System.Environment
 
--- import Data.Text as Text
+connectInfo :: ConnectInfo
+connectInfo = ConnectInfo { connectHost = "?",
+                            connectPort = 3306,
+                            connectUser = "?",
+                        connectPassword = "?",
+                        connectDatabase = "?",
+                         connectOptions = [],
+                            connectPath = "",
+                             connectSSL = Nothing }
 
--- data Config = Config
---   { tokenFile :: String
---   , baseUrl :: String
---   } deriving (Show)
-
--- config :: Config
--- config =
---   Config
---   { tokenFile = "/home/mandark/.penneo-auth-token-local"
---   , baseUrl = "http://dev.penneo.com:8000/app_dev.php/api/v1/"
---   }
-
--- main :: IO ()
--- main = do
---   token <- Char8.readFile (tokenFile config)
---   r <- run (baseUrl config) (Char8.unpack token)
---   print r
+arg = "caseFiles a | documents Sample | documents Sample"
+-- arg = "documents Sample | caseFiles 1"
+-- arg = "documents Sample | caseFiles 1"
 
 main :: IO ()
 main = do
   conn <- connect connectInfo
-  result <- run conn
+  result <- run conn (toAst arg)
   print $ result
   close conn
+
+-- Test parsing of the input
+-- @todo: move this to the tests
+--
+-- main :: IO ()
+-- main = do
+--   putStrLn $ show $ toAst "casefiles adf | documents 13 | signers asdf"
+
 

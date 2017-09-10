@@ -1,6 +1,5 @@
 module Connector.Database.Query.Main
-  ( Filter(..)
-  , buildQuery
+  ( buildQuery
   ) where
 
 import qualified Data.Map.Strict as Map
@@ -8,6 +7,7 @@ import Database.MySQL.Simple.Types
 import Data.List
 import Data.String
 
+import Ast
 import Entity.Main
 import qualified Entity.CaseFile as CaseFile
 import qualified Entity.Document as Document
@@ -16,12 +16,6 @@ import Debug.Trace
 
 type Table = String
 type Column = String
-
-data Filter
-  = Id Int
-  | Desc String
-  | NoFilter
-  deriving (Show)
 
 buildQueryString :: Table -> [Column] -> Filter -> Entity -> String
 buildQueryString table columns filter entity =
@@ -36,7 +30,8 @@ buildQueryString table columns filter entity =
      _ -> "") ++
   (case entity of
      CaseFileEntity (CaseFile.CaseFile id title) -> " AND caseFileId = " ++ (show id)
-     _ -> "") ++
+     DocumentEntity (Document.Document id title _) -> " AND documentId = " ++ (show id)
+     _ -> " /* unable to build query for context entity */ ") ++
   " LIMIT 10"
 
 

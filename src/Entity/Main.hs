@@ -15,4 +15,9 @@ data Entity
   = CaseFileEntity CaseFile.CaseFile
   | DocumentEntity Document.Document
   | NoEntity
-  deriving (Show)
+
+instance Show Entity where
+  show entity = case entity of
+    CaseFileEntity e -> "\n" ++ show e
+    DocumentEntity e -> "\n" ++ show e
+    _ -> "Can't show entity as it's show behaviour isn't specified"

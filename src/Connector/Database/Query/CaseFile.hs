@@ -4,7 +4,8 @@ module Connector.Database.Query.CaseFile
 
 import Database.MySQL.Simple
 
-import Connector.Database.Query.Main
+import Ast
+import Connector.Database.Query.Main (buildQuery)
 import Entity.CaseFile as CaseFile
 import Entity.Main
 

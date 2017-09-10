@@ -5,10 +5,13 @@ module Entity.Document
   ) where
 
 import Data.Data
+import Text.Printf
 
 data Document = Document
   { id :: Int
   , title :: String
   , status :: Int
-  } deriving (Show, Data)
+  } deriving (Data)
 
+instance Show Document where
+  show (Document id title status) = printf "% 4d : % 25s : % 2d" id title status
