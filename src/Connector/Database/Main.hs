@@ -6,29 +6,17 @@ module Connector.Database.Main
 
 import qualified Data.Map.Strict as Map
 
-import Database.MySQL.Simple
-import Data.List
-import Control.Monad.State
-
 import Ast
-import Entity.Main
-import Entity.CaseFile as CaseFile
-import Entity.Document as Document
+import Control.Monad.State
+import Connector.Database.Query
 
-import Connector.Database.Query.Main
-import Connector.Database.Query.CaseFile as QueryCaseFile
-import Connector.Database.Query.Document as QueryDocument
-
-import Debug.Trace
-
-type Table = String
+-------------------------
+-- Execute Operations
+-------------------------
 
 runQuery :: Connection -> Table -> Filter -> Entity -> IO [Entity]
 runQuery connection table filter entity = do
-  entities <- case table of
-    "caseFiles" -> QueryCaseFile.getRows connection filter entity
-    "documents" -> QueryDocument.getRows connection filter entity
-    _ -> return []
+  entities <- getRows connection table filter entity
   return $ entities
 
 runQuery' :: Connection -> Table -> Filter -> [Entity] -> IO [Entity]
@@ -40,10 +28,6 @@ runQuery'' :: Connection -> Table -> Filter -> IO [Entity] -> IO [Entity]
 runQuery'' connection table filter entities = do
   result <- entities
   runQuery' connection table filter result
-
--- test :: IO [Entity]
--- test = do
---   return [CaseFileEntity (CaseFile.CaseFile 0 "dummy")]
 
 type Operation = (Table, Filter)
 type PineValue = IO [Entity]

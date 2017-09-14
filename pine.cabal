@@ -15,17 +15,12 @@ cabal-version:       >=1.10
 
 library
   hs-source-dirs:      src
-  exposed-modules:     Entity.Main
-                     , Entity.CaseFile
-                     , Entity.Document
-                     -- -- Ast
-                     , Ast
+  exposed-modules:
+                     Ast
+                     , Parser
                      -- database
                      , Connector.Database.Main
-                     , Connector.Database.Query.Main
-                     , Connector.Database.Query.CaseFile
-                     , Connector.Database.Query.Document
-                     , Parser
+                     , Connector.Database.Query
                      --
   build-depends:       base >= 4.7 && < 5
                      -- database

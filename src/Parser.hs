@@ -8,11 +8,6 @@ import Ast
 import Text.ParserCombinators.Parsec
 import Text.ParserCombinators.Parsec.Token -- lexeme functions
 
--- pipeSeparated = sepBy ((optional spaces) >> many1 letter >>= (\x -> (optional spaces) >> return x)) (char '|')
-
-type Table = String
-
-
 toFilter s = case reads s :: [(Integer, String)] of
   [(i, "")] -> Id (fromInteger i)
   _         -> Desc s
@@ -27,9 +22,6 @@ operation = do
 
 operations = sepBy operation (char '|')
 
-
--- change the operation type..
-type Operations = [(Table, Filter)]
 
 parseSql :: Operations -> Parser Operations
 parseSql sql = do
