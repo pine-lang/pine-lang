@@ -31,7 +31,7 @@ caseFiles sample | documents test
 cf sample | docs
 ```
 
-- Aliases for table names so that the following can be used:
+- [DONE] Aliases for table names so that the following can be used:
 
 ```
 cf sample | docs test

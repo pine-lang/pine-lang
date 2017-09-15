@@ -2,7 +2,7 @@
 
 module Connector.Database.Query
   ( columns
-  -- Common Aliases
+  -- Schema
   , Table
   , Column
   -- Columns
@@ -31,6 +31,7 @@ import Data.Tuple.Select
 -------------------------
 
 type Table = String
+type Alias = String
 type Column = String
 
 -------------------------
@@ -74,16 +75,25 @@ instance Show Entity where
 
 hasForeignKey table associatedTo = elem (foreignKey associatedTo) (columns table)
 
-columns :: Table -> [Column]
-columns name = case name of
-  "caseFiles" -> ["id", "title", "userId"]
-  "documents" -> ["id", "title", "status", "caseFileId"]
-  _ -> [name ++ ".*"]
+type Schema = [(Table, [Alias], [Column])]
 
-table entity = case entity of
+schema :: Schema
+schema =
+  [
+    ("caseFiles", ["cf"]       , ["id", "title", "userId"]),
+    ("documents", ["d", "docs"], ["id", "title", "status", "caseFileId"])
+  ]
+
+columns :: Table -> [Column]
+columns table =
+  sel3 $ head $ filter (\(t, _, _) -> t == table) schema
+
+tableOfEntity entity = case entity of
      CaseFileEntity _ -> "caseFiles"
      DocumentEntity _ -> "documents"
      NoEntity -> ""
+
+tableForAlias alias = sel1 $ head $ filter (\(table, aliases, _) -> table == alias || elem alias aliases) schema
 
 getId entity = case entity of
      CaseFileEntity r -> show (sel1 r)
@@ -118,9 +128,9 @@ condition' column entity query =
 
 
 condition t entity query
-  | (table entity) == ""             = query ++ " WHERE 1 "
-  | (hasForeignKey t (table entity)) = condition' ("x." ++ (foreignKey $ table entity)) entity query
-  | otherwise                        = condition' "y.id" entity (join t (table entity) query)
+  | (tableOfEntity entity) == ""             = query ++ " WHERE 1 "
+  | (hasForeignKey t (tableOfEntity entity)) = condition' ("x." ++ (foreignKey $ tableOfEntity entity)) entity query
+  | otherwise                                = condition' "y.id" entity (join t (tableOfEntity entity) query)
 
 limit l query = query ++ " LIMIT 10"
 
@@ -154,12 +164,16 @@ getDocuments connection filter entity = do
   rows <- query_ connection (buildQuery "documents" filter entity) :: IO [Document]
   return $ map (\record -> DocumentEntity record) rows
 
-getRows :: Connection -> Table -> Filter -> Entity -> IO [Entity]
-getRows connection table filter entity = do
+getRows' :: Connection -> Table -> Filter -> Entity -> IO [Entity]
+getRows' connection table filter entity = do
   case table of
     "caseFiles" -> getCaseFiles connection filter entity
     "documents" -> getDocuments connection filter entity
     _ -> return []
+
+getRows :: Connection -> Alias -> Filter -> Entity -> IO [Entity]
+getRows connection alias filter entity =
+  getRows' connection (tableForAlias alias) filter entity
 
 -- How to make a generic 'getRows' function?
 
