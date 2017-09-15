@@ -27,6 +27,7 @@ library
                      , mysql-simple
                      , containers
                      , mtl
+                     , tuple
                      -- parser
                      , parsec
 

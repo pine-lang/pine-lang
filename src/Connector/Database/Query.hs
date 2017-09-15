@@ -21,10 +21,10 @@ module Connector.Database.Query
 
 import Ast
 import Database.MySQL.Simple
--- import Database.MySQL.Simple.Types
 import Data.List
 import Debug.Trace
 import Data.String
+import Data.Tuple.Select
 
 -------------------------
 -- Common Aliases
@@ -41,12 +41,16 @@ type Id = Int
 type Title = String
 type Status = Int
 
+type CaseFileId = Int
+type UserId = Int
+type DocumentId = Int
+
 -------------------------
 -- Tables
 -------------------------
 
-type CaseFile = (Id, Title)
-type Document = (Id, Title, Status)
+type CaseFile = (CaseFileId, Title, UserId)
+type Document = (DocumentId, Title, Status, CaseFileId)
 
 -------------------------
 -- Entities
@@ -59,8 +63,8 @@ data Entity
 
 instance Show Entity where
   show entity = case entity of
-    CaseFileEntity e -> "\n" ++ show e
-    DocumentEntity e -> "\n" ++ show e
+    CaseFileEntity e -> "\nCASEFILE : " ++ show e
+    DocumentEntity e -> "\nDOCUMENT : " ++ show e
     _ -> "Can't show entity as it's show behavior isn't specified"
 
 
@@ -68,32 +72,68 @@ instance Show Entity where
 -- Helpers
 -------------------------
 
+hasForeignKey table associatedTo = elem (foreignKey associatedTo) (columns table)
+
 columns :: Table -> [Column]
 columns name = case name of
-  "caseFiles" -> ["id", "title"]
-  "documents" -> ["id", "title", "status"]
+  "caseFiles" -> ["id", "title", "userId"]
+  "documents" -> ["id", "title", "status", "caseFileId"]
   _ -> [name ++ ".*"]
+
+table entity = case entity of
+     CaseFileEntity _ -> "caseFiles"
+     DocumentEntity _ -> "documents"
+     NoEntity -> ""
+
+getId entity = case entity of
+     CaseFileEntity r -> show (sel1 r)
+     DocumentEntity r -> show (sel1 r)
+     NoEntity -> ""
+
+foreignKey table = (take (length table - 1) table) ++ "Id"
 
 -------------------------
 -- Query Builder
 -------------------------
 
+select columns query = "SELECT x." ++ (intercalate ", x." columns) ++ query
+
+from table = " FROM " ++ table ++ " AS x"
+
+filterOn filter query =
+  query ++
+  " AND " ++
+  case filter of
+    Id id -> " x.id = " ++ (show id)
+    Desc desc -> " x.title LIKE '%" ++ desc ++ "%'" -- FIXME: escape
+    _ -> ""
+
+join t1 t2 query =
+  query ++
+  " JOIN " ++ t2 ++ " AS y"++
+  " ON (x.id = y." ++ (foreignKey t1) ++ ")"
+
+condition' column entity query =
+  query ++ " WHERE " ++ column ++ " = " ++ (getId entity)
+
+
+condition t entity query
+  | (table entity) == ""             = query ++ " WHERE 1 "
+  | (hasForeignKey t (table entity)) = condition' ("x." ++ (foreignKey $ table entity)) entity query
+  | otherwise                        = condition' "y.id" entity (join t (table entity) query)
+
+limit l query = query ++ " LIMIT 10"
+
+terminate query = query ++ ";"
+
 buildQueryString :: Table -> [Column] -> Filter -> Entity -> String
 buildQueryString table columns filter entity =
-  "SELECT " ++
-  (intercalate ", " columns) ++
-  " FROM " ++
-  table ++
-  " WHERE " ++
-  (case filter of
-     Id id -> " id = " ++ (show id)
-     Desc desc -> " title LIKE '%" ++ desc ++ "%'" -- FIXME: escape
-     _ -> "") ++
-  (case entity of
-     CaseFileEntity (id,title) -> " AND caseFileId = " ++ (show id)
-     DocumentEntity (id,title,_) -> " AND documentId = " ++ (show id)
-     NoEntity -> " /* no context */ ")
-  ++ " LIMIT 10"
+  terminate $
+  limit "10" $
+  filterOn filter $
+  condition table entity $
+  select columns $
+  from table
 
 buildQuery :: Table -> Filter -> Entity -> Query
 buildQuery table filter entity =
