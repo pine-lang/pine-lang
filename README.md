@@ -34,8 +34,6 @@ stack test
 
 ## TODO
 
-- Create a pine daemon that has an active database connection and listens for requests
-
 - Add support for following entities:
 
 ```
@@ -47,7 +45,8 @@ signingRequests
 folders
 ```
 
-- Add support for many to many relationships
+- Add support for many to many relationships:
+
 Instead of this:
 
 ```
