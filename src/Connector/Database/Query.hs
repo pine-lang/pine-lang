@@ -112,10 +112,9 @@ from table = " FROM " ++ table ++ " AS x"
 
 filterOn filter query =
   query ++
-  " AND " ++
   case filter of
-    Id id -> " x.id = " ++ (show id)
-    Desc desc -> " x.title LIKE '%" ++ desc ++ "%'" -- FIXME: escape
+    Id id -> " AND x.id = " ++ (show id)
+    Desc desc -> " AND x.title LIKE '%" ++ desc ++ "%'" -- FIXME: escape
     _ -> ""
 
 join t1 t2 query =

@@ -2,38 +2,50 @@
 
 module Main where
 
--- import Connector.Http.Http
-import Connector.Database.Main
-import Database.MySQL.Simple
+-- Parse Input to AST
 import Parser
 
+-- Pine DB Connector
+import qualified Connector.Database.Main as PineDbConnector
+import Database.MySQL.Simple
+import Config (connectInfo)
 
-connectInfo :: ConnectInfo
-connectInfo = ConnectInfo { connectHost = "?",
-                            connectPort = 3306,
-                            connectUser = "?",
-                        connectPassword = "?",
-                        connectDatabase = "?",
-                         connectOptions = [],
-                            connectPath = "",
-                             connectSSL = Nothing }
+-- Web interface
+import Network.Wai
+import Network.HTTP.Types
+import Network.Wai.Handler.Warp (run)
+import Data.ByteString.Lazy.Char8 (pack)
+import Data.ByteString.Char8 (unpack)
 
-arg = "caseFiles a | documents Sample | documents Sample"
--- arg = "documents Sample | caseFiles 1"
--- arg = "documents Sample | caseFiles 1"
+-- Handling SIGINT (Ctl-C)
+import Control.Concurrent
+import System.Exit
+import System.Posix.Signals
+
+
+-- arg = "caseFiles a | documents Sample"
+arg = "d \"ample\" | cf \"ample\""
+
+app :: Connection -> Application
+app conn request respond = do
+  input <- requestBody request
+  result <- PineDbConnector.run conn (toAst $ unpack input)
+  respond $
+    responseLBS status200 [("Content-Type", "text/plain")] (pack $ show result)
+
+handleShutdown :: ThreadId -> Connection -> IO ()
+handleShutdown tid conn =
+  putStrLn "\n" >>
+  putStrLn "Cleaning up the db connection.. " >>
+  close conn >>
+  putStrLn "Done!\n" >>
+  throwTo tid ExitSuccess
 
 main :: IO ()
 main = do
   conn <- connect connectInfo
-  result <- run conn (toAst arg)
-  print $ result
-  close conn
-
--- Test parsing of the input
--- @todo: move this to the tests
---
--- main :: IO ()
--- main = do
---   putStrLn $ show $ toAst "casefiles adf | documents 13 | signers asdf"
-
+  tid <- myThreadId
+  installHandler sigINT (Catch $ handleShutdown tid conn) Nothing
+  putStrLn $ "http://localhost:9901/"
+  run 9901 (app conn)
 
