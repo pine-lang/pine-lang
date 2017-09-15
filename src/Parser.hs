@@ -16,11 +16,26 @@ toFilter s =
         [(i, "")] -> Id (fromInteger i)
         _ -> Desc s
 
+escapedChars = do
+  char '\\'
+  x <- oneOf ['\\', '"', 't', 'n']
+  return $
+    case x of
+      't' -> '\t'
+      'n' -> '\n'
+      _ -> x
+
+quotedString = do
+  char '"'
+  x <- many (escapedChars <|> noneOf "\"")
+  char '"'
+  return $ x
+
 operation = do
   optional spaces
   entity <- many1 letter
   spaces
-  arg <- try (string "*") <|> try (many1 letter) <|> try (many1 digit)
+  arg <- try (string "*") <|> try quotedString <|> try (many1 digit)
   optional spaces
   return $ (entity, toFilter arg)
 

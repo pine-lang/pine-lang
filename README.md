@@ -19,7 +19,11 @@ stack exec pine-exe
 ## Examples
 
 ```
-caseFiles sample | documents test
+caseFiles "sample" | documents "test"
+caseFiles "sample" | documents *
+cf "sample" | docs *
+docs "sample" | cf *
+cf 1 | docs *
 ```
 
 ## Run tests
@@ -29,18 +33,6 @@ stack test
 ```
 
 ## TODO
-
-- [DONE] Make the filter optional so that the following is allowed:
-
-```
-cf sample | docs *
-```
-
-- [DONE] Aliases for table names so that the following can be used:
-
-```
-cf sample | docs test
-```
 
 - Create a pine daemon that has an active database connection and listens for requests
 
@@ -59,13 +51,13 @@ folders
 Instead of this:
 
 ```
-customers Acme | customerUserMap | users
+customers "Acme" | customerUserMap * | users *
 ```
 
 it should be possible to skip of the mapping table:
 
 ```
-customers Acme | users
+customers "Acme" | users *
 ```
 
 - Generate the schema specific functionality dynamically:
