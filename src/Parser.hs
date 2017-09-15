@@ -8,17 +8,21 @@ import Ast
 import Text.ParserCombinators.Parsec
 import Text.ParserCombinators.Parsec.Token -- lexeme functions
 
-toFilter s = case reads s :: [(Integer, String)] of
-  [(i, "")] -> Id (fromInteger i)
-  _         -> Desc s
+toFilter s =
+  case s of
+    "*" -> NoFilter
+    _ ->
+      case reads s :: [(Integer, String)] of
+        [(i, "")] -> Id (fromInteger i)
+        _ -> Desc s
 
 operation = do
   optional spaces
   entity <- many1 letter
   spaces
-  arg <- try (many1 letter) <|> try (many1 digit)
+  arg <- try (string "*") <|> try (many1 letter) <|> try (many1 digit)
   optional spaces
-  return $ (entity, toFilter arg )
+  return $ (entity, toFilter arg)
 
 operations = sepBy operation (char '|')
 

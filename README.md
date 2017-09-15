@@ -16,19 +16,24 @@ stack build pine
 stack exec pine-exe
 ```
 
-
 ## Examples
 
 ```
 caseFiles sample | documents test
 ```
 
-## TODO
-
-- Make the filter optional so that the following is allowed:
+## Run tests
 
 ```
-cf sample | docs
+stack test
+```
+
+## TODO
+
+- [DONE] Make the filter optional so that the following is allowed:
+
+```
+cf sample | docs *
 ```
 
 - [DONE] Aliases for table names so that the following can be used:
