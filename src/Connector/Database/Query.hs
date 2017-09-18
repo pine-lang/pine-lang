@@ -71,7 +71,7 @@ type DocumentId = Int
 type Customer = (CustomerId, Name)
 type CaseFile = (CaseFileId, Title, UserId, CustomerId)
 type Document = (DocumentId, Title, Status, CaseFileId)
-type Signer = (SignerId, Name, ValidatedName, OnBehalfOf, UserId)
+type Signer = (SignerId, Name, Maybe ValidatedName, OnBehalfOf, Maybe UserId)
 type SigningRequest = (SigningRequestId, Maybe Email, Maybe EmailSubject, Status, SignerId, CaseFileId)
 
 -------------------------
@@ -127,7 +127,7 @@ tableOfEntity entity = case entity of
      SignerEntity         _ -> "signers"
      NoEntity               -> ""
 
-tableForAlias alias = sel1 $ head $ filter (\(table, aliases, _) -> table == alias || elem alias aliases) schema
+aliasToTable alias = sel1 $ head $ filter (\(table, aliases, _) -> table == alias || elem alias aliases) schema
 
 getId entity = case entity of
      CustomerEntity r       -> show (sel1 r)
@@ -163,10 +163,12 @@ condition' column entity query =
   query ++ " WHERE " ++ column ++ " = " ++ (getId entity)
 
 
+-- @todo: add functionality for joining on distant relationships
 condition x entity query
   | x == "" || y == "" = query ++ " WHERE 1 "
   | x `belongsTo` y    = condition' ("x." ++ (foreignKey y)) entity query
   | y `belongsTo` x    = condition' "y.id" entity (join x y query)
+  | otherwise          = query ++ " WHERE NULL " -- no relationship found
   where y = tableOfEntity entity
 
 limit l query = query ++ " LIMIT 10"
@@ -228,7 +230,7 @@ getRows' connection table filter entity = do
 
 getRows :: Connection -> Alias -> Filter -> Entity -> IO [Entity]
 getRows connection alias filter entity =
-  getRows' connection (tableForAlias alias) filter entity
+  getRows' connection (aliasToTable alias) filter entity
 
 -- How to make a generic 'getRows' function?
 

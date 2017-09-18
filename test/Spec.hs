@@ -22,6 +22,9 @@ main =
       it "two expressions: containing filters" $ do
         show (toAst "customers \"acme\" | users 1") `shouldBe`
           "[(\"customers\",Desc \"acme\"),(\"users\",Id 1)]"
+        -- @todo: use the following Filter is an instance of 'Eq'
+        -- toAst "customers \"acme\" | users 1" `shouldBe`
+        --   [("customers", Desc "acme"), ("users", Id 1)]
 
       it "two expressions: one contains filter" $ do
         show (toAst "customers \"acme\" | users *") `shouldBe`

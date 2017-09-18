@@ -17,7 +17,14 @@ import Connector.Database.Query
 runQuery :: Connection -> Table -> Filter -> Entity -> IO [Entity]
 runQuery connection table filter entity = do
   entities <- getRows connection table filter entity
-  return $ entities
+  -- @todo: this adds the immediate parents for the results. I need all the
+  -- parents that were used to get to this point. For that I'll have to update
+  -- the Entity type so that I keeps the parent entity
+  return $ case entities of
+    x:xs -> case entity of
+      NoEntity -> entities
+      _        -> entity:x:xs
+    _    -> []
 
 runQuery' :: Connection -> Table -> Filter -> [Entity] -> IO [Entity]
 runQuery' connection table filter entities = do
@@ -26,8 +33,8 @@ runQuery' connection table filter entities = do
 
 runQuery'' :: Connection -> Table -> Filter -> IO [Entity] -> IO [Entity]
 runQuery'' connection table filter entities = do
-  result <- entities
-  runQuery' connection table filter result
+  entity <- entities
+  runQuery' connection table filter entity
 
 type Operation = (Table, Filter)
 type PineValue = IO [Entity]
