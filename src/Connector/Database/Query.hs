@@ -17,6 +17,8 @@ module Connector.Database.Query
   , getRows
   -- external
   , Connection
+  -- testing
+  , buildQuery
   ) where
 
 import Ast
@@ -40,9 +42,25 @@ type Column = String
 
 type Id = Int
 type Title = String
+type Name = String
 type Status = Int
 
+-- Customer
+type CustomerId = Int
+
+-- Case File
 type CaseFileId = Int
+
+-- Signing Request
+type SigningRequestId = Int
+type Email = String
+type EmailSubject = String
+
+-- Signer
+type SignerId = Int
+type ValidatedName = String
+type OnBehalfOf = String
+
 type UserId = Int
 type DocumentId = Int
 
@@ -50,38 +68,51 @@ type DocumentId = Int
 -- Tables
 -------------------------
 
-type CaseFile = (CaseFileId, Title, UserId)
+type Customer = (CustomerId, Name)
+type CaseFile = (CaseFileId, Title, UserId, CustomerId)
 type Document = (DocumentId, Title, Status, CaseFileId)
+type Signer = (SignerId, Name, ValidatedName, OnBehalfOf, UserId)
+type SigningRequest = (SigningRequestId, Maybe Email, Maybe EmailSubject, Status, SignerId, CaseFileId)
 
 -------------------------
 -- Entities
 -------------------------
 
 data Entity
-  = CaseFileEntity CaseFile
+  =
+    CustomerEntity Customer
+  | CaseFileEntity CaseFile
   | DocumentEntity Document
+  | SigningRequestEntity SigningRequest
+  | SignerEntity Signer
   | NoEntity
 
 instance Show Entity where
   show entity = case entity of
-    CaseFileEntity e -> "\nCASEFILE : " ++ show e
-    DocumentEntity e -> "\nDOCUMENT : " ++ show e
-    _ -> "Can't show entity as it's show behavior isn't specified"
+    CustomerEntity e       -> "\nCUSTOMER : " ++ show e
+    CaseFileEntity e       -> "\nCASEFILE : " ++ show e
+    DocumentEntity e       -> "\nDOCUMENT : " ++ show e
+    SigningRequestEntity e -> "\nSIGNING REQUEST: " ++ show e
+    SignerEntity e         -> "\nSIGNER : " ++ show e
+    _                      -> "Can't show entity as it's show behavior isn't specified"
 
 
 -------------------------
 -- Helpers
 -------------------------
 
-hasForeignKey table associatedTo = elem (foreignKey associatedTo) (columns table)
+belongsTo x y = elem (foreignKey y) (columns x)
 
 type Schema = [(Table, [Alias], [Column])]
 
 schema :: Schema
 schema =
   [
-    ("caseFiles", ["cf"]       , ["id", "title", "userId"]),
-    ("documents", ["d", "docs"], ["id", "title", "status", "caseFileId"])
+    ("customers",       ["c", "cst"] , ["id", "name"]),
+    ("caseFiles",       ["cf"]       , ["id", "title", "userId", "customerId"]),
+    ("documents",       ["d", "docs"], ["id", "title", "status", "caseFileId"]),
+    ("signingRequests", ["sr"],        ["id", "email", "emailSubject", "status", "signerId", "caseFileId"]),
+    ("signers",         ["s"],         ["id", "name", "validatedName", "onBehalfOf", "userId"])
   ]
 
 columns :: Table -> [Column]
@@ -89,16 +120,22 @@ columns table =
   sel3 $ head $ filter (\(t, _, _) -> t == table) schema
 
 tableOfEntity entity = case entity of
-     CaseFileEntity _ -> "caseFiles"
-     DocumentEntity _ -> "documents"
-     NoEntity -> ""
+     CustomerEntity       _ -> "customers"
+     CaseFileEntity       _ -> "caseFiles"
+     DocumentEntity       _ -> "documents"
+     SigningRequestEntity _ -> "signingRequests"
+     SignerEntity         _ -> "signers"
+     NoEntity               -> ""
 
 tableForAlias alias = sel1 $ head $ filter (\(table, aliases, _) -> table == alias || elem alias aliases) schema
 
 getId entity = case entity of
-     CaseFileEntity r -> show (sel1 r)
-     DocumentEntity r -> show (sel1 r)
-     NoEntity -> ""
+     CustomerEntity r       -> show (sel1 r)
+     CaseFileEntity r       -> show (sel1 r)
+     DocumentEntity r       -> show (sel1 r)
+     SigningRequestEntity r -> show (sel1 r)
+     SignerEntity r         -> show (sel1 r)
+     NoEntity               -> ""
 
 foreignKey table = (take (length table - 1) table) ++ "Id"
 
@@ -126,10 +163,11 @@ condition' column entity query =
   query ++ " WHERE " ++ column ++ " = " ++ (getId entity)
 
 
-condition t entity query
-  | (tableOfEntity entity) == ""             = query ++ " WHERE 1 "
-  | (hasForeignKey t (tableOfEntity entity)) = condition' ("x." ++ (foreignKey $ tableOfEntity entity)) entity query
-  | otherwise                                = condition' "y.id" entity (join t (tableOfEntity entity) query)
+condition x entity query
+  | x == "" || y == "" = query ++ " WHERE 1 "
+  | x `belongsTo` y    = condition' ("x." ++ (foreignKey y)) entity query
+  | y `belongsTo` x    = condition' "y.id" entity (join x y query)
+  where y = tableOfEntity entity
 
 limit l query = query ++ " LIMIT 10"
 
@@ -153,6 +191,11 @@ buildQuery table filter entity =
 -- 'Get Rows' Functions
 -------------------------
 
+getCustomers :: Connection -> Filter -> Entity -> IO [Entity]
+getCustomers connection filter entity = do
+  rows <- query_ connection (buildQuery "customers" filter entity) :: IO [Customer]
+  return $ map (\record -> CustomerEntity record) rows
+
 getCaseFiles :: Connection -> Filter -> Entity -> IO [Entity]
 getCaseFiles connection filter entity = do
   rows <- query_ connection (buildQuery "caseFiles" filter entity) :: IO [CaseFile]
@@ -163,11 +206,24 @@ getDocuments connection filter entity = do
   rows <- query_ connection (buildQuery "documents" filter entity) :: IO [Document]
   return $ map (\record -> DocumentEntity record) rows
 
+getSigningRequests :: Connection -> Filter -> Entity -> IO [Entity]
+getSigningRequests connection filter entity = do
+  rows <- query_ connection (buildQuery "signingRequests" filter entity) :: IO [SigningRequest]
+  return $ map (\record -> SigningRequestEntity record) rows
+
+getSigners :: Connection -> Filter -> Entity -> IO [Entity]
+getSigners connection filter entity = do
+  rows <- query_ connection (buildQuery "signers" filter entity) :: IO [Signer]
+  return $ map (\record -> SignerEntity record) rows
+
 getRows' :: Connection -> Table -> Filter -> Entity -> IO [Entity]
 getRows' connection table filter entity = do
   case table of
+    "customers" -> getCustomers connection filter entity
     "caseFiles" -> getCaseFiles connection filter entity
     "documents" -> getDocuments connection filter entity
+    "signingRequests" -> getSigningRequests connection filter entity
+    "signers" -> getSigners connection filter entity
     _ -> return []
 
 getRows :: Connection -> Alias -> Filter -> Entity -> IO [Entity]
