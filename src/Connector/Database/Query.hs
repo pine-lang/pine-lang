@@ -14,7 +14,7 @@ module Connector.Database.Query
   , Document
   , Entity(..)
   -- query
-  , getRows
+  , exec
   -- external
   , Connection
   -- testing
@@ -27,6 +27,8 @@ import Data.List
 import Debug.Trace
 import Data.String
 import Data.Tuple.Select
+
+import qualified Control.Monad.State as StateMonad
 
 -------------------------
 -- Common Aliases
@@ -154,7 +156,7 @@ filterOn filter query =
     Desc desc -> " AND x.title LIKE '%" ++ desc ++ "%'" -- FIXME: escape
     _ -> ""
 
-join t1 t2 query =
+joinWith t1 t2 query =
   query ++
   " JOIN " ++ t2 ++ " AS y"++
   " ON (x.id = y." ++ (foreignKey t1) ++ ")"
@@ -167,7 +169,7 @@ condition' column entity query =
 condition x entity query
   | x == "" || y == "" = query ++ " WHERE 1 "
   | x `belongsTo` y    = condition' ("x." ++ (foreignKey y)) entity query
-  | y `belongsTo` x    = condition' "y.id" entity (join x y query)
+  | y `belongsTo` x    = condition' "y.id" entity $ x `joinWith` y $ query
   | otherwise          = query ++ " WHERE NULL " -- no relationship found
   where y = tableOfEntity entity
 
@@ -247,3 +249,17 @@ getRows connection alias filter entity =
 --                    CaseFile -> CaseFileEntity r
 --                    Document -> DocumentEntity r
 --                ) rows
+
+exec'' :: Connection -> Table -> Filter -> Entity -> IO [Entity]
+exec'' connection table filter entity =
+  getRows connection table filter entity
+
+exec' :: Connection -> Table -> Filter -> [Entity] -> IO [Entity]
+exec' connection table filter entities = do
+  result <- traverse (exec'' connection table filter) entities
+  return $ StateMonad.join result
+
+exec :: Connection -> Table -> Filter -> IO [Entity] -> IO [Entity]
+exec connection table filter entities = do
+  entity <- entities
+  exec' connection table filter entity

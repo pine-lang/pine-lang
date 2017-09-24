@@ -29,7 +29,7 @@ arg = "d \"ample\" | cf \"ample\""
 app :: Connection -> Application
 app conn request respond = do
   input <- requestBody request
-  result <- PineDbConnector.run conn (toAst $ unpack input)
+  result <- PineDbConnector.execute conn (toAst $ unpack input)
   respond $
     responseLBS status200 [("Content-Type", "text/plain")] (pack $ show result)
 
