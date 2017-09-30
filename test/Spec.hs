@@ -11,8 +11,8 @@ import Ast
 import Connector.Database.Query
 
 
-dummyCaseFile = CaseFileEntity (876, "sample", 1, 1)
-dummyDocument = DocumentEntity (987, "sample", 1, 1)
+dummyCaseFile = CaseFileEntity $ Just (876, "sample", 1, 1)
+dummyDocument = DocumentEntity $ Just (987, "sample", 1, 1)
 
 main :: IO ()
 main =

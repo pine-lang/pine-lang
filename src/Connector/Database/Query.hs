@@ -82,21 +82,22 @@ type SigningRequest = (SigningRequestId, Maybe Email, Maybe EmailSubject, Status
 
 data Entity
   =
-    CustomerEntity Customer
-  | CaseFileEntity CaseFile
-  | DocumentEntity Document
-  | SigningRequestEntity SigningRequest
-  | SignerEntity Signer
+    CustomerEntity (Maybe Customer)
+  | CaseFileEntity (Maybe CaseFile)
+  | DocumentEntity (Maybe Document)
+  | SigningRequestEntity (Maybe SigningRequest)
+  | SignerEntity (Maybe Signer)
   | NoEntity
+  deriving (Show)
 
-instance Show Entity where
-  show entity = case entity of
-    CustomerEntity e       -> "\nCUSTOMER : " ++ show e
-    CaseFileEntity e       -> "\nCASEFILE : " ++ show e
-    DocumentEntity e       -> "\nDOCUMENT : " ++ show e
-    SigningRequestEntity e -> "\nSIGNING REQUEST: " ++ show e
-    SignerEntity e         -> "\nSIGNER : " ++ show e
-    _                      -> "Can't show entity as it's show behavior isn't specified"
+-- instance Show Entity where
+--   show entity = case entity of
+--     CustomerEntity e       -> "\nCUSTOMER : " ++ show e
+--     CaseFileEntity e       -> "\nCASEFILE : " ++ show e
+--     DocumentEntity e       -> "\nDOCUMENT : " ++ show e
+--     SigningRequestEntity e -> "\nSIGNING REQUEST: " ++ show e
+--     SignerEntity e         -> "\nSIGNER : " ++ show e
+--     _                      -> "Can't show entity as it's show behavior isn't specified"
 
 
 -------------------------
@@ -131,13 +132,15 @@ tableOfEntity entity = case entity of
 
 aliasToTable alias = sel1 $ head $ filter (\(table, aliases, _) -> table == alias || elem alias aliases) schema
 
+
+getId :: Entity -> Maybe Id
 getId entity = case entity of
-     CustomerEntity r       -> show (sel1 r)
-     CaseFileEntity r       -> show (sel1 r)
-     DocumentEntity r       -> show (sel1 r)
-     SigningRequestEntity r -> show (sel1 r)
-     SignerEntity r         -> show (sel1 r)
-     NoEntity               -> ""
+     CustomerEntity (Just r)       -> Just $ sel1 r
+     CaseFileEntity (Just r)       -> Just $ sel1 r
+     DocumentEntity (Just r)       -> Just $ sel1 r
+     SigningRequestEntity (Just r) -> Just $ sel1 r
+     SignerEntity (Just r)         -> Just $ sel1 r
+     NoEntity                      -> Nothing
 
 foreignKey table = (take (length table - 1) table) ++ "Id"
 
@@ -162,8 +165,9 @@ joinWith t1 t2 query =
   " ON (x.id = y." ++ (foreignKey t1) ++ ")"
 
 condition' column entity query =
-  query ++ " WHERE " ++ column ++ " = " ++ (getId entity)
-
+  let id = getId entity
+  in case id of
+    Just id' -> query ++ " WHERE " ++ column ++ " = " ++ (show id')
 
 -- @todo: add functionality for joining on distant relationships
 condition x entity query
@@ -198,36 +202,46 @@ buildQuery table filter entity =
 getCustomers :: Connection -> Filter -> Entity -> IO [Entity]
 getCustomers connection filter entity = do
   rows <- query_ connection (buildQuery "customers" filter entity) :: IO [Customer]
-  return $ map (\record -> CustomerEntity record) rows
+  return $ case rows of
+    x:xs -> map (\record -> CustomerEntity $ Just record) rows
+    _ -> [CustomerEntity Nothing]
 
 getCaseFiles :: Connection -> Filter -> Entity -> IO [Entity]
 getCaseFiles connection filter entity = do
   rows <- query_ connection (buildQuery "caseFiles" filter entity) :: IO [CaseFile]
-  return $ map (\record -> CaseFileEntity record) rows
+  return $ case rows of
+    x:xs -> map (\record -> CaseFileEntity $ Just record) rows
+    _ -> [CaseFileEntity Nothing]
 
 getDocuments :: Connection -> Filter -> Entity -> IO [Entity]
 getDocuments connection filter entity = do
   rows <- query_ connection (buildQuery "documents" filter entity) :: IO [Document]
-  return $ map (\record -> DocumentEntity record) rows
+  return $ case rows of
+    x:xs -> map (\record -> DocumentEntity $ Just record) rows
+    _ -> [DocumentEntity Nothing]
 
 getSigningRequests :: Connection -> Filter -> Entity -> IO [Entity]
 getSigningRequests connection filter entity = do
   rows <- query_ connection (buildQuery "signingRequests" filter entity) :: IO [SigningRequest]
-  return $ map (\record -> SigningRequestEntity record) rows
+  return $ case rows of
+    x:xs -> map (\record -> SigningRequestEntity $ Just record) rows
+    _ -> [SigningRequestEntity Nothing]
 
 getSigners :: Connection -> Filter -> Entity -> IO [Entity]
 getSigners connection filter entity = do
   rows <- query_ connection (buildQuery "signers" filter entity) :: IO [Signer]
-  return $ map (\record -> SignerEntity record) rows
+  return $ case rows of
+    x:xs -> map (\record -> SignerEntity $ Just record) rows
+    _ -> [SignerEntity Nothing]
 
 getRows' :: Connection -> Table -> Filter -> Entity -> IO [Entity]
 getRows' connection table filter entity = do
   case table of
     "customers" -> getCustomers connection filter entity
-    "caseFiles" -> getCaseFiles connection filter entity
-    "documents" -> getDocuments connection filter entity
-    "signingRequests" -> getSigningRequests connection filter entity
-    "signers" -> getSigners connection filter entity
+    -- "caseFiles" -> getCaseFiles connection filter entity
+    -- "documents" -> getDocuments connection filter entity
+    -- "signingRequests" -> getSigningRequests connection filter entity
+    -- "signers" -> getSigners connection filter entity
     _ -> return []
 
 getRows :: Connection -> Alias -> Filter -> Entity -> IO [Entity]
