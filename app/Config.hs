@@ -1,1 +1,0 @@
-Config.template.hs
