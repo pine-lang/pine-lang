@@ -88,16 +88,30 @@ data Entity
   | SigningRequestEntity (Maybe SigningRequest)
   | SignerEntity (Maybe Signer)
   | NoEntity
-  deriving (Show)
+  -- deriving (Show)
 
--- instance Show Entity where
---   show entity = case entity of
---     CustomerEntity e       -> "\nCUSTOMER : " ++ show e
---     CaseFileEntity e       -> "\nCASEFILE : " ++ show e
---     DocumentEntity e       -> "\nDOCUMENT : " ++ show e
---     SigningRequestEntity e -> "\nSIGNING REQUEST: " ++ show e
---     SignerEntity e         -> "\nSIGNER : " ++ show e
---     _                      -> "Can't show entity as it's show behavior isn't specified"
+instance Eq Entity where
+  CustomerEntity (Just a)       == CustomerEntity (Just b)       = a == b
+  CustomerEntity Nothing        == CustomerEntity Nothing        = True
+  CaseFileEntity (Just a)       == CaseFileEntity (Just b)       = a == b
+  CaseFileEntity Nothing        == CaseFileEntity Nothing        = True
+  DocumentEntity (Just a)       == DocumentEntity (Just b)       = a == b
+  DocumentEntity Nothing        == DocumentEntity Nothing        = True
+  SigningRequestEntity (Just a) == SigningRequestEntity (Just b) = a == b
+  SigningRequestEntity Nothing  == SigningRequestEntity Nothing  = True
+  SignerEntity (Just a)         == SignerEntity (Just b)         = a == b
+  SignerEntity Nothing          == SignerEntity Nothing          = True
+  _                             == _                             = False
+
+instance Show Entity where
+  show entity = case entity of
+    CustomerEntity e       -> "\nCUSTOMER : " ++ show e
+    CaseFileEntity e       -> "\nCASEFILE : " ++ show e
+    DocumentEntity e       -> "\nDOCUMENT : " ++ show e
+    SigningRequestEntity e -> "\nSIGNING REQUEST: " ++ show e
+    SignerEntity e         -> "\nSIGNER : " ++ show e
+    -- _                      -> "Can't show entity as it's show behavior isn't specified"
+    _                      -> "Show behavior not specified for " ++ (tableOfEntity entity)
 
 
 -------------------------
@@ -136,11 +150,17 @@ aliasToTable alias = sel1 $ head $ filter (\(table, aliases, _) -> table == alia
 getId :: Entity -> Maybe Id
 getId entity = case entity of
      CustomerEntity (Just r)       -> Just $ sel1 r
+     CustomerEntity Nothing        -> Nothing
      CaseFileEntity (Just r)       -> Just $ sel1 r
+     CaseFileEntity Nothing        -> Nothing
      DocumentEntity (Just r)       -> Just $ sel1 r
+     DocumentEntity Nothing        -> Nothing
      SigningRequestEntity (Just r) -> Just $ sel1 r
+     SigningRequestEntity Nothing  -> Nothing
      SignerEntity (Just r)         -> Just $ sel1 r
+     SignerEntity Nothing          -> Nothing
      NoEntity                      -> Nothing
+     _                             -> trace (tableOfEntity entity) Nothing
 
 foreignKey table = (take (length table - 1) table) ++ "Id"
 
@@ -168,6 +188,7 @@ condition' column entity query =
   let id = getId entity
   in case id of
     Just id' -> query ++ " WHERE " ++ column ++ " = " ++ (show id')
+    _        -> trace (tableOfEntity entity) (query ++ " WHERE NULL /* we shouldn't end up here*/")
 
 -- @todo: add functionality for joining on distant relationships
 condition x entity query
@@ -238,10 +259,10 @@ getRows' :: Connection -> Table -> Filter -> Entity -> IO [Entity]
 getRows' connection table filter entity = do
   case table of
     "customers" -> getCustomers connection filter entity
-    -- "caseFiles" -> getCaseFiles connection filter entity
-    -- "documents" -> getDocuments connection filter entity
-    -- "signingRequests" -> getSigningRequests connection filter entity
-    -- "signers" -> getSigners connection filter entity
+    "caseFiles" -> getCaseFiles connection filter entity
+    "documents" -> getDocuments connection filter entity
+    "signingRequests" -> getSigningRequests connection filter entity
+    "signers" -> getSigners connection filter entity
     _ -> return []
 
 getRows :: Connection -> Alias -> Filter -> Entity -> IO [Entity]
@@ -271,7 +292,7 @@ exec'' connection table filter entity =
 exec' :: Connection -> Table -> Filter -> [Entity] -> IO [Entity]
 exec' connection table filter entities = do
   result <- traverse (exec'' connection table filter) entities
-  return $ StateMonad.join result
+  return $ (StateMonad.join . nub) result
 
 exec :: Connection -> Table -> Filter -> IO [Entity] -> IO [Entity]
 exec connection table filter entities = do
