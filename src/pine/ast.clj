@@ -35,37 +35,46 @@
   (str "SELECT * FROM " (name table)))
 
 
-;; TODO: escape
-(defn filter->sql
-  "Filter to SQL"
-  [filter]
-  (cond
-    (contains? filter :id) (str "AND id = " (:id filter))
-    (contains? filter :name) (str "AND name = \"\"" (:name filter) "\"")
-    )
+(defn ast-join->sql
+  "Convert a single join in the joins parts of the AST to an sql query"
+  [entity alias [t1 t2]]
+  (format "JOIN %s AS %s ON (%s = %s)" (name entity) alias t1 t2) )
+
+(defn ast-joins->sql
+  "Convert joins part of the AST to an sql query"
+  [joins]
+  (->> joins
+       (partition 3 3)
+       (map (partial apply ast-join->sql))
+       (s/join " ")
+       )
   )
 
-(defn ast->sql
+(defn ast->sql-and-params
   "Create an sql query"
   [ast]
+  (let [select (s/join ", " (ast :select))
+        [table alias] (ast :from)
+        where (ast :where)
+        joins (ast :joins)
+        conditions (where :conditions)
+        parameters (where :params)
+        ]
+    [(apply format
+            (s/join " " (remove nil?
+                                ["SELECT %s"
+                                 "FROM %s AS %s"
+                                 (cond joins "%s" :else nil)
+                                 "WHERE %s"
+                                 "LIMIT 10"]))
+            (remove nil?
+                    [select                                        ;; select
+                     (name table) alias                            ;; from
+                     (cond joins (ast-joins->sql joins) :else nil) ;; joins
+                     (s/join " AND " conditions)                   ;; where
+                          ]))
+     parameters]))
 
-  (loop [ops ast acc ""]
-    (if (empty? ops) acc
-        (recur (rest ops)
-               (let [op (first ops)
-                     table (:entity op)
-                     filter (:filter op)
-                     prefix (if (empty? acc)
-                              (s/join " " [(table->sql table)
-                                           "WHERE 1"])
-                                "")]
-                 (s/join " "
-                         [prefix
-                          acc
-                          (filter->sql filter)])
-                 )
-               )))
-  )
 
 ;; ------------
 ;; Common Utils
@@ -81,6 +90,16 @@
 ;; -----------------
 ;; DB operations
 ;; -----------------
+
+(defn alias
+  "Alias for a table. At some point, fix this so that it also works for snake case
+  strings."
+  [table]
+  (let [t (name table)]
+    (str
+     (str (first t))
+     (s/lower-case (or (apply str (re-seq #"[A-Z]" t)) ""))))
+  )
 
 (defn primary-key
   "Get the qualified primary key for the table. This is a naive function that
@@ -99,15 +118,6 @@
     (str (alias t) "." (singular ft) "Id")
     ))
 
-(defn alias
-  "Alias for a table. At some point, fix this so that it also works for snake case
-  strings."
-  [table]
-  (let [t (name table)]
-    (str
-     (str (first t))
-     (s/lower-case (or (apply str (re-seq #"[A-Z]" t)) ""))))
-  )
 
 ;; -----------------
 ;; Operations to AST
@@ -137,64 +147,56 @@
   "Get the joins from the operations"
   [operations]
   (let [[op & ops] operations]
-    (cond (nil? ops) []
-          :else (reduce (fn [acc [o1 o2]]
-                          (concat acc (operations->join o1 o2))
-                          )
-                        [] (partition 2 1 operations)))
+    (->>
+     (cond (nil? ops) []
+           :else (reduce (fn [acc [o1 o2]]
+                           (concat acc (operations->join o1 o2))
+                           )
+                         [] (partition 2 1 operations)))
+     (apply vector)
+     )
+    )
+  )
+
+(defn operation->where
+  "Get the where condition for an operation."
+  [operation]
+  (let [filter (:filter operation)
+        entity (:entity operation)
+        a      (alias entity)
+        ]
+    (cond (:id filter) [(str a ".id = ?" ) (:id filter)]
+          (:name filter) [(str a ".name LIKE ?") (str (:name filter) "%")]
+          :else ["NULL /* couldn't read the filter */"]
+          )
+    )
+  )
+
+(defn operations->where
+  "Get the joins from the operations"
+  [ops]
+  (let [
+        where (map operation->where ops)
+        [conditions params] (apply (partial map vector) where)
+        ]
+    {
+     :conditions conditions
+     :params     params
+     }
     )
   )
 
 (defn operations->ast
   "operations to ast"
-  [operations]
-  (reduce (fn [ast operation]
-            (letfn [
-                    (set-table [ast]
-                      (cond (:from ast) ast
-                            :else (update ast :from (fn [_] (:entity operation)))))
-                    ]
-              (->> ast
-                  )
-
-              )
-
-            )
-          {:from (operations->primary-table operations)} operations)
+  [ops]
+  (let [table (operations->primary-table ops)
+        joins (operations->joins ops)
+        where (operations->where ops)]
+    {
+     :select ["*"]
+     :from [table (alias table)]
+     :joins joins
+     :where where
+     }
+    )
   )
-
-
-(operations->ast operations)
-
-(def operations
-  [{:entity :customers, :filter {:id "1"}}
-   {:entity :users, :filter {:id "2"}}
-   {:entity :address, :filter {:name "test"}}
-   ])
-
-
-(:from {})
-
-(cond false 1 :else 2)
-
-(update {:a 1 :b 2} :join (fn [x] 123))
-
-(update-in {:a {} :b 2} [:a :join] (fn [x] 123))
-
-;; (let [tables (map :entity ast)]
-;;   (loop [table  (first tables)
-;;          ts (rest tables)
-;;          acc (str " FROM " (name table))]
-;;     (if (empty? ts) acc
-;;         (let [t1 table
-;;               t2 (first ts)]
-;;           (recur t2 (rest ts) (str acc " JOIN " (name t2) " ON " " something = something")))))
-;;   )
-
-(reduce (fn [acc x] (+ acc x)) 10 [1 2 3 4 5])
-
-
-
-(operations->joins-ast
- [{:entity :customers, :filter {:id "1"}}
-  {:entity :users, :filter {:id "2"}}])

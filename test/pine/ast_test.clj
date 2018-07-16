@@ -1,6 +1,7 @@
 (ns pine.ast-test
   (:require [pine.ast :as ast]
-            [clojure.test :refer :all]))
+            [clojure.test :refer :all]
+            [clojure.string :as s]))
 
 
 ;; Parsing the Operations
@@ -35,6 +36,42 @@
 
 ;; Opertations to AST
 
+(deftest operation->where:customer-id-is-1
+  (testing "Create a where condition from an operation"
+    (is
+     (=
+      (ast/operation->where
+       {:entity :customers, :filter {:id "1"}})
+      ["c.id = ?" "1"]
+      ))))
+
+(deftest operation->where:customer-name-is-acme
+  (testing "Create a where condition from an operation"
+    (is
+     (=
+      (ast/operation->where
+       {:entity :customers, :filter {:name "acme"}})
+      ["c.name LIKE ?" "acme%"]
+      ))))
+
+(deftest operations->where
+  (testing "Create a where condition from operations"
+    (is
+     (=
+      (ast/operations->where
+       [
+        {:entity :customers, :filter {:name "acme"}}
+        {:entity :users    , :filter {:id "1"}}
+        ]
+       )
+      {
+       :conditions ["c.name LIKE ?"
+                    "u.id = ?"]
+       :params ["acme%"
+                "1"]
+       }
+      ))))
+
 (deftest operations->join
   (testing "Create operations for a query"
     (is
@@ -58,16 +95,86 @@
        :address "a" ["a.userId" "u.id"]]
       ))))
 
+(deftest operations->ast
+  (testing "Create operations for a query"
+    (is
+     (=
+      (ast/operations->ast
+       [{:entity :customers, :filter {:id "1"}}
+        {:entity :users, :filter {:name "john"}}
+        {:entity :address, :filter {:name "xyz"}}
+        ])
+      {
+       :select ["*"]
+       :from [:customers "c"]
+       :joins [
+              :users "u" ["u.customerId" "c.id"]
+              :address "a" ["a.userId" "u.id"]
+              ]
+       :where {
+               :conditions ["c.id = ?"
+                            "u.name LIKE ?"
+                            "a.name LIKE ?"
+                            ]
+               :params     ["1" "john%" "xyz%"]
+               }
+       }
+      ))))
 
 ;; AST to SQL
 
-;; (deftest ast->sql:one-operation
-;;   (testing "Create sql from an ast with one operation"
-;;     (is
-;;      (=
-;;       (ast/ast->sql [{:entity :customers, :filter {:id "1"}}])
-;;       "SELECT * FROM customers WHERE 1  AND id = 1"
-;;       ))))
+(deftest ast->sql:one-operation
+  (testing "Create sql from an ast with one operation"
+    (is
+     (=
+      (ast/ast->sql {
+                     :select ["c.*"]
+                     :from [:customers "c"]
+                     :where {
+                             :conditions ["c.id = ?"
+                                          ]
+                             :params     ["1"]
+                             }
+                     })
+      ["SELECT c.* FROM customers AS c WHERE c.id = ? LIMIT 10" ["1"]]
+      ))))
+
+(deftest ast-join->sql
+  (testing "Create sql from a single join from the joins part of the ast"
+    (is
+     (=
+      (ast/ast-join->sql :users "u" ["u.customerId" "c.id"])
+      "JOIN users AS u ON (u.customerId = c.id)"
+      ))))
+
+(deftest ast-joins->sql
+  (testing "Create sql from a joins part of the ast"
+    (is
+     (=
+      (ast/ast-joins->sql [:users "u" ["u.customerId" "c.id"]
+                          :address "a" ["a.userId" "u.id"]])
+      "JOIN users AS u ON (u.customerId = c.id) JOIN address AS a ON (a.userId = u.id)"
+      ))))
+
+:joins [:users "u" ["u.customerId" "c.id"]]
+
+(deftest ast->sql-and-params:two-operation
+  (testing "Create sql from an ast with two operations"
+    (is
+     (=
+      (ast/ast->sql-and-params {
+                     :select ["u.*"]
+                     :from [:customers "c"]
+                     :joins [:users "u" ["u.customerId" "c.id"]]
+                     :where {
+                             :conditions ["c.id = ?"
+                                          "u.name = ?"
+                                          ]
+                             :params     ["1" "john?"]
+                             }
+                     })
+      ["SELECT u.* FROM customers AS c JOIN users AS u ON (u.customerId = c.id) WHERE c.id = ? AND u.name = ? LIMIT 10" ["1" "john?"]]
+      ))))
 
 
 ;; Utils
