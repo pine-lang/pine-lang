@@ -105,7 +105,7 @@
         {:entity :address, :filter {:name "xyz"}}
         ])
       {
-       :select ["*"]
+       :select ["a.*"]
        :from [:customers "c"]
        :joins [
               :users "u" ["u.customerId" "c.id"]
@@ -175,7 +175,6 @@
                      })
       ["SELECT u.* FROM customers AS c JOIN users AS u ON (u.customerId = c.id) WHERE c.id = ? AND u.name = ? LIMIT 10" ["1" "john?"]]
       ))))
-
 
 ;; Utils
 

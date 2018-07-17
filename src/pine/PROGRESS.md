@@ -67,7 +67,7 @@ to:
 
 ## TODO
 
-### [ ] Get the columns for the table in the last operations
+### [x] Get the columns for the table in the last operations
 
 The following should only return the columns for the user table:
 

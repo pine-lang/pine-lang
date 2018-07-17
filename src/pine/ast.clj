@@ -131,6 +131,13 @@
        first
        :entity))
 
+(defn operations->select-columns
+  "Get the columns for the last operation"
+  [operations]
+  (let [op (last operations)
+        entity (op :entity)]
+    [(format "%s.*" (alias entity))]))
+
 (defn operations->join
   "Get the join from 2 operatoins"
   [o1 o2]
@@ -189,11 +196,12 @@
 (defn operations->ast
   "operations to ast"
   [ops]
-  (let [table (operations->primary-table ops)
+  (let [columns (operations->select-columns ops)
+        table (operations->primary-table ops)
         joins (operations->joins ops)
         where (operations->where ops)]
     {
-     :select ["*"]
+     :select columns
      :from [table (alias table)]
      :joins joins
      :where where
