@@ -48,9 +48,20 @@
     (j/query db args)
     ))
 
-;; (->> "caseFiles 54 | documents sample"
-;;    (pine-eval db)
-;;    first
-;;    :title_2
-;;    )
+;; Helpers
+
+(defn $
+  "Evaluate!
+  ($ count \"users *\")
+  ($ first \"users *\")
+  ($ (partial map :fullName) \"users *\")
+  "
+  ([fn expression]
+   (->> expression
+        (pine-eval db)
+        fn))
+  ([expression]
+   ($ (fn[x] x) expression)))
+
+
 
