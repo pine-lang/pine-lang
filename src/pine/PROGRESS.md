@@ -81,6 +81,13 @@ customers 1 | user 1
 customers *
 ```
 
+### [ ] Use the schema to determine the relationships between tables
+
+Currently, I am relying on a convention i.e. table names are always camel case
+and the forign keys follow the same convention. This will definitely not hold
+true for all schemas.
+
+I have the functions in the db module. I just have to use them when building queries.
 
 ### [ ] It should be possible to place the expressions in any order
 
@@ -104,12 +111,6 @@ The 'JOINS' should be generated correctly
 ```
 customers "Acme Inc."
 ```
-
-### [ ] Use the schema to determine the relationships between tables
-
-Currently, I am relying on a convention i.e. table names are always camel case
-and the forign keys follow the same convention. This will definitely not hold
-true for all schemas.
 
 ### [ ] Automatically figure out the relationship between entities if they are not directly related
 

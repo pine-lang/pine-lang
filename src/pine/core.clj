@@ -1,27 +1,9 @@
 (ns pine.core
   (:require [clojure.java.jdbc :as j]
             [pine.ast :as ast]
+            [pine.config :as c]
             )
   )
-
-;; Config
-
-(let
-
-    [db-host "127.0.0.1"
-     db-port 3306
-     db-name "?"
-     db-user "?"
-     db-password "?"]
-
-  (def db {:classname "com.mysql.jdbc.Driver"
-           :subprotocol "mysql"
-           :subname (str "//" db-host ":" db-port "/" db-name)
-           :user db-user
-           :password db-password}))
-
-
-
 
 ;; Eval
 
@@ -51,17 +33,14 @@
 ;; Helpers
 
 (defn $
-  "Evaluate!
+  "Evaluate Pine expressions:
   ($ count \"users *\")
   ($ first \"users *\")
   ($ (partial map :fullName) \"users *\")
   "
   ([fn expression]
    (->> expression
-        (pine-eval db)
+        (pine-eval c/db)
         fn))
   ([expression]
    ($ (fn[x] x) expression)))
-
-
-
