@@ -7,10 +7,11 @@
 (defn str->filter
   "Create a filter AST from the raw query part"
   [x]
-  (cond->> x
-    (re-matches #"[^0-9]+" x) (hash-map :name)
-    (re-matches #"[0-9]+" x) (hash-map :id)
-    ))
+  (cond (= "*" x) {}
+        :else (cond->> x
+                (re-matches #"[^0-9]+" x) (hash-map :name)
+                (re-matches #"[0-9]+" x) (hash-map :id)
+                )))
 
 (defn str->operations
   "Get the operations from the query. An operation is a single executable atom."
@@ -57,24 +58,30 @@
         [table alias] (ast :from)
         where (ast :where)
         joins (ast :joins)
+        join? (not (empty? joins))
         conditions (where :conditions)
         parameters (where :params)
         ]
-    [(apply format
-            (s/join " " (remove nil?
-                                ["SELECT %s"
-                                 "FROM %s AS %s"
-                                 (cond joins "%s" :else nil)
-                                 "WHERE %s"
-                                 "LIMIT 10"]))
-            (remove nil?
-                    [select                                        ;; select
-                     (name table) alias                            ;; from
-                     (cond joins (ast-joins->sql joins) :else nil) ;; joins
-                     (s/join " AND " conditions)                   ;; where
-                          ]))
-     parameters]))
 
+    [(apply format
+            (->> ["SELECT %s"
+                  "FROM %s AS %s"
+                  (cond join? "%s" :else nil)
+                  "WHERE %s"
+                  "LIMIT 10"]
+                 (remove nil?)
+                 (s/join " ")
+                 )
+
+            (->> [select                                        ;; select
+                  (name table) alias                            ;; from
+                  (cond join? (ast-joins->sql joins) :else nil) ;; joins
+                  (s/join " AND " conditions)                   ;; where
+                  ]
+                 (remove nil?))
+            )
+     parameters]
+    ))
 
 ;; ------------
 ;; Common Utils
@@ -174,7 +181,7 @@
         ]
     (cond (:id filter) [(str a ".id = ?" ) (:id filter)]
           (:name filter) [(str a ".name LIKE ?") (str (:name filter) "%")]
-          :else ["NULL /* couldn't read the filter */"]
+          :else ["1" nil]
           )
     )
   )
@@ -188,7 +195,7 @@
         ]
     {
      :conditions conditions
-     :params     params
+     :params     (vec (remove nil? params))
      }
     )
   )

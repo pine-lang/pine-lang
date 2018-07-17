@@ -75,7 +75,7 @@ The following should only return the columns for the user table:
 customers 1 | user 1
 ```
 
-### [ ] Select all filter
+### [x] Select all filter
 
 ```
 customers *

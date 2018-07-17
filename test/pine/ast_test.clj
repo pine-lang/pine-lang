@@ -4,7 +4,7 @@
             [clojure.string :as s]))
 
 
-;; Parsing the Operations
+;; Parsing the Pine Expressions and Lexemes
 
 (deftest str->operations:one-operation
   (testing "Create operations for a query"
@@ -27,10 +27,10 @@
   (testing "Create operations for a query"
     (is
      (=
-      (ast/str->operations "customers 1 | users 2 | address test")
+      (ast/str->operations "customers 1 | users John | address *")
       [{:entity :customers, :filter {:id "1"}}
-       {:entity :users, :filter {:id "2"}}
-       {:entity :address, :filter {:name "test"}}
+       {:entity :users, :filter {:name "John"}}
+       {:entity :address, :filter {}}
        ]
       ))))
 
@@ -147,6 +147,14 @@
       "JOIN users AS u ON (u.customerId = c.id)"
       ))))
 
+(deftest ast-joins->sql:no-join
+  (testing "Create sql from a joins part of the ast"
+    (is
+     (=
+      (ast/ast-joins->sql [])
+      ""
+      ))))
+
 (deftest ast-joins->sql
   (testing "Create sql from a joins part of the ast"
     (is
@@ -155,8 +163,6 @@
                           :address "a" ["a.userId" "u.id"]])
       "JOIN users AS u ON (u.customerId = c.id) JOIN address AS a ON (a.userId = u.id)"
       ))))
-
-:joins [:users "u" ["u.customerId" "c.id"]]
 
 (deftest ast->sql-and-params:two-operation
   (testing "Create sql from an ast with two operations"
