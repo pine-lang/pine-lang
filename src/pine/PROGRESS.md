@@ -67,6 +67,21 @@ to:
 
 ## TODO
 
+### [ ] Get the columns for the table in the last operations
+
+The following should only return the columns for the user table:
+
+```
+customers 1 | user 1
+```
+
+### [ ] Select all filter
+
+```
+customers *
+```
+
+
 ### [ ] It should be possible to place the expressions in any order
 
 The following should work:
@@ -84,12 +99,6 @@ users 1 | customers acme
 
 The 'JOINS' should be generated correctly
 
-
-### [ ] Get all the columns
-
-```
-customers *
-```
 
 ### [ ] Enclose strings with quotes
 ```
