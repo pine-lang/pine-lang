@@ -1,5 +1,6 @@
 (ns pine.ast
-  (:require [clojure.string :as s])
+  (:require [clojure.string :as s]
+            [pine.db :as db])
   )
 
 ;; Parse
@@ -83,22 +84,11 @@
      parameters]
     ))
 
-;; ------------
-;; Common Utils
-;; ------------
-
-(defn singular
-  "Drop the s at the end of the word"
-  [s]
-  (cond (re-matches #".*s$" s) (s/join "" (drop-last s))
-        :else s)
-  )
-
 ;; -----------------
 ;; DB operations
 ;; -----------------
 
-(defn alias
+(defn table-alias
   "Alias for a table. At some point, fix this so that it also works for snake case
   strings."
   [table]
@@ -113,18 +103,14 @@
   assumes that the primary key is always Id."
   [table]
   (let [t (name table)]
-    (str (alias t) ".id")
+    (str (table-alias t) ".id")
     ))
 
-(defn foreign-key
-  "Get the qualified foreign key for the table. This is a naive function that
-  tries to guess the foreign key instead of looking at the schema."
-  [table foreign-table]
-  (let [t (name table)
-        ft (name foreign-table)]
-    (str (alias t) "." (singular ft) "Id")
-    ))
-
+(defn qualify
+  "Qualify a column with the alias: (qualify \"caseFileId\" :with \"d\") => \"d.caseFileId\""
+  [column _ alias]
+  (format "%s.%s" alias column)
+  )
 
 ;; -----------------
 ;; Operations to AST
@@ -143,19 +129,26 @@
   [schema operations]
   (let [op (last operations)
         entity (op :entity)]
-    [(format "%s.*" (alias entity))]))
+    [(format "%s.*" (table-alias entity))]))
 
 (defn operations->join
   "Get the join from 2 operatoins"
   [schema o1 o2]
-  (let [
-        entity-1  (:entity o1)
-        entity-2  (:entity o2)
-        alias-2 (alias entity-2)
-        alias-1 (alias entity-1)
+  (let [e1  (:entity o1)
+        e2  (:entity o2)
+        a1 (table-alias e1)
+        a2 (table-alias e2)
+        e1-foreign-key (db/relation schema e2 :owns e1)
+        e2-foreign-key (db/relation schema e1 :owns e2)
+        join-on (cond e1-foreign-key [(primary-key e2) (qualify e1-foreign-key :with (table-alias e1))]
+                      e2-foreign-key [(qualify e2-foreign-key :with (table-alias e2)) (primary-key e1)]
+                      :else ["1" "2 /* No relationship exists */"])
         ]
-    [entity-2 alias-2 [(foreign-key entity-2 entity-1) (primary-key entity-1)]])
-  )
+
+    [e2 a2 join-on]
+    ))
+
+
 
 (defn operations->joins
   "Get the joins from the operations"
@@ -177,7 +170,7 @@
   [schema operation]
   (let [filter (:filter operation)
         entity (:entity operation)
-        a      (alias entity)
+        a      (table-alias entity)
         ]
     (cond (:id filter) [(str a ".id = ?" ) (:id filter)]
           (:name filter) [(str a ".name LIKE ?") (str (:name filter) "%")]
@@ -209,7 +202,7 @@
         where (operations->where schema ops)]
     {
      :select columns
-     :from [table (alias table)]
+     :from [table (table-alias table)]
      :joins joins
      :where where
      }

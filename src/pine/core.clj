@@ -2,6 +2,7 @@
   (:require [clojure.java.jdbc :as j]
             [pine.ast :as ast]
             [pine.config :as c]
+            [pine.fixtures :as fixtures]
             )
   )
 
@@ -40,8 +41,10 @@
   "
   ([fn expression]
    (->> expression
-        (pine-prepare *schema*) ;; prepare the sql for executing using cached schema
+        (pine-prepare fixtures/schema) ;; prepare the sql for executing using cached schema
         (pine-eval c/db)        ;; execute
         fn))
   ([expression]
    ($ (fn[x] x) expression)))
+
+;; ($ count "documents 1 | caseFiles * ")

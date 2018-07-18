@@ -19,7 +19,6 @@ SELECT u.id, u.name
    AND c.name LIKE "Acme%"
    AND u.name LIKE "John%"
 ```
-SELECT u.id, u.name FROM customers AS c JOIN users AS u ON (c.id = u.customerId) WHERE 1 AND c.name LIKE "Acme%" AND u.name LIKE "John%"
 
 ## What is needed for the transformations:
 
@@ -83,25 +82,35 @@ customers *
 
 ### [ ] Use the schema to determine the relationships between tables
 
-Currently, I am relying on a convention i.e. table names are always camel case
-and the forign keys follow the same convention. This will definitely not hold
-true for all schemas.
+Almost there... The schema is hardcoded for some entities. I need to dynamically fetch the schema.
 
-I have the functions in the db module. I just have to use them when building queries.
-
-### [ ] It should be possible to place the expressions in any order
+### [x] It should be possible to place the expressions in any order
 
 The following should work:
 
 ```
-customers 1 | users John
+customers 1 | users *
+
+=>  SELECT u.*
+      FROM customers AS c
+      JOIN users AS u
+        ON (u.customerId = c.id)
+     WHERE 1
+       AND c.id = 1
 ```
 
 as well as
 
 
 ```
-users 1 | customers acme
+users acme | customers *
+
+=>  SELECT c.*
+      FROM customers AS c
+      JOIN users AS u
+        ON (u.customerId = c.id)
+    WHERE 1
+      AND u.name LIKE "John%"
 ```
 
 The 'JOINS' should be generated correctly
