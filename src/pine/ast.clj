@@ -17,15 +17,18 @@
 (defn str->operations
   "Get the operations from the query. An operation is a single executable atom."
   [query]
-  (->>
-   (s/split query #"\s*\|\s*")
-   (map #(s/split %1 #"\s+"))
-   ;; (map #(hash-map (keyword (first %1)) (str->filter (second %1))))
-   (map #(hash-map
-          :entity (keyword (first %1))
-          :filter (str->filter (second %1))))
-   (vec)
-   ))
+  (letfn [(str->expressions [x]
+            (s/split x #"\s*\|\s*"))
+          (split-on-whitespace [x]
+                               (s/split x #"\s+"))
+          (create-operation [[table filter-value]]
+                            {:entity (keyword table)
+                             :filter (str->filter filter-value)})]
+    (->> query                       ;; "a 1 | b 1"
+         str->expressions            ;; [ "a 1" "b 1" ]
+         (map split-on-whitespace)   ;; [ [ "a" "1" ] [ "b" "1" ]]
+         (map create-operation)      ;; [ {:entity :a :filter "1"} {:entity :b :filter "1"}]
+         )))
 
 
 ;; Build SQL from the AST

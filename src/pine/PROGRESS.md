@@ -117,11 +117,42 @@ users acme | customers *
 
 The 'JOINS' should be generated correctly
 
+### [ ] Allow the column names in the filters
+
+```
+customers.id 1
+```
+
+or 
+
+```
+user.fullName John
+```
+
+If the column is not specified, `.id` will be used as default
+
+### [ ] Use LIKE expression if the value ends with %
+
+This should match exactly (use the = operator in MySQL)
+
+```
+users.fullName John  => users.fullName = "John"
+```
+
+This should use a wild card (using the LIKE operator in MySQL)
+
+```
+user.fullName John*  => users.fullName LIKE "John%"
+user.fullName *John* => users.fullName LIKE "%John%"
+```
+
 
 ### [ ] Enclose strings with quotes
 ```
 customers "Acme Inc."
 ```
+
+I should start using something like a parsec library and have a formal specification for the syntax at this point.
 
 ### [ ] Automatically figure out the relationship between entities if they are not directly related
 
