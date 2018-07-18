@@ -80,9 +80,11 @@ customers 1 | user 1
 customers *
 ```
 
-### [ ] Use the schema to determine the relationships between tables
+### [x] Use the schema to determine the relationships between tables
 
-Almost there... The schema is hardcoded for some entities. I need to dynamically fetch the schema.
+Currently, I am relying on a convention i.e. table names are always camel case
+and the forign keys follow the same convention. This will definitely not hold
+true for all schemas.
 
 ### [x] It should be possible to place the expressions in any order
 

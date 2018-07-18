@@ -4,27 +4,14 @@
             [clojure.string :as s])
   )
 
-(defn exec
-  "Execute raw sql queries"
-  [db query]
-  (->> query
-       (j/query db)))
+;; Utils
 
 (defn escape
   "Remove non alphanumeric chars from a string"
   [s]
   (s/replace s #"[^A-Za-z0-9_-]*" ""))
 
-(defn table-definition
-  "Create table definition"
-  [db table]
-  (->> table
-      escape
-      (format "show create table %s")
-      (exec db)
-      first
-      ((keyword "create table"))
-      ))
+;; Extract information from the schema
 
 ;; TODO: memoize
 (defn references
@@ -48,6 +35,41 @@
     :owned-by (t2 (references schema t1))
     :else     nil)
   )
+
+
+;; Query the database
+
+(defn exec
+  "Execute raw sql queries"
+  [db-config query]
+  (->> query
+       (j/query db-config)))
+
+(defn table-definition
+  "Create table definition"
+  [db-config table]
+  (->> table
+       escape
+       (format "show create table %s")
+       (exec db-config)
+       first
+       ((keyword "create table"))
+       ))
+
+(defn schema
+  "Get the schema for the database. This function gets the schema for every table
+  and can be very slow. Should be called once and the schema should be passed
+  around."
+  [db-name db-config]
+  (let [column-name (format "tables_in_%s" db-name)
+        column      (keyword column-name)]
+    (->> "show tables"
+         (exec db-config)
+         (map column)
+         (map (fn [c] {(keyword c) (table-definition db-config c)}))
+         (apply merge)
+    )
+  ))
 
 ;; Helpers
 

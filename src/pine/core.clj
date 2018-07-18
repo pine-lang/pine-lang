@@ -3,7 +3,7 @@
             [pine.ast :as ast]
             [pine.config :as c]
             [pine.fixtures :as fixtures]
-            )
+            [pine.db :as db])
   )
 
 ;; Eval
@@ -33,6 +33,9 @@
 
 ;; Helpers
 
+;; Load the schema only once
+(def *schema* (db/schema "INSERT_DB_NAME" c/db))
+
 (defn $
   "Evaluate Pine expressions:
   ($ count \"users *\")
@@ -41,10 +44,10 @@
   "
   ([fn expression]
    (->> expression
-        (pine-prepare fixtures/schema) ;; prepare the sql for executing using cached schema
+        (pine-prepare *schema*) ;; prepare the sql for executing using cached schema
         (pine-eval c/db)        ;; execute
         fn))
   ([expression]
    ($ (fn[x] x) expression)))
 
-;; ($ count "documents 1 | caseFiles * ")
+($ count "documents 1 | caseFiles * ")
