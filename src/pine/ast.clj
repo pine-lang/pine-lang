@@ -133,21 +133,21 @@
 
 (defn operations->primary-table
   "Get the primary table from the operations"
-  [operations]
+  [schema operations]
   (->> operations
        first
        :entity))
 
 (defn operations->select-columns
   "Get the columns for the last operation"
-  [operations]
+  [schema operations]
   (let [op (last operations)
         entity (op :entity)]
     [(format "%s.*" (alias entity))]))
 
 (defn operations->join
   "Get the join from 2 operatoins"
-  [o1 o2]
+  [schema o1 o2]
   (let [
         entity-1  (:entity o1)
         entity-2  (:entity o2)
@@ -159,12 +159,12 @@
 
 (defn operations->joins
   "Get the joins from the operations"
-  [operations]
+  [schema operations]
   (let [[op & ops] operations]
     (->>
      (cond (nil? ops) []
            :else (reduce (fn [acc [o1 o2]]
-                           (concat acc (operations->join o1 o2))
+                           (concat acc (operations->join schema o1 o2))
                            )
                          [] (partition 2 1 operations)))
      (apply vector)
@@ -174,7 +174,7 @@
 
 (defn operation->where
   "Get the where condition for an operation."
-  [operation]
+  [schema operation]
   (let [filter (:filter operation)
         entity (:entity operation)
         a      (alias entity)
@@ -188,9 +188,9 @@
 
 (defn operations->where
   "Get the joins from the operations"
-  [ops]
+  [schema ops]
   (let [
-        where (map operation->where ops)
+        where (map (partial operation->where schema) ops)
         [conditions params] (apply (partial map vector) where)
         ]
     {
@@ -202,11 +202,11 @@
 
 (defn operations->ast
   "operations to ast"
-  [ops]
-  (let [columns (operations->select-columns ops)
-        table (operations->primary-table ops)
-        joins (operations->joins ops)
-        where (operations->where ops)]
+  [schema ops]
+  (let [columns (operations->select-columns schema ops)
+        table (operations->primary-table schema ops)
+        joins (operations->joins schema ops)
+        where (operations->where schema ops)]
     {
      :select columns
      :from [table (alias table)]

@@ -26,11 +26,12 @@
       ((keyword "create table"))
       ))
 
+;; TODO: memoize
 (defn references
   "Get the tables used in the foreign keys"
-  [db table]
+  [schema table]
   (->> table
-       (table-definition db)
+       ((keyword table) schema)
        (re-seq #"FOREIGN KEY .`(.*)`. REFERENCES `(.*?)`")
        (map (fn [[_ col t]] { (keyword t) col }))
        (apply merge)
@@ -41,10 +42,10 @@
   (relation \"caseFiles\" :owns \"documents\") => \"caseFileId\"
   (relation \"documents\" :owned-by \"caseFile\") => \"caseFileId\"
   "
-  [db t1 relationship t2]
+  [schema t1 relationship t2]
   (case relationship
-    :owns     ((keyword t1) (references db t2))
-    :owned-by ((keyword t2) (references db t1))
+    :owns     (t1 (references schema t2))
+    :owned-by (t2 (references schema t1))
     :else     nil)
   )
 

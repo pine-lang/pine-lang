@@ -9,24 +9,24 @@
 
 (defn pine-prepare
   "Prepare a pine expression i.e. get the sql query and params"
-  [expression]
-  (let [[sql params] (-> expression
+  [schema expression]
+  (let [[sql params] (->> expression
                          ast/str->operations
-                         ast/operations->ast
+                         (ast/operations->ast schema)
                          ast/ast->sql-and-params)]
     {:query sql
      :params params})
   )
 
 
+;; TODO: make sure that the db connection is reused instead of creating a new one with each evaluation.
+;;
 (defn pine-eval
   "Evalate a query"
-  [db expression]
-  (let [prepared (pine-prepare expression)
-        query (prepared :query)
+  [db prepared]
+  (let [query (prepared :query)
         params (prepared :params)
-        args   (cons query params)
-        ]
+        args   (cons query params)]
     (j/query db args)
     ))
 
@@ -40,7 +40,8 @@
   "
   ([fn expression]
    (->> expression
-        (pine-eval c/db)
+        (pine-prepare *schema*) ;; prepare the sql for executing using cached schema
+        (pine-eval c/db)        ;; execute
         fn))
   ([expression]
    ($ (fn[x] x) expression)))

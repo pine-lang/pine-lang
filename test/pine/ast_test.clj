@@ -3,6 +3,7 @@
             [clojure.test :refer :all]
             [clojure.string :as s]))
 
+(def *test-schema* {})
 
 ;; Parsing the Pine Expressions and Lexemes
 
@@ -41,6 +42,7 @@
     (is
      (=
       (ast/operation->where
+       *test-schema*
        {:entity :customers, :filter {:id "1"}})
       ["c.id = ?" "1"]
       ))))
@@ -50,6 +52,7 @@
     (is
      (=
       (ast/operation->where
+       *test-schema*
        {:entity :customers, :filter {:name "acme"}})
       ["c.name LIKE ?" "acme%"]
       ))))
@@ -59,6 +62,7 @@
     (is
      (=
       (ast/operations->where
+       *test-schema*
        [
         {:entity :customers, :filter {:name "acme"}}
         {:entity :users    , :filter {:id "1"}}
@@ -77,6 +81,7 @@
     (is
      (=
       (ast/operations->join
+       *test-schema*
        {:entity :customers, :filter {:id "1"}}
        {:entity :users, :filter {:id "2"}})
       [:users "u" ["u.customerId" "c.id"]]
@@ -87,6 +92,7 @@
     (is
      (=
       (ast/operations->joins
+       *test-schema*
        [{:entity :customers, :filter {:id "1"}}
         {:entity :users, :filter {:id "2"}}
         {:entity :address, :filter {:name "test"}}
@@ -100,6 +106,7 @@
     (is
      (=
       (ast/operations->ast
+       *test-schema*
        [{:entity :customers, :filter {:id "1"}}
         {:entity :users, :filter {:name "john"}}
         {:entity :address, :filter {:name "xyz"}}
