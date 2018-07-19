@@ -23,6 +23,14 @@
       [{:entity :customers, :filter [ "id" "1" ]}]
       ))))
 
+(deftest str->operations:one-operation-name-has-number-and-wildcard
+  (testing "Create operations for a query explicitly specifying the id"
+    (is
+     (=
+      (ast/str->operations "customers name=1*")
+      [{:entity :customers, :filter [ "name" "1*" ]}]
+      ))))
+
 (deftest str->operations:two-operations
   (testing "Create operations for a query"
     (is

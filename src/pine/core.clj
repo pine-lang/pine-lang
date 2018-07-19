@@ -50,4 +50,11 @@
   ([expression]
    ($ (fn[x] x) expression)))
 
-($ count "documents 1 | caseFiles * ")
+(defn $prepare
+  "Show the query to be executed"
+  [expression]
+  (->> expression
+       (pine-prepare *schema*) ;; prepare the sql for executing using cached schema
+       ))
+
+;; ($prepare "documents title=1* | caseFiles *")

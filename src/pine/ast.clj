@@ -10,16 +10,14 @@
   [x]
   (let [all? (= "*" x)
         [_ _ column value] (re-matches #"((.*)=)?(.*)" x)
-        string? (re-matches #"[^0-9]+" value)
+        string? (re-find #"[^0-9]" value)
         number? (re-matches #"[0-9]+" value)
         column  (cond (empty? column) "id" :else column)
         ]
     (cond all? []
           string? [ column value ]
           number? [ column value ]
-          )
-    )
-  )
+          )))
 
 (defn str->operations
   "Get the operations from the query. An operation is a single executable atom."
@@ -177,18 +175,14 @@
 (defn operation->where
   "Get the where condition for an operation."
   [schema operation]
-  (let [filter (:filter operation)
-        [column value] (:filter operation)
-        entity (:entity operation)
-        a      (table-alias entity)
-        operator (cond (re-find #"\*" value) "LIKE" :else "=")
-        val      (s/replace value "*" "%")
-        ]
+  (let [filter (:filter operation)]
     (cond (empty? filter) ["1" nil]
-          :else [(format "%s.%s %s ?" a column operator) val]
-          )
-    )
-  )
+          :else           (let [[column value] filter
+                                entity (:entity operation)
+                                a      (table-alias entity)
+                                operator (cond (re-find #"\*" value) "LIKE" :else "=")
+                                val      (s/replace value "*" "%")]
+                            [(format "%s.%s %s ?" a column operator) val]))))
 
 (defn operations->where
   "Get the joins from the operations"
