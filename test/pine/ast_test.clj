@@ -7,31 +7,39 @@
 
 ;; Parsing the Pine Expressions and Lexemes
 
-(deftest str->operations:one-operation
+(deftest str->operations:one-operation-implicit-id
   (testing "Create operations for a query"
     (is
      (=
       (ast/str->operations "customers 1")
-      [{:entity :customers, :filter {:id "1"}}]
+      [{:entity :customers, :filter [ "id" "1" ]}]
+      ))))
+
+(deftest str->operations:one-operation-explicit-id
+  (testing "Create operations for a query explicitly specifying the id"
+    (is
+     (=
+      (ast/str->operations "customers id=1")
+      [{:entity :customers, :filter [ "id" "1" ]}]
       ))))
 
 (deftest str->operations:two-operations
   (testing "Create operations for a query"
     (is
      (=
+      [{:entity :customers, :filter [ "id" "1" ]}
+       {:entity :users, :filter [ "id" "2" ]}]
       (ast/str->operations "customers 1 | users 2")
-      [{:entity :customers, :filter {:id "1"}}
-       {:entity :users, :filter {:id "2"}}]
       ))))
 
 (deftest str->operations:three-operations
   (testing "Create operations for a query"
     (is
      (=
-      (ast/str->operations "customers 1 | users John | address *")
-      [{:entity :customers, :filter {:id "1"}}
-       {:entity :users, :filter {:name "John"}}
-       {:entity :address, :filter {}}
+      (ast/str->operations "customers 1 | users name=John | address *")
+      [{:entity :customers, :filter [ "id" "1" ]}
+       {:entity :users, :filter [ "name" "John" ]}
+       {:entity :address, :filter []}
        ]
       ))))
 
@@ -43,7 +51,7 @@
      (=
       (ast/operation->where
        fixtures/schema
-       {:entity :customers, :filter {:id "1"}})
+       {:entity :customers, :filter [ "id" "1" ]})
       ["c.id = ?" "1"]
       ))))
 
@@ -51,29 +59,30 @@
   (testing "Create a where condition from an operation"
     (is
      (=
+      ["c.name = ?" "acme"]
       (ast/operation->where
        fixtures/schema
-       {:entity :customers, :filter {:name "acme"}})
-      ["c.name LIKE ?" "acme%"]
+       {:entity :customers, :filter [ "name" "acme" ]})
       ))))
 
 (deftest operations->where
   (testing "Create a where condition from operations"
     (is
      (=
+      {
+       :conditions ["c.name = ?"
+                    "u.id = ?"]
+       :params ["acme"
+                "1"]
+       }
       (ast/operations->where
        fixtures/schema
        [
-        {:entity :customers, :filter {:name "acme"}}
-        {:entity :users    , :filter {:id "1"}}
+        {:entity :customers, :filter [ "name" "acme" ]}
+        {:entity :users    , :filter [ "id" "1" ]}
         ]
        )
-      {
-       :conditions ["c.name LIKE ?"
-                    "u.id = ?"]
-       :params ["acme%"
-                "1"]
-       }
+      
       ))))
 
 (deftest operations->join:entity-owns-another-entity
@@ -83,8 +92,8 @@
       [:documents "d" ["d.caseFileId" "cf.id"]]
       (ast/operations->join
        fixtures/schema
-       {:entity :caseFiles, :filter {:id "1"}}
-       {:entity :documents, :filter {:id "2"}})
+       {:entity :caseFiles, :filter [ "id" "1" ]}
+       {:entity :documents, :filter [ "id" "2" ]})
       ))))
 
 (deftest operations->join:entity-owned-by-another-entity
@@ -94,8 +103,8 @@
       [:caseFiles "cf" ["cf.id" "d.caseFileId"]]
       (ast/operations->join
        fixtures/schema
-       {:entity :documents, :filter {:id "2"}}
-       {:entity :caseFiles, :filter {:id "1"}}
+       {:entity :documents, :filter [ "id" "2" ]}
+       {:entity :caseFiles, :filter [ "id" "1" ]}
        )
       ))))
 
@@ -105,9 +114,9 @@
      (=
       (ast/operations->joins
        fixtures/schema
-       [{:entity :customers, :filter {:id "1"}}
-        {:entity :caseFiles, :filter {:id "2"}}
-        {:entity :documents, :filter {:name "test"}}
+       [{:entity :customers, :filter [ "id" "1" ]}
+        {:entity :caseFiles, :filter [ "id" "2" ]}
+        {:entity :documents, :filter [ "name" "test" ]}
         ])
       [:caseFiles "cf" ["cf.customerId" "c.id"]
        :documents "d" ["d.caseFileId" "cf.id"]]
@@ -119,9 +128,9 @@
      (=
       (ast/operations->ast
        fixtures/schema
-       [{:entity :customers, :filter {:id "1"}}
-        {:entity :caseFiles, :filter {:name "john"}}
-        {:entity :documents, :filter {:name "test"}}
+       [{:entity :customers, :filter [ "id" "1" ]}
+        {:entity :caseFiles, :filter [ "name" "john" ]}
+        {:entity :documents, :filter [ "name" "test" ]}
         ])
       {
        :select ["d.*"]
@@ -130,10 +139,10 @@
                :documents "d" ["d.caseFileId" "cf.id"]]
        :where {
                :conditions ["c.id = ?"
-                            "cf.name LIKE ?"
-                            "d.name LIKE ?"
+                            "cf.name = ?"
+                            "d.name = ?"
                             ]
-               :params     ["1" "john%" "test%"]
+               :params     ["1" "john" "test"]
                }
        }
       ))))

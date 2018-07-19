@@ -34,8 +34,9 @@
     (is
      (=
       {
-       :query "SELECT cf.* FROM customers AS c JOIN caseFiles AS cf ON (cf.customerId = c.id) WHERE c.name LIKE ? AND cf.name LIKE ? LIMIT 10"
-       :params ["Acme%" "John%"]
+       :query "SELECT cf.* FROM customers AS c JOIN caseFiles AS cf ON (cf.customerId = c.id) WHERE c.name = ? AND cf.title = ? LIMIT 10"
+       :params ["Acme" "John"]
        }
-      (pine-prepare fixtures/schema "customers Acme | caseFiles John")
+      (pine-prepare fixtures/schema "customers name=Acme | caseFiles title=John")
       ))))
+

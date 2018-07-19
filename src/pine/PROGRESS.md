@@ -117,33 +117,43 @@ users acme | customers *
 
 The 'JOINS' should be generated correctly
 
-### [ ] Allow the column names in the filters
+### [ ] Support for aliases
+
+Allow the following:
+
 
 ```
-customers.id 1
+c 1 => SELECT c.* FROM customers AS c WHERE c.id = 1
+
+```
+
+### [x] Allow the column names in the filters
+
+```
+c 1
 ```
 
 or 
 
 ```
-user.fullName John
+c title=xyz
 ```
 
-If the column is not specified, `.id` will be used as default
+If the column is not specified, `id` column will be used as default
 
 ### [ ] Use LIKE expression if the value ends with %
 
-This should match exactly (use the = operator in MySQL)
+This should match exactly (use the `=` operator in MySQL)
 
 ```
-users.fullName John  => users.fullName = "John"
+u fullname=John  => users.fullName = "John"
 ```
 
-This should use a wild card (using the LIKE operator in MySQL)
+This should use a wild card (using the `LIKE` operator in MySQL)
 
 ```
-user.fullName John*  => users.fullName LIKE "John%"
-user.fullName *John* => users.fullName LIKE "%John%"
+u fullname=John*  => users.fullName LIKE "John%"
+u fullname=*John* => users.fullName LIKE "%John%"
 ```
 
 

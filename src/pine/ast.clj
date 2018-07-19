@@ -8,11 +8,18 @@
 (defn str->filter
   "Create a filter AST from the raw query part"
   [x]
-  (cond (= "*" x) {}
-        :else (cond->> x
-                (re-matches #"[^0-9]+" x) (hash-map :name)
-                (re-matches #"[0-9]+" x) (hash-map :id)
-                )))
+  (let [all? (= "*" x)
+        [_ _ column value] (re-matches #"((.*)=)?(.*)" x)
+        string? (re-matches #"[^0-9]+" value)
+        number? (re-matches #"[0-9]+" value)
+        column  (cond (empty? column) "id" :else column)
+        ]
+    (cond all? []
+          string? [ column value ]
+          number? [ column value ]
+          )
+    )
+  )
 
 (defn str->operations
   "Get the operations from the query. An operation is a single executable atom."
@@ -27,9 +34,8 @@
     (->> query                       ;; "a 1 | b 1"
          str->expressions            ;; [ "a 1" "b 1" ]
          (map split-on-whitespace)   ;; [ [ "a" "1" ] [ "b" "1" ]]
-         (map create-operation)      ;; [ {:entity :a :filter "1"} {:entity :b :filter "1"}]
+         (map create-operation)      ;; [ {:entity :a :filter ["id" "1"]} {:entity :b :filter ["id" "1"]}]
          )))
-
 
 ;; Build SQL from the AST
 
@@ -172,12 +178,12 @@
   "Get the where condition for an operation."
   [schema operation]
   (let [filter (:filter operation)
+        [column value] (:filter operation)
         entity (:entity operation)
         a      (table-alias entity)
         ]
-    (cond (:id filter) [(str a ".id = ?" ) (:id filter)]
-          (:name filter) [(str a ".name LIKE ?") (str (:name filter) "%")]
-          :else ["1" nil]
+    (cond (empty? filter) ["1" nil]
+          :else [(format "%s.%s = ?" a column) value]
           )
     )
   )
