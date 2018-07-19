@@ -141,7 +141,7 @@ c title=xyz
 
 If the column is not specified, `id` column will be used as default
 
-### [ ] Use LIKE expression if the value ends with %
+### [x] Use LIKE expression if the value ends with %
 
 This should match exactly (use the `=` operator in MySQL)
 
@@ -153,7 +153,6 @@ This should use a wild card (using the `LIKE` operator in MySQL)
 
 ```
 u fullname=John*  => users.fullName LIKE "John%"
-u fullname=*John* => users.fullName LIKE "%John%"
 ```
 
 

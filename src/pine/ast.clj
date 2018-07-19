@@ -181,9 +181,11 @@
         [column value] (:filter operation)
         entity (:entity operation)
         a      (table-alias entity)
+        operator (cond (re-find #"\*" value) "LIKE" :else "=")
+        val      (s/replace value "*" "%")
         ]
     (cond (empty? filter) ["1" nil]
-          :else [(format "%s.%s = ?" a column) value]
+          :else [(format "%s.%s %s ?" a column operator) val]
           )
     )
   )

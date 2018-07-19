@@ -65,6 +65,16 @@
        {:entity :customers, :filter [ "name" "acme" ]})
       ))))
 
+(deftest operation->where:customer-name-is-acme-something
+  (testing "Create a where condition from an operation"
+    (is
+     (=
+      ["c.name LIKE ?" "acme%"]
+      (ast/operation->where
+       fixtures/schema
+       {:entity :customers, :filter [ "name" "acme*" ]})
+      ))))
+
 (deftest operations->where
   (testing "Create a where condition from operations"
     (is
@@ -202,18 +212,8 @@
                              :conditions ["c.id = ?"
                                           "u.name = ?"
                                           ]
-                             :params     ["1" "john?"]
+                             :params     ["1" "john"]
                              }
                      })
-      ["SELECT u.* FROM customers AS c JOIN users AS u ON (u.customerId = c.id) WHERE c.id = ? AND u.name = ? LIMIT 10" ["1" "john?"]]
-      ))))
-
-;; Utils
-
-(deftest singular
-  (testing "Make a word singular"
-    (is
-     (=
-      (ast/singular "apples")
-      "apple"
+      ["SELECT u.* FROM customers AS c JOIN users AS u ON (u.customerId = c.id) WHERE c.id = ? AND u.name = ? LIMIT 10" ["1" "john"]]
       ))))
