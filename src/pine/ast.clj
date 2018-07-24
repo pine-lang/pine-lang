@@ -1,7 +1,18 @@
 (ns pine.ast
   (:require [clojure.string :as s]
-            [pine.db :as db])
+            [pine.db :as db]
+            [instaparse.core :as insta]
+            ))
+
+(def parse (let [dir (System/getProperty "user.dir")
+                  file (format "%s/src/pine/pine.bnf" dir)
+                  grammar (slurp file)
+                  ]
+             (insta/parser grammar)
+              )
   )
+
+;; (parse "casefiles 1")
 
 ;; Parse
 
