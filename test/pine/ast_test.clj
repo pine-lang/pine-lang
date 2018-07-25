@@ -171,7 +171,7 @@
   (testing "Create sql from an ast with one operation"
     (is
      (=
-      (ast/ast->sql {
+      (ast/ast->sql-and-params {
                      :select ["c.*"]
                      :from [:customers "c"]
                      :where {

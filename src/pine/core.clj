@@ -34,7 +34,7 @@
 ;; Helpers
 
 ;; Load the schema only once
-(def *schema* (db/schema "INSERT_DB_NAME" c/db))
+;; (def *schema* (db/schema c/db "INSERT_DB_NAME" ))
 
 (defn $
   "Evaluate Pine expressions:
@@ -42,19 +42,21 @@
   ($ first \"users *\")
   ($ (partial map :fullName) \"users *\")
   "
-  ([fn expression]
+  ([fn schema expression]
    (->> expression
-        (pine-prepare *schema*) ;; prepare the sql for executing using cached schema
+        (pine-prepare schema) ;; prepare the sql for executing using cached schema
         (pine-eval c/db)        ;; execute
         fn))
-  ([expression]
-   ($ (fn[x] x) expression)))
+  ([schema expression]
+   ($ (fn[x] x) schema expression)))
 
 (defn $prepare
-  "Show the query to be executed"
-  [expression]
+  "Prepare query and the parameters"
+  [schema expression]
   (->> expression
-       (pine-prepare *schema*) ;; prepare the sql for executing using cached schema
+       (pine-prepare schema) ;; prepare the sql for executing using cached schema
        ))
 
-;; ($prepare "documents title=1* | caseFiles *")
+
+
+;; ($ (db/schema c/db "penneo") "caseFiles 1")
