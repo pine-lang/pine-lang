@@ -1,5 +1,7 @@
 # Pine
 
+[![Build Status](https://travis-ci.org/ahmadnazir/pine.svg?branch=master)](https://travis-ci.org/ahmadnazir/pine)
+
 Pine uses pipes to query a database. When you evaluate the following pine expression:
 
 ```
