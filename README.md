@@ -1,72 +1,91 @@
-# pine
+# Pine
 
-Pine is a tool to explore relational datasets. The initial version will enable
-the user to use a syntax like follows which will be converted into `SELECT`
-statements behind the scenes:
+Pine uses pipes to query a database. When you evaluate the following pine expression:
 
 ```
-customers 1 | users "John"
+customers Acme* | users John
 ```
 
-which will be converted into (and execute) the following:
+the following SQL is executed:
 
 ```
-SELECT u.*
+SELECT u.
+  FROM customers AS c
+  JOIN users AS u
+    ON (u.customerId = c.id)
+ WHERE c.name LIKE "Acme%"
+   AND u.name = "John"
+```
+
+## TODO
+
+### [ ] Use instaparse and the [pine grammar](src/pine/pine.bnf) to generate a parser
+
+### [ ] Support multiple schemas
+For now, the API runs with one predefined database name.
+
+### [ ] Support for aliases
+
+Allow the following:
+
+
+```
+c 1 => SELECT c.* FROM customers AS c WHERE c.id = 1
+
+```
+
+### [ ] Enclose strings with quotes
+```
+customers "Acme Inc."
+```
+
+I should start using something like a parsec library and have a formal specification for the syntax at this point.
+
+### [ ] Automatically figure out the relationship between entities if they are not directly related
+
+Consider the relationship between tables: `customer` has many `users` where each
+of them have an `address`. A pine expression as following should be able to
+generate a result:
+
+```
+customers "Acme Inc" | address "xyz"
+```
+
+`customer` is not directly linked to `address` but I want to get a result and also the other way around. A way to do this is to:
+
+1. Convert the schema into a graph where each table is a node
+2. Find the shortest distance between to nodes
+3. Expand the pine expression to include the nodes not explicitly mentioned in the expression
+4. Evaluate the expression for great profit and fun!
+
+In case we find multiple paths with an equal distance, then I need to find a priority algorithm.. More on that later.
+
+### [ ] Select specific columns
+
+```
+customers name=Acme | select: id | users name=John | select: email
+```
+should evaluate:
+
+```
+SELECT c.id, u.email
   FROM customers AS c
   JOIN users AS u
     ON (c.id = u.customerId)
- WHERE c.id = 1
+ WHERE c.name = "Acme"
+   AND u.name = "John"
 ```
 
-The goal is that given a database schema, pine should be able to determine the relationships between the different types of entities so that the user doesn't have to think about them.
-
-## Objectives
-
-- Use a db schema definition as an input
-- It should be possible to filter on entities that are not directly connected e.g. if we have the entities: `company`, `employee`, and `skills`, then writing the following should work:
+### [ ] Group on a column
 
 ```
-company "Acme In" | skills *
+customers name=dummy* | count: status
 ```
 
-(give me all the skills that company 'Acme' has to offer)
-
-Note that even if there is no direct relationship between `company` and `skills`, pine should be able to figure out the implicit relationship.
-
-- Many to many relationships
-
-Instead of this:
+should evaluate something like:
 
 ```
-customers "Acme" | customerUserMap * | users *
+SELECT c.status, count(c.status)
+  FROM customers AS c
+ WHERE c.name LIKE "dummy%"
 ```
-
-it should be possible to skip of the mapping table:
-
-```
-customers "Acme" | users *
-```
-
-## Some of the challenges
-
-### How to keep the history of relevant entities?
-
-Consider the following query:
-
-```
-company 1 | employee "Joe" | company *
-```
-
-gives all the companies that has employees "Joe" instead of just "1".
-
-I need to keep a history of all the entities that were searched for. Before making
-a new query, go through the history. If no entity is found, then keep looking
-
-
-### How to find the entities that are not directly connected?
-
-I need the `isRelatedTo` function along with 2 helper functions:
-
-- x `hasOne`      y
-- x `hasMany`     y (inverse of the previous one)
-- x `isRelatedTo` y (x show be related to y through a hasMany and hasOne relationship)

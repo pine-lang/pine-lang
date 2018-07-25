@@ -13,7 +13,6 @@
 
 ;; Extract information from the schema
 
-;; TODO: memoize
 (defn references
   "Get the tables used in the foreign keys"
   [schema table]
@@ -56,11 +55,11 @@
        ((keyword "create table"))
        ))
 
-(defn schema
+(defn schema-
   "Get the schema for the database. This function gets the schema for every table
   and can be very slow. Should be called once and the schema should be passed
   around."
-  [db-name db-config]
+  [db-config db-name ]
   (let [column-name (format "tables_in_%s" db-name)
         column      (keyword column-name)]
     (->> "show tables"
@@ -70,6 +69,8 @@
          (apply merge)
     )
   ))
+
+(def schema (memoize schema-))
 
 ;; Helpers
 
