@@ -1,5 +1,4 @@
-(ns pine.config
-  (:require [pine.config :as c]))
+(ns pine.config)
 
 
 ;; Config

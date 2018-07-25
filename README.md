@@ -28,7 +28,7 @@ lein ring server
 
 ## TODO
 
-### [ ] Use instaparse and the [pine grammar](src/pine/pine.bnf) to generate a parser
+### [x] Use instaparse and the [pine grammar](src/pine/pine.bnf) to generate a parser
 
 ### [ ] Support multiple schemas
 For now, the API runs with one predefined database name.

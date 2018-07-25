@@ -2,49 +2,50 @@
   (:require [clojure.string :as s]
             [pine.db :as db]
             [instaparse.core :as insta]
+            [clojure.core.match :refer [match]]
             ))
 
 (def parse (let [dir (System/getProperty "user.dir")
                   file (format "%s/src/pine/pine.bnf" dir)
-                  grammar (slurp file)
-                  ]
-             (insta/parser grammar)
-              )
-  )
+                 grammar (slurp file)]
+             (insta/parser grammar)))
 
 ;; (parse "casefiles 1")
 
 ;; Parse
 
-(defn str->filter
-  "Create a filter AST from the raw query part"
-  [x]
-  (let [all? (= "*" x)
-        [_ _ column value] (re-matches #"((.*)=)?(.*)" x)
-        string? (re-find #"[^0-9]" value)
-        number? (re-matches #"[0-9]+" value)
-        column  (cond (empty? column) "id" :else column)
-        ]
-    (cond all? []
-          string? [ column value ]
-          number? [ column value ]
-          )))
-
 (defn str->operations
-  "Get the operations from the query. An operation is a single executable atom."
-  [query]
-  (letfn [(str->expressions [x]
-            (s/split x #"\s*\|\s*"))
-          (split-on-whitespace [x]
-                               (s/split x #"\s+"))
-          (create-operation [[table filter-value]]
-                            {:entity (keyword table)
-                             :filter (str->filter filter-value)})]
-    (->> query                       ;; "a 1 | b 1"
-         str->expressions            ;; [ "a 1" "b 1" ]
-         (map split-on-whitespace)   ;; [ [ "a" "1" ] [ "b" "1" ]]
-         (map create-operation)      ;; [ {:entity :a :filter ["id" "1"]} {:entity :b :filter ["id" "1"]}]
-         )))
+  "Create a filter AST from the raw query part"
+  [expression]
+(letfn [(get-parsed-ops [ops]
+          (match ops
+           [:OPERATIONS & parsed] parsed
+           :else ops))
+        (parsed-filter->indexed-filter [f]
+          (match f
+                 [:filter [:implicit-filter [:string "*"]]]                    []
+                 [:filter [:implicit-filter [:string value]]]                  ["id" value]
+                 [:filter [:explicit-filter [:string column] [:string value]]] [column value]
+                 :else "Can't convert format of the operation"
+                 )
+          )
+        (parsed-op->indexed-op [op]
+          (match op
+                 [:condition [:entity [:string table]] [:filters & filters]]   {:entity (keyword table) :filter (parsed-filter->indexed-filter (first filters))}
+                 :else "Can't convert format of the operation"
+                 )
+          )
+        (index [op]
+          (match op
+                 [:operation o] (parsed-op->indexed-op o)
+                 :else "Can't index operation"))
+        ]
+  (->> expression
+       parse
+       get-parsed-ops
+       (map index)
+       )))
+
 
 ;; Build SQL from the AST
 

@@ -11,6 +11,7 @@
                  [ring/ring-defaults "0.2.1"]
                  [ring/ring-json "0.4.0"]
                  [instaparse "1.4.9"]
+                 [org.clojure/core.match "0.3.0-alpha5"]
                  ]
   :plugins [[lein-ring "0.9.7"]]
   :ring {:handler pine.handler/app}
