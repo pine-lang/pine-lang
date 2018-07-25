@@ -17,6 +17,13 @@ SELECT u.
    AND u.name = "John"
 ```
 
+## Run the pine server
+
+```
+lein deps
+lein ring server
+```
+
 ## TODO
 
 ### [ ] Use instaparse and the [pine grammar](src/pine/pine.bnf) to generate a parser
@@ -89,3 +96,5 @@ SELECT c.status, count(c.status)
   FROM customers AS c
  WHERE c.name LIKE "dummy%"
 ```
+
+### [ ] Create docker image with the pine server
