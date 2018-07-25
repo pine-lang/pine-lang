@@ -1,0 +1,17 @@
+OPERATIONS := operation <whitespace*> ("|"? <whitespace*> operation <whitespace*>)*
+operation  := filter | condition
+
+select  := ("select:"|"unselect:") <whitespace+> columns
+columns := column (<","> <whitespace*> column)*
+column  := string
+
+condition       := entity <whitespace+> filters
+entity          := string
+filters         := filter (<","> <whitespace*> filter)*
+filter          := implicit-filter | explicit-filter
+implicit-filter := string
+explicit-filter := string <whitespace*> "=" <whitespace*> (string|number)
+
+string     := #"[A-Za-z0-9-_]+"
+number     := #"[0-9]+"
+whitespace := #"\s+"
