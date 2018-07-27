@@ -20,7 +20,7 @@
        ((keyword table) schema)
        (re-seq #"FOREIGN KEY .`(.*)`. REFERENCES `(.*?)`")
        (map (fn [[_ col t]] { (keyword t) col }))
-       (apply merge)
+       (apply (partial merge-with (fn [a b] a)))
        ))
 
 (defn relation

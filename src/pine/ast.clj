@@ -10,7 +10,9 @@
                  grammar (slurp file)]
              (insta/parser grammar)))
 
-;; (parse "casefiles 1")
+;; (parse "users * | caseFiles *")
+
+;; (str->operations "users * | caseFiles *")
 
 ;; Parse
 
@@ -26,19 +28,20 @@
                  [:filter [:implicit-filter [:string "*"]]]                    []
                  [:filter [:implicit-filter [:string value]]]                  ["id" value]
                  [:filter [:explicit-filter [:string column] [:string value]]] [column value]
-                 :else "Can't convert format of the operation"
+                 :else (throw (Exception. "Can't index filter"))
                  )
           )
         (parsed-op->indexed-op [op]
           (match op
                  [:condition [:entity [:string table]] [:filters & filters]]   {:entity (keyword table) :filter (parsed-filter->indexed-filter (first filters))}
-                 :else "Can't convert format of the operation"
+                 :else (throw (Exception. "Can't convert format of operation"))
                  )
           )
         (index [op]
           (match op
                  [:operation o] (parsed-op->indexed-op o)
-                 :else "Can't index operation"))
+                 :else (throw (Exception. "Can't index filter"))
+                 ))
         ]
   (->> expression
        parse
@@ -88,7 +91,7 @@
                   "FROM %s AS %s"
                   (cond join? "%s" :else nil)
                   "WHERE %s"
-                  "LIMIT 10"]
+                  "LIMIT 50"]
                  (remove nil?)
                  (s/join " ")
                  )
@@ -148,10 +151,11 @@
   [schema operations]
   (let [op (last operations)
         entity (op :entity)]
-    [(format "%s.*" (table-alias entity))]))
+    [(format "%s.*" (table-alias entity))])
+  )
 
 (defn operations->join
-  "Get the join from 2 operatoins"
+  "Get the join from 2 operations"
   [schema o1 o2]
   (let [e1  (:entity o1)
         e2  (:entity o2)

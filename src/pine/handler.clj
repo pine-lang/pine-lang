@@ -3,6 +3,8 @@
             [compojure.route :as route]
             [ring.middleware.defaults :refer [wrap-defaults api-defaults]]
             [pine.core :as pine]
+            [pine.db :as db]
+            [pine.config :as c]
             [ring.util.response :refer [response]]
             [ring.middleware.json :refer [wrap-json-params wrap-json-response]]
             [clojure.string :as s]
@@ -25,11 +27,10 @@
 (defroutes app-routes
   (context "/pine/build" []
            (defroutes query-routes
-             ;; (GET  "/" [] (list "test"))
              (POST "/" request
                    (->> (get-in request [:params "expression"])
                         ((fn [x] (prn x) x))
-                        (build-query "INSERT_DB_NAME_HERE")
+                        (build-query (db/schema c/db "penneo")) ;; TODO: shouldn't need to specify db
                         ;; ((fn [x] {:query x}))
                         response
                         )

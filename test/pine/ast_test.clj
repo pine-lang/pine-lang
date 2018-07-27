@@ -140,6 +140,18 @@
        :documents "d" ["d.caseFileId" "cf.id"]]
       ))))
 
+(deftest operations->joins:no-filter
+  (testing "Create operations for a query"
+    (is
+     (=
+      (ast/operations->joins
+       fixtures/schema
+       [{:entity :customers, :filter []}
+        {:entity :caseFiles, :filter []}
+        ])
+      [:caseFiles "cf" ["cf.customerId" "c.id"]]
+      ))))
+
 (deftest operations->ast
   (testing "Create operations for a query"
     (is
@@ -180,7 +192,7 @@
                              :params     ["1"]
                              }
                      })
-      ["SELECT c.* FROM customers AS c WHERE c.id = ? LIMIT 10" ["1"]]
+      ["SELECT c.* FROM customers AS c WHERE c.id = ? LIMIT 50" ["1"]]
       ))))
 
 (deftest ast-join->sql
@@ -223,5 +235,5 @@
                              :params     ["1" "john"]
                              }
                      })
-      ["SELECT u.* FROM customers AS c JOIN users AS u ON (u.customerId = c.id) WHERE c.id = ? AND u.name = ? LIMIT 10" ["1" "john"]]
+      ["SELECT u.* FROM customers AS c JOIN users AS u ON (u.customerId = c.id) WHERE c.id = ? AND u.name = ? LIMIT 50" ["1" "john"]]
       ))))
