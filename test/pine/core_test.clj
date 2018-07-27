@@ -13,7 +13,7 @@
        :query "SELECT c.* FROM customers AS c WHERE 1 LIMIT 50"
        :params []
        }
-      (pine-prepare fixtures/schema "customers *")
+      (pine-prepare fixtures/schema "customers")
       ))))
 
 
@@ -45,7 +45,7 @@
     (is
      (=
       {
-       :query "SELECT cf.* FROM customers WHERE 1 LIMIT 50"
+       :query "SELECT c.* FROM customers AS c WHERE 1 LIMIT 50"
        :params []
        }
       (pine-prepare fixtures/schema "customers")
@@ -59,7 +59,7 @@
        :query "SELECT cf.* FROM customers AS c JOIN caseFiles AS cf ON (cf.customerId = c.id) WHERE 1 AND 1 LIMIT 50"
        :params []
        }
-      (pine-prepare fixtures/schema "customers * | caseFiles *")
+      (pine-prepare fixtures/schema "customers | caseFiles")
       ))))
 
 
@@ -71,5 +71,5 @@
        :query "SELECT cf.* FROM users AS u JOIN caseFiles AS cf ON (cf.userId = u.id) WHERE 1 AND 1 LIMIT 50"
        :params []
        }
-      (pine-prepare fixtures/schema "users * | caseFiles *")
+      (pine-prepare fixtures/schema "users | caseFiles")
       ))))
