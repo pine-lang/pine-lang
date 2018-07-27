@@ -10,8 +10,6 @@
                  grammar (slurp file)]
              (insta/parser grammar)))
 
-;; (parse "users * | caseFiles *")
-
 ;; (str->operations "users * | caseFiles *")
 
 ;; Parse
@@ -25,7 +23,6 @@
            :else ops))
         (parsed-filter->indexed-filter [f]
           (match f
-                 [:filter [:implicit-filter [:string "*"]]]                    []
                  [:filter [:implicit-filter [:string value]]]                  ["id" value]
                  [:filter [:explicit-filter [:string column] [:string value]]] [column value]
                  :else (throw (Exception. "Can't index filter"))
@@ -33,8 +30,9 @@
           )
         (parsed-op->indexed-op [op]
           (match op
+                 [:condition [:entity [:string table]] ]                       {:entity (keyword table) :filter []}
                  [:condition [:entity [:string table]] [:filters & filters]]   {:entity (keyword table) :filter (parsed-filter->indexed-filter (first filters))}
-                 :else (throw (Exception. "Can't convert format of operation"))
+                 :else (throw (Exception. (format "Can't convert format of operation: %s" op)))
                  )
           )
         (index [op]

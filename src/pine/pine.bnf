@@ -1,11 +1,11 @@
 OPERATIONS := operation <whitespace*> (<"|"?> <whitespace*> operation <whitespace*>)*
-operation  := filter | condition
+operation  := select | condition
 
 select  := <("select:"|"unselect:")> <whitespace+> columns
 columns := column (<","> <whitespace*> column)*
 column  := string
 
-condition       := entity <whitespace+> filters
+condition       := entity | entity <whitespace+> filters
 entity          := string
 filters         := filter (<","> <whitespace*> filter)*
 filter          := implicit-filter | explicit-filter

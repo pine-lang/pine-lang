@@ -44,7 +44,7 @@
   (testing "Create operations for a query"
     (is
      (=
-      (ast/str->operations "customers 1 | users name=John | address *")
+      (ast/str->operations "customers 1 | users name=John | address")
       [{:entity :customers, :filter [ "id" "1" ]}
        {:entity :users, :filter [ "name" "John" ]}
        {:entity :address, :filter []}

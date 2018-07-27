@@ -40,6 +40,16 @@
       (pine-prepare fixtures/schema "customers name=Acme | caseFiles title=John")
       ))))
 
+(deftest pine-prepare:one-operation-without-filters
+  (testing "Create sql a pine expression containing one operation without filters"
+    (is
+     (=
+      {
+       :query "SELECT cf.* FROM customers WHERE 1 LIMIT 50"
+       :params []
+       }
+      (pine-prepare fixtures/schema "customers")
+      ))))
 
 (deftest pine-prepare:two-operations-without-filters
   (testing "Create sql a pine expression containing two operations without filters"
