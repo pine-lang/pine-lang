@@ -151,8 +151,7 @@
   [schema operations]
   (let [op (last operations)
         entity (op :entity)]
-    [(format "%s.*" (table-alias entity))])
-  )
+    [(format "%s.*" (table-alias entity))]))
 
 (defn operations->join
   "Get the join from 2 operations"

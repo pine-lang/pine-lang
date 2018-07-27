@@ -47,6 +47,7 @@
 (defn table-definition
   "Create table definition"
   [db-config table]
+  (prn (format "Loading schema definition for table: %s." table))
   (->> table
        escape
        (format "show create table %s")
@@ -60,6 +61,7 @@
   and can be very slow. Should be called once and the schema should be passed
   around."
   [db-config db-name ]
+  (prn (format "Loading schema definition for db: %s." db-name))
   (let [column-name (format "tables_in_%s" db-name)
         column      (keyword column-name)]
     (->> "show tables"
