@@ -11,32 +11,32 @@
   (testing "Create operations for a query"
     (is
      (=
+      [{:type "condition" :entity :customers, :filter [ "id" "1" ]}]
       (ast/str->operations "customers 1")
-      [{:entity :customers, :filter [ "id" "1" ]}]
       ))))
 
 (deftest str->operations:one-operation-explicit-id
   (testing "Create operations for a query explicitly specifying the id"
     (is
      (=
+      [{:type "condition" :entity :customers, :filter [ "id" "1" ]}]
       (ast/str->operations "customers id=1")
-      [{:entity :customers, :filter [ "id" "1" ]}]
       ))))
 
 (deftest str->operations:one-operation-name-has-number-and-wildcard
   (testing "Create operations for a query explicitly specifying the id"
     (is
      (=
+      [{:type "condition" :entity :customers, :filter [ "name" "1*" ]}]
       (ast/str->operations "customers name=1*")
-      [{:entity :customers, :filter [ "name" "1*" ]}]
       ))))
 
 (deftest str->operations:two-operations
   (testing "Create operations for a query"
     (is
      (=
-      [{:entity :customers, :filter [ "id" "1" ]}
-       {:entity :users, :filter [ "id" "2" ]}]
+      [{:type "condition" :entity :customers, :filter [ "id" "1" ]}
+       {:type "condition" :entity :users, :filter [ "id" "2" ]}]
       (ast/str->operations "customers 1 | users 2")
       ))))
 
@@ -44,11 +44,11 @@
   (testing "Create operations for a query"
     (is
      (=
-      (ast/str->operations "customers 1 | users name=John | address")
-      [{:entity :customers, :filter [ "id" "1" ]}
-       {:entity :users, :filter [ "name" "John" ]}
-       {:entity :address, :filter []}
+      [{:type "condition" :entity :customers, :filter [ "id" "1" ]}
+       {:type "condition" :entity :users, :filter [ "name" "John" ]}
+       {:type "condition" :entity :address, :filter []}
        ]
+      (ast/str->operations "customers 1 | users name=John | address")
       ))))
 
 ;; Opertations to AST
@@ -146,8 +146,8 @@
      (=
       (ast/operations->joins
        fixtures/schema
-       [{:entity :customers, :filter []}
-        {:entity :caseFiles, :filter []}
+       [{:type "condition" :entity :customers, :filter []}
+        {:type "condition" :entity :caseFiles, :filter []}
         ])
       [:caseFiles "cf" ["cf.customerId" "c.id"]]
       ))))
@@ -158,9 +158,9 @@
      (=
       (ast/operations->ast
        fixtures/schema
-       [{:entity :customers, :filter [ "id" "1" ]}
-        {:entity :caseFiles, :filter [ "name" "john" ]}
-        {:entity :documents, :filter [ "name" "test" ]}
+       [{:type "condition" :entity :customers, :filter [ "id" "1" ]}
+        {:type "condition" :entity :caseFiles, :filter [ "name" "john" ]}
+        {:type "condition" :entity :documents, :filter [ "name" "test" ]}
         ])
       {
        :select ["d.*"]

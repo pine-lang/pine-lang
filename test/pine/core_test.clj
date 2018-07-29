@@ -73,3 +73,36 @@
        }
       (pine-prepare fixtures/schema "users | caseFiles")
       ))))
+
+(deftest pine-prepare:one-table-selected-columns
+  (testing "Create sql from pine expressions for one entity selecting specific columns"
+    (is
+     (=
+      {
+       :query "SELECT u.id, u.fullName FROM users AS u WHERE 1 LIMIT 50"
+       :params []
+       }
+      (pine-prepare fixtures/schema "users | select: id, fullName")
+      ))))
+
+(deftest pine-prepare:two-tables-selected-columns
+  (testing "Create sql from pine expressions for two tables selecting specific columns"
+    (is
+     (=
+      {
+       :query "SELECT u.id, u.fullName, cf.id FROM users AS u JOIN caseFiles AS cf ON (cf.userId = u.id) WHERE 1 AND 1 LIMIT 50"
+       :params []
+       }
+      (pine-prepare fixtures/schema "users | select: id, fullName | caseFiles | select: id")
+      ))))
+
+(deftest pine-prepare:two-tables-selected-and-all-columns
+  (testing "Create sql from pine expressions for two tables selecting specific columns"
+    (is
+     (=
+      {
+       :query "SELECT u.id, u.fullName, cf.* FROM users AS u JOIN caseFiles AS cf ON (cf.userId = u.id) WHERE 1 AND 1 LIMIT 50"
+       :params []
+       }
+      (pine-prepare fixtures/schema "users | select: id, fullName | caseFiles")
+      ))))

@@ -3,7 +3,7 @@
             [pine.db :as db]
             [instaparse.core :as insta]
             [clojure.core.match :refer [match]]
-            ))
+            [pine.fixtures :as fixtures]))
 
 (def parse (let [dir (System/getProperty "user.dir")
                   file (format "%s/src/pine/pine.bnf" dir)
@@ -13,6 +13,16 @@
 ;; (str->operations "users * | caseFiles *")
 
 ;; Parse
+
+(defn operation-type?
+  "Check the type of the operation"
+  [type operation]
+  (= (:type operation) type))
+
+(defn filter-operations
+  "Filter out the type of operations where type can be: select, condition"
+  [name ops]
+  (filter (partial operation-type? name) ops))
 
 (defn str->operations
   "Create a filter AST from the raw query part"
@@ -28,10 +38,21 @@
                  :else (throw (Exception. "Can't index filter"))
                  )
           )
+        (parsed-cols->indexed-cols [cs]
+          (reduce (fn [acc c]
+                    (match c
+                           [:column [:string column-name]] (conj acc column-name)
+                           :else (throw (Exception. (format "Can't index column: %s" c)))
+                           )) [] cs)
+          )
         (parsed-op->indexed-op [op]
           (match op
-                 [:condition [:entity [:string table]] ]                       {:entity (keyword table) :filter []}
-                 [:condition [:entity [:string table]] [:filters & filters]]   {:entity (keyword table) :filter (parsed-filter->indexed-filter (first filters))}
+                 ;; conditions
+                 [:condition [:entity [:string table]] ]                       {:type "condition" :entity (keyword table) :filter []}
+                 [:condition [:entity [:string table]] [:filters & filters]]   {:type "condition" :entity (keyword table) :filter (parsed-filter->indexed-filter (first filters))}
+                 ;; select
+                 [:select [:columns & columns]]                                {:type "select" :columns (parsed-cols->indexed-cols columns)}
+                 ;; not specified
                  :else (throw (Exception. (format "Can't convert format of operation: %s" op)))
                  )
           )
@@ -46,7 +67,6 @@
        get-parsed-ops
        (map index)
        )))
-
 
 ;; Build SQL from the AST
 
@@ -144,12 +164,41 @@
        first
        :entity))
 
-(defn operations->select-columns
-  "Get the columns for the last operation"
-  [schema operations]
-  (let [op (last operations)
-        entity (op :entity)]
+(defn operation->select-all
+  "Get the columns for the last 'condition' operation or the select operation"
+  [schema op]
+  (let [entity (op :entity)]
     [(format "%s.*" (table-alias entity))]))
+
+
+(defn operations->select-specific
+  "Get the columns specified using the 'select:' keyword"
+  [schema ops]
+  (let [pairs (partition 2 1 ops)]
+    (->> pairs
+         (filter (fn [pair] (and (operation-type? "condition" (first pair))
+                                 (operation-type? "select" (second pair)))))
+         (map (fn [pair] (let [
+                               entity (:entity (first pair))
+                               a      (table-alias entity)
+                               columns (:columns (second pair))]
+                           (map (fn [c] (format "%s.%s" a c)) columns)
+                           )))
+         (apply concat)
+         )))
+
+(defn operations->select-columns
+  "Get the columns for the last 'condition' operation or the select operation"
+  [schema operations]
+  (let [last-op          (last operations)
+        select-all?      (operation-type? "condition" last-op)
+        specific-columns (operations->select-specific schema operations)
+        all-columns     (cond select-all? (operation->select-all schema last-op)
+                                :else [])
+        ]
+    (concat specific-columns all-columns)
+    )
+  )
 
 (defn operations->join
   "Get the join from 2 operations"
@@ -215,9 +264,10 @@
   "operations to ast"
   [schema ops]
   (let [columns (operations->select-columns schema ops)
-        table (operations->primary-table schema ops)
-        joins (operations->joins schema ops)
-        where (operations->where schema ops)]
+        condition-ops (filter-operations "condition" ops)
+        table (operations->primary-table schema condition-ops)
+        joins (operations->joins schema condition-ops)
+        where (operations->where schema condition-ops)]
     {
      :select columns
      :from [table (table-alias table)]

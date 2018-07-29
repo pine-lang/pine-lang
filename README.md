@@ -69,7 +69,7 @@ customers "Acme Inc" | address "xyz"
 
 In case we find multiple paths with an equal distance, then I need to find a priority algorithm.. More on that later.
 
-### [ ] Select specific columns
+### [x] Select specific columns
 
 ```
 customers name=Acme | select: id | users name=John | select: email
