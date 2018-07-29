@@ -71,10 +71,15 @@ In case we find multiple paths with an equal distance, then I need to find a pri
 
 ### [x] Select specific columns
 
+The following pine expression to select specific columns:
 ```
 customers name=Acme | select: id | users name=John | select: email
 ```
-should evaluate:
+or even shorter:
+```
+customers name=Acme | s: id | users name=John | s: email
+```
+should build the following query:
 
 ```
 SELECT c.id, u.email

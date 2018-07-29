@@ -1,7 +1,7 @@
 OPERATIONS := operation <whitespace*> (<"|"?> <whitespace*> operation <whitespace*>)*
 operation  := select | condition
 
-select  := <("select:"|"unselect:")> <whitespace+> columns
+select  := <(#"s(el(ect)?)?:"|"u(ns(elect)?)?:")> <whitespace+> columns
 columns := column (<","> <whitespace*> column)*
 column  := string
 
