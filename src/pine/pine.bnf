@@ -1,11 +1,13 @@
-OPERATIONS := operation <whitespace*> (<"|"?> <whitespace*> operation <whitespace*>)*
-operation  := select | condition
+OPERATIONS := OPERATION <whitespace*> (<"|"?> <whitespace*> OPERATION <whitespace*>)*
+OPERATION  := SELECT | CONDITION
 
-select  := <(#"s(el(ect)?)?:"|"u(ns(elect)?)?:")> <whitespace+> columns
-columns := column (<","> <whitespace*> column)*
-column  := string
+SELECT          := specific | invert-specific
+specific        := <#"s(el(ect)?)?:"> <whitespace+> columns
+invert-specific := <#"u(ns(elect)?)?:"> <whitespace+> columns
+columns         := column (<","> <whitespace*> column)*
+column          := string
 
-condition       := entity | entity <whitespace+> filters
+CONDITION       := entity | entity <whitespace+> filters
 entity          := string
 filters         := filter (<","> <whitespace*> filter)*
 filter          := implicit-filter | explicit-filter

@@ -5,18 +5,18 @@
 Pine uses pipes to query a database. When you evaluate the following pine expression:
 
 ```
-customers Acme* | users John
+customers 1 | users name=John* | s: id, email
 ```
 
 the following SQL is executed:
 
 ```
-SELECT u.
+SELECT u.id, u.email
   FROM customers AS c
   JOIN users AS u
     ON (u.customerId = c.id)
- WHERE c.name LIKE "Acme%"
-   AND u.name = "John"
+ WHERE c.id = 1
+   AND u.name LIKE "John*"
 ```
 
 ## Run the pine server
@@ -105,3 +105,34 @@ SELECT c.status, count(c.status)
 ```
 
 ### [ ] Create docker image with the pine server
+
+### [ ] Compose filters/conditions
+
+```
+caseFiles 1 | c: title=Sample*
+```
+
+### [ ] Support for 'OR'
+
+```
+caseFiles 1, 2, 3
+```
+
+or
+
+```
+caseFiles | c: title=Sample*, userId=1
+```
+
+
+### [ ] Updates
+
+```
+caseFiles 1 | set! title=new_title
+```
+
+### [ ] Deletes
+
+```
+caseFiles 1 | delete!
+```

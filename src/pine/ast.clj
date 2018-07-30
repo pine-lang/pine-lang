@@ -48,18 +48,19 @@
         (parsed-op->indexed-op [op]
           (match op
                  ;; conditions
-                 [:condition [:entity [:string table]] ]                       {:type "condition" :entity (keyword table) :filter []}
-                 [:condition [:entity [:string table]] [:filters & filters]]   {:type "condition" :entity (keyword table) :filter (parsed-filter->indexed-filter (first filters))}
+                 [:CONDITION [:entity [:string table]] ]                       {:type "condition" :entity (keyword table) :filter []}
+                 [:CONDITION [:entity [:string table]] [:filters & filters]]   {:type "condition" :entity (keyword table) :filter (parsed-filter->indexed-filter (first filters))}
                  ;; select
-                 [:select [:columns & columns]]                                {:type "select" :columns (parsed-cols->indexed-cols columns)}
+                 [:SELECT [:specific [:columns & columns]]]                                {:type "select" :columns (parsed-cols->indexed-cols columns)}
+                 [:SELECT [:invert-specific [:columns & columns]]]                              (throw (Exception. "Unselect key word is not supported yet."))
                  ;; not specified
                  :else (throw (Exception. (format "Can't convert format of operation: %s" op)))
                  )
           )
         (index [op]
           (match op
-                 [:operation o] (parsed-op->indexed-op o)
-                 :else (throw (Exception. "Can't index filter"))
+                 [:OPERATION o] (parsed-op->indexed-op o)
+                 :else (throw (Exception. (format  "Can't index operation: %s" op)))
                  ))
         ]
   (->> expression
