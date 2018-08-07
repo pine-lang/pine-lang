@@ -29,6 +29,17 @@
       (pine-prepare fixtures/schema  "customers 1")
       ))))
 
+(deftest pine-prepare:one-operation-multiple-and-filters
+  (testing "Create sql a pine expression containing one operation with AND filters"
+    (is
+     (=
+      {
+       :query "SELECT c.* FROM customers AS c WHERE c.name LIKE ? AND c.industry = ? LIMIT 50"
+       :params ["acme%", "test"]
+       }
+      (pine-prepare fixtures/schema  "customers name=acme* industry=test")
+      ))))
+
 (deftest pine-prepare:two-operation
   (testing "Create sql a pine expression containing one operation"
     (is

@@ -50,6 +50,23 @@ customers "Acme Inc."
 
 I should start using something like a parsec library and have a formal specification for the syntax at this point.
 
+### [x] Support multiple filters (AND)
+
+Multiple filters seperated by a whitespace:
+
+```
+users name="John" email="john*"
+```
+
+### [ ] Support multiple filters (OR)
+
+Multiple filters seperated by a comma `,`:
+
+```
+users name="John", email="john*"
+users 1,2
+```
+
 ### [ ] Automatically figure out the relationship between entities if they are not directly related
 
 Consider the relationship between tables: `customer` has many `users` where each

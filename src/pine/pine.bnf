@@ -9,7 +9,7 @@ column          := string
 
 CONDITION       := entity | entity <whitespace+> filters
 entity          := string
-filters         := filter (<","> <whitespace*> filter)*
+filters         := filter (<whitespace+> filter)*
 filter          := implicit-filter | explicit-filter
 implicit-filter := string
 explicit-filter := string <whitespace*> <"="> <whitespace*> string

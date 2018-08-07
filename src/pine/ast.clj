@@ -48,8 +48,8 @@
         (parsed-op->indexed-op [op]
           (match op
                  ;; conditions
-                 [:CONDITION [:entity [:string table]] ]                       {:type "condition" :entity (keyword table) :filter []}
-                 [:CONDITION [:entity [:string table]] [:filters & filters]]   {:type "condition" :entity (keyword table) :filter (parsed-filter->indexed-filter (first filters))}
+                 [:CONDITION [:entity [:string table]] ]                       {:type "condition" :entity (keyword table) :filters []}
+                 [:CONDITION [:entity [:string table]] [:filters & filters]]   {:type "condition" :entity (keyword table) :filters (map parsed-filter->indexed-filter filters)}
                  ;; select
                  [:SELECT [:specific [:columns & columns]]]                                {:type "select" :columns (parsed-cols->indexed-cols columns)}
                  [:SELECT [:invert-specific [:columns & columns]]]                              (throw (Exception. "Unselect key word is not supported yet."))
@@ -235,28 +235,48 @@
     )
   )
 
+(defn filter->where-condition
+  "Convert the filter part of an operation to a where sql"
+  [entity [column value]]
+  (let [a      (table-alias entity)
+        operator (cond (re-find #"\*" value) "LIKE" :else "=")
+        val      (s/replace value "*" "%")]
+    [(format "%s.%s %s ?" a column operator) val])
+  )
+
 (defn operation->where
   "Get the where condition for an operation."
   [schema operation]
-  (let [filter (:filter operation)]
-    (cond (empty? filter) ["1" nil]
-          :else           (let [[column value] filter
-                                entity (:entity operation)
-                                a      (table-alias entity)
-                                operator (cond (re-find #"\*" value) "LIKE" :else "=")
-                                val      (s/replace value "*" "%")]
-                            [(format "%s.%s %s ?" a column operator) val]))))
+  (let [fs (:filters operation)]
+    (cond (empty? fs) { :conditions "1" :params nil}
+          :else       (->> fs
+                           (map (partial filter->where-condition (:entity operation)))
+                           ((fn [where-conditions] { :conditions (->> where-conditions
+                                                         (map first)
+                                                         (s/join " AND ")
+                                                         )
+                                                    :params (->> where-conditions
+                                                         (map second)
+                                                         vec
+                                                         ) }))
+
+                           ))))
 
 (defn operations->where
   "Get the joins from the operations"
   [schema ops]
   (let [
-        where (map (partial operation->where schema) ops)
-        [conditions params] (apply (partial map vector) where)
+        wheres (map (partial operation->where schema) ops)
         ]
     {
-     :conditions conditions
-     :params     (vec (remove nil? params))
+     :conditions (->> wheres
+                     (map :conditions)
+                     )
+     :params (->> wheres
+                  (map :params)
+                  (apply concat)
+                  vec
+                  )
      }
     )
   )
