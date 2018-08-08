@@ -1,5 +1,5 @@
 OPERATIONS := OPERATION <whitespace*> (<"|"?> <whitespace*> OPERATION <whitespace*>)*
-OPERATION  := SELECT | CONDITION
+OPERATION  := SELECT | CONDITION | LIMIT
 
 SELECT          := specific | invert-specific
 specific        := <#"s(el(ect)?)?:"> <whitespace+> columns
@@ -14,5 +14,8 @@ filter          := implicit-filter | explicit-filter
 implicit-filter := string
 explicit-filter := string <whitespace*> <"="> <whitespace*> string
 
+LIMIT           := <#"l(imit)?:"> <whitespace+> number
+
+number     := #"[0-9]+"
 string     := #"[A-Za-z0-9-_*]+"
 whitespace := #"\s+"

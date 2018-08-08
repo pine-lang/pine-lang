@@ -53,6 +53,8 @@
                  ;; select
                  [:SELECT [:specific [:columns & columns]]]                                {:type "select" :columns (parsed-cols->indexed-cols columns)}
                  [:SELECT [:invert-specific [:columns & columns]]]                              (throw (Exception. "Unselect key word is not supported yet."))
+                 ;; limit
+                 [:LIMIT [:number number]]                                     {:type "limit" :count (Integer. number)}
                  ;; not specified
                  :else (throw (Exception. (format "Can't convert format of operation: %s" op)))
                  )
@@ -99,6 +101,7 @@
   (let [select (s/join ", " (ast :select))
         [table alias] (ast :from)
         where (ast :where)
+        limit (ast :limit)
         joins (ast :joins)
         join? (not (empty? joins))
         conditions (where :conditions)
@@ -110,7 +113,8 @@
                   "FROM %s AS %s"
                   (cond join? "%s" :else nil)
                   "WHERE %s"
-                  "LIMIT 50"]
+                  limit
+                  ]
                  (remove nil?)
                  (s/join " ")
                  )
@@ -281,6 +285,16 @@
     )
   )
 
+(defn operations->limit
+  "Get the joins from the operations"
+  [ops]
+  (->> ops
+       (filter-operations "limit")
+       last
+       ((fn [op] (format "LIMIT %s" (or (:count op) 50))))
+       )
+  )
+
 (defn operations->ast
   "operations to ast"
   [schema ops]
@@ -288,12 +302,15 @@
         condition-ops (filter-operations "condition" ops)
         table (operations->primary-table schema condition-ops)
         joins (operations->joins schema condition-ops)
-        where (operations->where schema condition-ops)]
+        where (operations->where schema condition-ops)
+        limit (operations->limit ops)
+        ]
     {
      :select columns
      :from [table (table-alias table)]
      :joins joins
      :where where
+     :limit limit
      }
     )
   )

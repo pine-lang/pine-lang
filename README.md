@@ -67,6 +67,18 @@ users name="John", email="john*"
 users 1,2
 ```
 
+### [x] Support for limit
+
+```
+users | l: 10
+```
+
+or
+
+```
+users | limit: 10
+```
+
 ### [ ] Automatically figure out the relationship between entities if they are not directly related
 
 Consider the relationship between tables: `customer` has many `users` where each
