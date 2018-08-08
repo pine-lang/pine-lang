@@ -119,10 +119,10 @@ SELECT c.id, u.email
    AND u.name = "John"
 ```
 
-### [ ] Group on a column
+### [x] Group on a column
 
 ```
-customers name=dummy* | count: status
+customers name=dummy* | s: status | count: status
 ```
 
 should evaluate something like:
@@ -131,6 +131,7 @@ should evaluate something like:
 SELECT c.status, count(c.status)
   FROM customers AS c
  WHERE c.name LIKE "dummy%"
+ GROUP BY c.status
 ```
 
 ### [ ] Create docker image with the pine server

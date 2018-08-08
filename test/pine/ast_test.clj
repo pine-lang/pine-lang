@@ -152,16 +152,20 @@
       [:caseFiles "cf" ["cf.customerId" "c.id"]]
       ))))
 
+(deftest operations->group:no-filter
+  (testing "Operatations to the group sql"
+    (is
+     (=
+      nil
+      (ast/operations->group
+       [{:type "condition" :entity :customers, :filters []}
+        ])
+      ))))
+
 (deftest operations->ast
   (testing "Create operations for a query"
     (is
      (=
-      (ast/operations->ast
-       fixtures/schema
-       [{:type "condition" :entity :customers, :filters [[ "id" "1" ]]}
-        {:type "condition" :entity :caseFiles, :filters [[ "name" "john" ]]}
-        {:type "condition" :entity :documents, :filters [[ "name" "test" ]]}
-        ])
       {
        :select ["d.*"]
        :from [:customers "c"]
@@ -174,8 +178,15 @@
                             ]
                :params     ["1" "john" "test"]
                }
+       :group nil
        :limit "LIMIT 50"
        }
+      (ast/operations->ast
+       fixtures/schema
+       [{:type "condition" :entity :customers, :filters [[ "id" "1" ]]}
+        {:type "condition" :entity :caseFiles, :filters [[ "name" "john" ]]}
+        {:type "condition" :entity :documents, :filters [[ "name" "test" ]]}
+        ])
       ))))
 
 ;; AST to SQL

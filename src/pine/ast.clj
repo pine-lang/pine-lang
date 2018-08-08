@@ -55,6 +55,8 @@
                  [:SELECT [:invert-specific [:columns & columns]]]                              (throw (Exception. "Unselect key word is not supported yet."))
                  ;; limit
                  [:LIMIT [:number number]]                                     {:type "limit" :count (Integer. number)}
+                 ;; group
+                 [:GROUP fn-name [:columns [:column [:string column]]]]                          {:type "group" :fn-name fn-name :columns [column]}
                  ;; not specified
                  :else (throw (Exception. (format "Can't convert format of operation: %s" op)))
                  )
@@ -101,6 +103,7 @@
   (let [select (s/join ", " (ast :select))
         [table alias] (ast :from)
         where (ast :where)
+        group (ast :group)
         limit (ast :limit)
         joins (ast :joins)
         join? (not (empty? joins))
@@ -113,6 +116,7 @@
                   "FROM %s AS %s"
                   (cond join? "%s" :else nil)
                   "WHERE %s"
+                  group
                   limit
                   ]
                  (remove nil?)
@@ -175,6 +179,24 @@
   (let [entity (op :entity)]
     [(format "%s.*" (table-alias entity))]))
 
+(defn operations->group-columns
+  "Get the columns for the last 'condition' operation or the select operation"
+  [ops]
+  (let [[condition-op group-op] (->> ops
+                                    (filter (fn [op] (or (operation-type? "condition" op)
+                                                         (operation-type? "group" op)
+                                                         )))
+                                    (partition 2 1)
+                                    (last)
+                                )
+        fn-name (group-op :fn-name)
+        columns (group-op :columns)
+        entity (:entity condition-op)
+        a      (table-alias entity)
+
+        ]
+    [(format "%s(%s.%s)" fn-name a (first columns))]))
+
 
 (defn operations->select-specific
   "Get the columns specified using the 'select:' keyword"
@@ -196,12 +218,12 @@
   "Get the columns for the last 'condition' operation or the select operation"
   [schema operations]
   (let [last-op          (last operations)
-        select-all?      (operation-type? "condition" last-op)
         specific-columns (operations->select-specific schema operations)
-        all-columns     (cond select-all? (operation->select-all schema last-op)
+        extra-columns     (cond (operation-type? "condition" last-op) (operation->select-all schema last-op)
+                                (operation-type? "group" last-op) (operations->group-columns operations)
                                 :else [])
         ]
-    (concat specific-columns all-columns)
+    (concat specific-columns extra-columns)
     )
   )
 
@@ -295,6 +317,35 @@
        )
   )
 
+(defn operations->group
+  "Get the columns for the last 'condition' operation or the select operation"
+  [ops]
+  (let [[condition-op group-op] (->> ops
+                                     (filter (fn [op] (or (operation-type? "condition" op)
+                                                          (operation-type? "group" op)
+                                                          )))
+                                     (partition 2 1)
+                                     (filter (fn [ops] (and (operation-type? "condition" (first ops))
+                                                          (operation-type? "group" (second ops))
+                                                          )))
+                                     (last)
+                                     )
+        ]
+    (cond (and condition-op group-op) (let [
+
+                                         columns (group-op :columns)
+                                         entity (:entity condition-op)
+                                         a      (table-alias entity)
+
+                                         ]
+                                     (format "GROUP BY %s.%s" a (first columns))
+                                     )
+          :else nil
+          )
+    ))
+
+;; (str->operations "users * | l: 1 | count: test")
+
 (defn operations->ast
   "operations to ast"
   [schema ops]
@@ -303,6 +354,7 @@
         table (operations->primary-table schema condition-ops)
         joins (operations->joins schema condition-ops)
         where (operations->where schema condition-ops)
+        group (operations->group ops)
         limit (operations->limit ops)
         ]
     {
@@ -310,6 +362,7 @@
      :from [table (table-alias table)]
      :joins joins
      :where where
+     :group group
      :limit limit
      }
     )
