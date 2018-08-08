@@ -174,6 +174,7 @@
                             ]
                :params     ["1" "john" "test"]
                }
+       :limit "LIMIT 50"
        }
       ))))
 
@@ -192,7 +193,7 @@
                              :params     ["1"]
                              }
                      })
-      ["SELECT c.* FROM customers AS c WHERE c.id = ? LIMIT 50" ["1"]]
+      ["SELECT c.* FROM customers AS c WHERE c.id = ?" ["1"]]
       ))))
 
 (deftest ast-join->sql
@@ -235,5 +236,5 @@
                              :params     ["1" "john"]
                              }
                      })
-      ["SELECT u.* FROM customers AS c JOIN users AS u ON (u.customerId = c.id) WHERE c.id = ? AND u.name = ? LIMIT 50" ["1" "john"]]
+      ["SELECT u.* FROM customers AS c JOIN users AS u ON (u.customerId = c.id) WHERE c.id = ? AND u.name = ?" ["1" "john"]]
       ))))
