@@ -142,19 +142,6 @@ SELECT c.status, count(c.status)
 caseFiles 1 | c: title=Sample*
 ```
 
-### [ ] Support for 'OR'
-
-```
-caseFiles 1, 2, 3
-```
-
-or
-
-```
-caseFiles | c: title=Sample*, userId=1
-```
-
-
 ### [ ] Updates
 
 ```
