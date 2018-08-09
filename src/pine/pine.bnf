@@ -1,5 +1,5 @@
 OPERATIONS := OPERATION <whitespace*> (<"|"?> <whitespace*> OPERATION <whitespace*>)*
-OPERATION  := SELECT | CONDITION | LIMIT | GROUP
+OPERATION  := SELECT | CONDITION | LIMIT | FUNCTION | GROUP
 
 SELECT          := specific | invert-specific
 specific        := <#"s(el(ect)?)?:"> <whitespace+> columns
@@ -14,7 +14,9 @@ filter          := implicit-filter | explicit-filter
 implicit-filter := string
 explicit-filter := string <whitespace*> <"="> <whitespace*> string
 
-GROUP           := #"(count|min|max)" <":"> <whitespace+> columns
+FUNCTION        := #"(count|min|max)" <":"> <whitespace+> columns
+
+GROUP           := <#"g(roup)?:"> <whitespace+> columns
 
 LIMIT           := <#"l(imit)?:"> <whitespace+> number
 

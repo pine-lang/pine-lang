@@ -51,12 +51,16 @@
                  [:CONDITION [:entity [:string table]] ]                       {:type "condition" :entity (keyword table) :filters []}
                  [:CONDITION [:entity [:string table]] [:filters & filters]]   {:type "condition" :entity (keyword table) :filters (map parsed-filter->indexed-filter filters)}
                  ;; select
-                 [:SELECT [:specific [:columns & columns]]]                                {:type "select" :columns (parsed-cols->indexed-cols columns)}
-                 [:SELECT [:invert-specific [:columns & columns]]]                              (throw (Exception. "Unselect key word is not supported yet."))
+                 [:SELECT [:specific [:columns & columns]]]                    {:type "select" :columns (parsed-cols->indexed-cols columns)}
+                 [:SELECT [:invert-specific [:columns & columns]]]             (throw (Exception. "Unselect key word is not supported yet."))
                  ;; limit
                  [:LIMIT [:number number]]                                     {:type "limit" :count (Integer. number)}
+                 ;; function
+                 [:FUNCTION fn-name [:columns [:column [:string column]]]]     {:type "function" :fn-name fn-name :columns [column]}
+
                  ;; group
-                 [:GROUP fn-name [:columns [:column [:string column]]]]                          {:type "group" :fn-name fn-name :columns [column]}
+                 [:GROUP [:columns [:column [:string column]]]]                {:type "group" :columns [column]}
+
                  ;; not specified
                  :else (throw (Exception. (format "Can't convert format of operation: %s" op)))
                  )
@@ -179,18 +183,21 @@
   (let [entity (op :entity)]
     [(format "%s.*" (table-alias entity))]))
 
-(defn operations->group-columns
+(defn operations->function-columns
   "Get the columns for the last 'condition' operation or the select operation"
   [ops]
-  (let [[condition-op group-op] (->> ops
+  (let [[condition-op function-op] (->> ops
                                     (filter (fn [op] (or (operation-type? "condition" op)
-                                                         (operation-type? "group" op)
+                                                         (operation-type? "function" op)
                                                          )))
                                     (partition 2 1)
-                                    (last)
+                                    (filter (fn [ops] (and (operation-type? "condition" (first ops))
+                                                           (operation-type? "function" (second ops))
+                                                           )))
+                                    last
                                 )
-        fn-name (group-op :fn-name)
-        columns (group-op :columns)
+        fn-name (function-op :fn-name)
+        columns (function-op :columns)
         entity (:entity condition-op)
         a      (table-alias entity)
 
@@ -201,31 +208,72 @@
 (defn operations->select-specific
   "Get the columns specified using the 'select:' keyword"
   [schema ops]
-  (let [pairs (partition 2 1 ops)]
-    (->> pairs
-         (filter (fn [pair] (and (operation-type? "condition" (first pair))
-                                 (operation-type? "select" (second pair)))))
-         (map (fn [pair] (let [
-                               entity (:entity (first pair))
-                               a      (table-alias entity)
-                               columns (:columns (second pair))]
-                           (map (fn [c] (format "%s.%s" a c)) columns)
-                           )))
-         (apply concat)
-         )))
+  (->> ops
+       (filter (fn [op] (or (operation-type? "condition" op)
+                            (operation-type? "select" op)
+                            )))
+       (partition 2 1)
+       (filter (fn [[a b]] (and (operation-type? "condition" a)
+                               (operation-type? "select" b))))
+       (map (fn [pair] (let [
+                             entity (:entity (first pair))
+                             a      (table-alias entity)
+                             columns (:columns (second pair))]
+                         (map (fn [c] (format "%s.%s" a c)) columns)
+                         )))
+       (apply concat)
+       )
+  )
 
 (defn operations->select-columns
   "Get the columns for the last 'condition' operation or the select operation"
   [schema operations]
-  (let [last-op          (last operations)
-        specific-columns (operations->select-specific schema operations)
-        extra-columns     (cond (operation-type? "condition" last-op) (operation->select-all schema last-op)
-                                (operation-type? "group" last-op) (operations->group-columns operations)
-                                :else [])
-        ]
-    (concat specific-columns extra-columns)
+  (let [specific-columns (operations->select-specific schema operations)
+        condition-ops    (filter (partial operation-type? "condition") operations)
+        function-columns (let [pairs        (->> operations
+                                                 (filter (fn [op] (or (operation-type? "condition" op)
+                                                                      (operation-type? "function" op))))
+                                                 (partition 2 1)
+                                                 (filter (fn [[a b]] (and (operation-type? "condition" a)
+                                                                          (operation-type? "function" b)))))
+                               relevant-ops (cond (empty? pairs) []
+                                                  :else (->> pairs
+                                                             ((fn [pairs]
+                                                                (concat
+                                                                 (->> pairs
+                                                                      (map first))
+                                                                 [(second (last pairs))]
+                                                                 )))))]
+                           (cond (empty? relevant-ops) []
+                                 :else (operations->function-columns relevant-ops)))
+        all-columns      (->> operations
+                              (filter (fn [op] (or (operation-type? "select" op)
+                                                   (operation-type? "condition" op))))
+
+                              last
+                              ((fn [op] (cond (operation-type? "condition" op) (operation->select-all schema op)
+                                              :else [])))
+                              )]
+
+    ;; only show all the columns if function columns are not specified
+    ;;
+    ;; | specific columns | function columns | SELECTED            |
+    ;; | x                | x                | specific + function |
+    ;; | x                | o                | specific + all      |
+    ;; | o                | x                | function            |
+    ;; | o                | o                | all                 |
+
+    (cond (and (not-empty specific-columns) (not-empty function-columns)) (concat specific-columns function-columns)
+          (and (not-empty specific-columns) (empty? function-columns))    (concat specific-columns all-columns)
+          (and (empty? specific-columns)    (not-empty function-columns)) function-columns
+          (and (empty? specific-columns)    (empty? function-columns))    all-columns
+          :else                                                           ["?"]
+          )
     )
   )
+
+;; (pine/$prepare fixtures/schema "caseFiles 1 | l: 1 | count: status | s: id" )
+
 
 (defn operations->join
   "Get the join from 2 operations"

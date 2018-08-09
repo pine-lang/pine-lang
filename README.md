@@ -119,10 +119,35 @@ SELECT c.id, u.email
    AND u.name = "John"
 ```
 
+### [x] Functions on a column
+
+```
+customers | count: id
+```
+
+evaluates to:
+
+```
+SELECT count(c.id)
+  FROM customers AS c
+```
+
 ### [x] Group on a column
 
 ```
-customers name=dummy* | s: status | count: status
+customers | count: id | group: status
+```
+
+evaluates to:
+
+```
+  SELECT count(c.id)
+    FROM customers AS c
+GROUP BY c.status
+```
+
+```
+customers name=dummy* | s: status | count: status | group: status
 ```
 
 should evaluate something like:

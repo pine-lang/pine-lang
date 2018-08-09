@@ -15,6 +15,15 @@
       (ast/str->operations "customers 1")
       ))))
 
+(deftest str->operations:max-function
+  (testing "Create operations for a max function"
+    (is
+     (=
+      [{:type "condition" :entity :customers :filters []}
+       {:type "function" :fn-name "max" :columns ["created"]}]
+      (ast/str->operations "customers | max: created")
+      ))))
+
 (deftest str->operations:one-operation-explicit-id
   (testing "Create operations for a query explicitly specifying the id"
     (is
@@ -52,6 +61,17 @@
       ))))
 
 ;; Opertations to AST
+
+(deftest operations->function-columns
+  (testing "Create a where condition from operations"
+    (is
+     (=
+      ["max(c.created)"]
+      (ast/operations->function-columns
+       [{:type "condition" :entity :customers :filters []}
+        {:type "function" :fn-name "max" :columns ["created"]}]
+       )
+      ))))
 
 (deftest operation->where:customer-id-is-1
   (testing "Create a where condition from an operation"
