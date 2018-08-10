@@ -112,8 +112,8 @@
     (is
      (=
       {
-       :query "SELECT u.id, u.fullName, cf.* FROM users AS u JOIN caseFiles AS cf ON (cf.userId = u.id) WHERE 1 AND 1 LIMIT 50"
+       :query "SELECT u.id, u.fullName, cf.* FROM users AS u JOIN caseFiles AS cf ON (cf.userId = u.id) WHERE 1 AND 1 ORDER BY cf.id DESC LIMIT 50"
        :params []
        }
-      (pine-prepare fixtures/schema "users | select: id, fullName | caseFiles")
+      (pine-prepare fixtures/schema "users | select: id, fullName | caseFiles | o: id")
       ))))

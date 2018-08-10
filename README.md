@@ -167,6 +167,42 @@ SELECT c.status, count(c.status)
 caseFiles 1 | c: title=Sample*
 ```
 
+### [x] Order by a column
+
+```
+caseFiles | order: id
+```
+
+evaluates to:
+
+```
+SELECT cf.*
+FROM caseFiles AS cf
+ORDER BY cf.id DESC
+```
+
+For ascending order:
+
+```
+caseFiles | order: +id
+```
+
+evaluates to:
+
+```
+SELECT cf.*
+FROM caseFiles AS cf
+ORDER BY cf.id ASC
+```
+
+Concise form can also be used:
+
+```
+caseFiles | o: id
+```
+
+Multiple columns are not supported yet.
+
 ### [ ] Updates
 
 ```

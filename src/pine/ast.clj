@@ -61,6 +61,9 @@
                  ;; group
                  [:GROUP [:columns [:column [:string column]]]]                {:type "group" :columns [column]}
 
+                 ;; order
+                 [:ORDER "+" [:column [:string column]]]                       {:type "order" :direction "ascending"  :column column}
+                 [:ORDER [:column [:string column]]]                           {:type "order" :direction "descending" :column column}
                  ;; not specified
                  :else (throw (Exception. (format "Can't convert format of operation: %s" op)))
                  )
@@ -366,7 +369,32 @@
   )
 
 (defn operations->group
-  "Get the columns for the last 'condition' operation or the select operation"
+  "Create the ORDER BY SQL statement"
+  [ops]
+  (let [[condition-op order-op] (->> ops
+                                     (filter (fn [op] (or (operation-type? "condition" op)
+                                                          (operation-type? "order" op)
+                                                          )))
+                                     (partition 2 1)
+                                     (filter (fn [ops] (and (operation-type? "condition" (first ops))
+                                                          (operation-type? "order" (second ops))
+                                                          )))
+                                     (last)
+                                     )
+        ]
+    (cond (and condition-op order-op) (let [direction (order-op :direction)
+                                            column (order-op :column)
+                                            entity (:entity condition-op)
+                                            a      (table-alias entity)
+                                         ]
+                                     (format "ORDER BY %s.%s %s" a column (cond (= direction "ascending") "ASC" :else "DESC"))
+                                     )
+          :else nil
+          )
+    ))
+
+(defn operations->group
+  "Create the GROUP BY SQL statement"
   [ops]
   (let [[condition-op group-op] (->> ops
                                      (filter (fn [op] (or (operation-type? "condition" op)
@@ -402,6 +430,7 @@
         table (operations->primary-table schema condition-ops)
         joins (operations->joins schema condition-ops)
         where (operations->where schema condition-ops)
+        order (operations->order ops)
         group (operations->group ops)
         limit (operations->limit ops)
         ]
