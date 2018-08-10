@@ -368,7 +368,7 @@
        )
   )
 
-(defn operations->group
+(defn operations->order
   "Create the ORDER BY SQL statement"
   [ops]
   (let [[condition-op order-op] (->> ops
