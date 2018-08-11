@@ -110,6 +110,7 @@
   (let [select (s/join ", " (ast :select))
         [table alias] (ast :from)
         where (ast :where)
+        order (ast :order)
         group (ast :group)
         limit (ast :limit)
         joins (ast :joins)
@@ -123,6 +124,7 @@
                   "FROM %s AS %s"
                   (cond join? "%s" :else nil)
                   "WHERE %s"
+                  order
                   group
                   limit
                   ]
@@ -439,8 +441,11 @@
      :from [table (table-alias table)]
      :joins joins
      :where where
+     :order order
      :group group
      :limit limit
      }
     )
   )
+
+
