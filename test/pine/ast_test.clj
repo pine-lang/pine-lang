@@ -198,6 +198,7 @@
                             ]
                :params     ["1" "john" "test"]
                }
+       :order nil
        :group nil
        :limit "LIMIT 50"
        }
