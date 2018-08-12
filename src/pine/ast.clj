@@ -1,28 +1,32 @@
 (ns pine.ast
   (:require [clojure.string :as s]
             [pine.db :as db]
+            [pine.utils :as utils]
             [instaparse.core :as insta]
             [clojure.core.match :refer [match]]
-            [pine.fixtures :as fixtures]))
+            ))
 
-(def parse (let [dir (System/getProperty "user.dir")
-                  file (format "%s/src/pine/pine.bnf" dir)
-                 grammar (slurp file)]
-             (insta/parser grammar)))
+;; Filter operations
 
-;; (str->operations "users * | caseFiles *")
+(defn operation-type?
+  "Check if the operation has one of the specified types"
+  ([ts]
+   (partial operation-type? ts))
+  ([ts op]
+   (letfn [(t? [t op] (= (:type op) t))]
+     (some true?
+           (map (utils/flip t? op) ts))
+
+     )))
+
 
 ;; Parse
 
-(defn operation-type?
-  "Check the type of the operation"
-  [type operation]
-  (= (:type operation) type))
+(def parse (let [dir (System/getProperty "user.dir")
 
-(defn filter-operations
-  "Filter out the type of operations where type can be: select, condition"
-  [name ops]
-  (filter (partial operation-type? name) ops))
+                  file (format "%s/src/pine/pine.bnf" dir)
+                 grammar (slurp file)]
+             (insta/parser grammar)))
 
 (defn str->operations
   "Create a filter AST from the raw query part"
@@ -192,15 +196,12 @@
   "Get the columns for the last 'condition' operation or the select operation"
   [ops]
   (let [[condition-op function-op] (->> ops
-                                    (filter (fn [op] (or (operation-type? "condition" op)
-                                                         (operation-type? "function" op)
-                                                         )))
-                                    (partition 2 1)
-                                    (filter (fn [ops] (and (operation-type? "condition" (first ops))
-                                                           (operation-type? "function" (second ops))
-                                                           )))
-                                    last
-                                )
+                                        (filter (operation-type? ["condition", "function"]))
+                                        (partition 2 1)
+                                        (filter (fn [[a b]] (and (operation-type? ["condition"] a)
+                                                                 (operation-type? ["function"] b)
+                                                               )))
+                                        last)
         fn-name (function-op :fn-name)
         columns (function-op :columns)
         entity (:entity condition-op)
@@ -214,12 +215,10 @@
   "Get the columns specified using the 'select:' keyword"
   [schema ops]
   (->> ops
-       (filter (fn [op] (or (operation-type? "condition" op)
-                            (operation-type? "select" op)
-                            )))
+       (filter (operation-type? ["condition", "select"]))
        (partition 2 1)
-       (filter (fn [[a b]] (and (operation-type? "condition" a)
-                               (operation-type? "select" b))))
+       (filter (fn [[a b]] (and (operation-type? ["condition"] a)
+                               (operation-type? ["select"] b))))
        (map (fn [pair] (let [
                              entity (:entity (first pair))
                              a      (table-alias entity)
@@ -234,13 +233,12 @@
   "Get the columns for the last 'condition' operation or the select operation"
   [schema operations]
   (let [specific-columns (operations->select-specific schema operations)
-        condition-ops    (filter (partial operation-type? "condition") operations)
+        condition-ops    (filter (operation-type? ["condition"]) operations)
         function-columns (let [pairs        (->> operations
-                                                 (filter (fn [op] (or (operation-type? "condition" op)
-                                                                      (operation-type? "function" op))))
+                                                 (filter (operation-type? ["condition", "function"]))
                                                  (partition 2 1)
-                                                 (filter (fn [[a b]] (and (operation-type? "condition" a)
-                                                                          (operation-type? "function" b)))))
+                                                 (filter (fn [[a b]] (and (operation-type? ["condition"] a)
+                                                                          (operation-type? ["function"] b)))))
                                relevant-ops (cond (empty? pairs) []
                                                   :else (->> pairs
                                                              ((fn [pairs]
@@ -252,11 +250,9 @@
                            (cond (empty? relevant-ops) []
                                  :else (operations->function-columns relevant-ops)))
         all-columns      (->> operations
-                              (filter (fn [op] (or (operation-type? "select" op)
-                                                   (operation-type? "condition" op))))
-
+                              (filter (operation-type? ["select", "condition"]))
                               last
-                              ((fn [op] (cond (operation-type? "condition" op) (operation->select-all schema op)
+                              ((fn [op] (cond (operation-type? ["condition"] op) (operation->select-all schema op)
                                               :else [])))
                               )]
 
@@ -364,7 +360,7 @@
   "Get the joins from the operations"
   [ops]
   (->> ops
-       (filter-operations "limit")
+       (filter (operation-type? ["limit"]))
        last
        ((fn [op] (format "LIMIT %s" (or (:count op) 50))))
        )
@@ -374,12 +370,10 @@
   "Create the ORDER BY SQL statement"
   [ops]
   (let [[condition-op order-op] (->> ops
-                                     (filter (fn [op] (or (operation-type? "condition" op)
-                                                          (operation-type? "order" op)
-                                                          )))
+                                     (filter (operation-type? ["condition", "order"]))
                                      (partition 2 1)
-                                     (filter (fn [ops] (and (operation-type? "condition" (first ops))
-                                                          (operation-type? "order" (second ops))
+                                     (filter (fn [ops] (and (operation-type? ["condition"] (first ops))
+                                                            (operation-type? ["order"] (second ops))
                                                           )))
                                      (last)
                                      )
@@ -399,12 +393,10 @@
   "Create the GROUP BY SQL statement"
   [ops]
   (let [[condition-op group-op] (->> ops
-                                     (filter (fn [op] (or (operation-type? "condition" op)
-                                                          (operation-type? "group" op)
-                                                          )))
+                                     (filter (operation-type? ["condition", "group"]))
                                      (partition 2 1)
-                                     (filter (fn [ops] (and (operation-type? "condition" (first ops))
-                                                          (operation-type? "group" (second ops))
+                                     (filter (fn [ops] (and (operation-type? ["condition"] (first ops))
+                                                            (operation-type? ["group"] (second ops))
                                                           )))
                                      (last)
                                      )
@@ -428,7 +420,7 @@
   "operations to ast"
   [schema ops]
   (let [columns (operations->select-columns schema ops)
-        condition-ops (filter-operations "condition" ops)
+        condition-ops (filter (operation-type? ["condition"]) ops)
         table (operations->primary-table schema condition-ops)
         joins (operations->joins schema condition-ops)
         where (operations->where schema condition-ops)
@@ -447,5 +439,3 @@
      }
     )
   )
-
-
