@@ -153,6 +153,28 @@ caseFiles | o: id
 
 Multiple columns are not supported yet.
 
+### [x] Meta function: references
+
+```
+customers | references?
+```
+
+to
+
+```
+SHOW CREATE TABLE customers
+```
+
+### [ ] Meta function - getting inverse relationships
+
+Also, need to find inverse relationships i.e.
+
+```
+customers | references?
+```
+
+should find all the tables and the references that point to `customers`
+
 ### [ ] Support multiple database schemas
 For now, the API runs with one predefined database name.
 

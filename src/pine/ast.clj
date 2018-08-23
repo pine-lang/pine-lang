@@ -68,6 +68,10 @@
                  ;; order
                  [:ORDER "+" [:column [:string column]]]                       {:type "order" :direction "ascending"  :column column}
                  [:ORDER [:column [:string column]]]                           {:type "order" :direction "descending" :column column}
+
+                 ;; meta
+                 [:META "references"]                                          {:type "meta" :fn-name "references"}
+
                  ;; not specified
                  :else (throw (Exception. (format "Can't convert format of operation: %s" op)))
                  )
@@ -108,7 +112,7 @@
        )
   )
 
-(defn ast->sql-and-params
+(defn ast->sql-and-params-helper
   "Create an sql query"
   [ast]
   (let [select (s/join ", " (ast :select))
@@ -145,6 +149,13 @@
             )
      parameters]
     ))
+
+(defn ast->sql-and-params
+  "Create an sql query from the ast."
+  [ast]
+  (let [meta (:meta ast)]
+    (cond meta [meta []]
+          :else (ast->sql-and-params-helper ast))))
 
 ;; -----------------
 ;; DB operations
@@ -414,6 +425,32 @@
           )
     ))
 
+(defn operations->meta
+  "Execute the command related to the meta function"
+  [ops]
+  (cond (operation-type? ["meta"] (last ops)) (let [[condition-op meta-op]
+                                                    (->> ops
+                                                                                  (filter (operation-type? ["condition", "meta"]))
+                                                                                  (partition 2 1)
+                                                                                  (filter (fn [ops] (and (operation-type? ["condition"] (first ops))
+                                                                                                         (operation-type? ["meta"] (second ops))
+                                                                                                         )))
+                                                                                  (last)
+                                                                                  )
+                                                      ]
+                                                  (cond (and condition-op meta-op) (let [
+                                                                                          fn-name (meta-op :fn-name)
+                                                                                          entity (:entity condition-op)
+                                                                                          ]
+                                                                                      (format "show create table %s" (name entity))
+                                                                                      )
+                                                        :else nil
+                                                        )
+                                                  )
+        :else nil
+        )
+  )
+
 ;; (str->operations "users * | l: 1 | count: test")
 
 (defn operations->ast
@@ -427,6 +464,7 @@
         order (operations->order ops)
         group (operations->group ops)
         limit (operations->limit ops)
+        meta  (operations->meta ops)
         ]
     {
      :select columns
@@ -436,6 +474,7 @@
      :order order
      :group group
      :limit limit
+     :meta  meta
      }
     )
   )
