@@ -66,7 +66,7 @@
   (testing "Create a where condition from operations"
     (is
      (=
-      ["max(c.created)"]
+      ["max(customers.created)"]
       (ast/operations->function-columns
        [{:type "condition" :entity :customers :filters []}
         {:type "function" :fn-name "max" :columns ["created"]}]
@@ -77,19 +77,22 @@
   (testing "Create a where condition from an operation"
     (is
      (=
-      { :conditions "c.id = ?" :params ["1"] }
+      { :conditions "customers.id = ?" :params ["1"] }
       (ast/operation->where
        fixtures/schema
-       {:entity :customers, :filters [[ "id" "1" ]]})
+       true
+       {:entity :customers, :filters [[ "id" "1" ]]}
+       )
       ))))
 
 (deftest operation->where:customer-name-is-acme
   (testing "Create a where condition from an operation"
     (is
      (=
-      { :conditions "c.name = ?" :params ["acme"] }
+      { :conditions "customers.name = ?" :params ["acme"] }
       (ast/operation->where
        fixtures/schema
+       true
        {:entity :customers, :filters [[ "name" "acme" ]]})
       ))))
 
@@ -97,9 +100,10 @@
   (testing "Create a where condition from an operation"
     (is
      (=
-      { :conditions "c.name LIKE ?" :params ["acme%"] }
+      { :conditions "customers.name LIKE ?" :params ["acme%"] }
       (ast/operation->where
        fixtures/schema
+       true
        {:entity :customers, :filters [[ "name" "acme*" ]]})
       ))))
 
@@ -108,8 +112,8 @@
     (is
      (=
       {
-       :conditions ["c.name = ?"
-                    "u.id = ?"]
+       :conditions ["customers.name = ?"
+                    "users.id = ?"]
        :params ["acme"
                 "1"]
        }
@@ -119,15 +123,15 @@
         {:entity :customers, :filters [[ "name" "acme" ]]}
         {:entity :users    , :filters [[ "id" "1" ]]}
         ]
+       true
        )
-      
       ))))
 
 (deftest operations->join:entity-owns-another-entity
   (testing "Create operations for a query"
     (is
      (=
-      [:documents "d" ["d.caseFileId" "cf.id"]]
+      [:documents "documents" ["documents.caseFileId" "caseFiles.id"]]
       (ast/operations->join
        fixtures/schema
        {:entity :caseFiles, :filters [[ "id" "1" ]]}
@@ -138,7 +142,7 @@
   (testing "Create operations for a query"
     (is
      (=
-      [:caseFiles "cf" ["cf.id" "d.caseFileId"]]
+      [:caseFiles "caseFiles" ["caseFiles.id" "documents.caseFileId"]]
       (ast/operations->join
        fixtures/schema
        {:entity :documents, :filters [[ "id" "2" ]]}
@@ -156,8 +160,8 @@
         {:entity :caseFiles, :filters [[ "id" "2" ]]}
         {:entity :documents, :filters [[ "name" "test" ]]}
         ])
-      [:caseFiles "cf" ["cf.customerId" "c.id"]
-       :documents "d" ["d.caseFileId" "cf.id"]]
+      [:caseFiles "caseFiles" ["caseFiles.customerId" "customers.id"]
+       :documents "documents" ["documents.caseFileId" "caseFiles.id"]]
       ))))
 
 (deftest operations->joins:no-filter
@@ -169,7 +173,7 @@
        [{:type "condition" :entity :customers, :filters []}
         {:type "condition" :entity :caseFiles, :filters []}
         ])
-      [:caseFiles "cf" ["cf.customerId" "c.id"]]
+      [:caseFiles "caseFiles" ["caseFiles.customerId" "customers.id"]]
       ))))
 
 (deftest operations->group:no-filter
@@ -187,20 +191,23 @@
     (is
      (=
       {
-       :select ["d.*"]
-       :from [:customers "c"]
-       :joins [:caseFiles "cf" ["cf.customerId" "c.id"]
-               :documents "d" ["d.caseFileId" "cf.id"]]
+       :select ["documents.*"]
+       :from [:customers "customers"]
+       :joins [:caseFiles "caseFiles" ["caseFiles.customerId" "customers.id"]
+               :documents "documents" ["documents.caseFileId" "caseFiles.id"]]
        :where {
-               :conditions ["c.id = ?"
-                            "cf.name = ?"
-                            "d.name = ?"
+               :conditions ["customers.id = ?"
+                            "caseFiles.name = ?"
+                            "documents.name = ?"
+
                             ]
                :params     ["1" "john" "test"]
                }
        :order nil
        :group nil
        :limit "LIMIT 50"
+       :meta nil
+       :delete nil
        }
       (ast/operations->ast
        fixtures/schema

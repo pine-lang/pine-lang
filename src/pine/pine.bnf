@@ -1,5 +1,5 @@
 OPERATIONS := OPERATION <whitespace*> (<"|"?> <whitespace*> OPERATION <whitespace*>)*
-OPERATION  := SELECT | CONDITION | LIMIT | FUNCTION | GROUP | ORDER | META
+OPERATION  := SELECT | CONDITION | LIMIT | FUNCTION | GROUP | ORDER | META | DELETE
 
 SELECT          := specific | invert-specific
 specific        := <#"s(el(ect)?)?:"> <whitespace+> columns
@@ -23,6 +23,8 @@ GROUP           := <#"g(roup)?:"> <whitespace+> columns
 LIMIT           := <#"l(imit)?:"> <whitespace+> number
 
 META            := #"(references)" <"?">
+
+DELETE          := <#"delete!">
 
 number     := #"[0-9]+"
 string     := #"[A-Za-z0-9-_*.]+"

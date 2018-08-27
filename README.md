@@ -214,7 +214,7 @@ In case we find multiple paths with an equal distance, then I need to find a pri
 caseFiles 1 | set! title=new_title
 ```
 
-### [ ] Deletes
+### [x] Deletes
 
 ```
 caseFiles 1 | delete!

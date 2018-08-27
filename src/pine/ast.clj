@@ -72,6 +72,9 @@
                  ;; meta
                  [:META "references"]                                          {:type "meta" :fn-name "references"}
 
+                 ;; meta
+                 [:DELETE]                                                     {:type "delete"}
+
                  ;; not specified
                  :else (throw (Exception. (format "Can't convert format of operation: %s" op)))
                  )
@@ -115,8 +118,11 @@
 (defn ast->sql-and-params-helper
   "Create an sql query"
   [ast]
-  (let [select (s/join ", " (ast :select))
+  (let [select-columns (s/join ", " (ast :select))
         [table alias] (ast :from)
+        select (str "SELECT %s FROM %s AS %s")
+        delete-table (ast :delete)
+        delete (str "DELETE FROM %s")
         where (ast :where)
         order (ast :order)
         group (ast :group)
@@ -128,8 +134,7 @@
         ]
 
     [(apply format
-            (->> ["SELECT %s"
-                  "FROM %s AS %s"
+            (->> [(cond delete-table delete :else select)
                   (cond join? "%s" :else nil)
                   "WHERE %s"
                   order
@@ -140,10 +145,11 @@
                  (s/join " ")
                  )
 
-            (->> [select                                        ;; select
-                  (name table) alias                            ;; from
-                  (cond join? (ast-joins->sql joins) :else nil) ;; joins
-                  (s/join " AND " conditions)                   ;; where
+            (->> [(cond delete-table nil :else select-columns)    ;; select columns
+                  (name table)                                    ;; table
+                  (cond delete-table nil :else alias)             ;; alias
+                  (cond join? (ast-joins->sql joins) :else nil)   ;; joins
+                  (s/join " AND " conditions)                     ;; where
                   ]
                  (remove nil?))
             )
@@ -165,11 +171,21 @@
   "Alias for a table. At some point, fix this so that it also works for snake case
   strings."
   [table]
-  (let [t (name table)]
-    (str
-     (str (first t))
-     (s/lower-case (or (apply str (re-seq #"[A-Z]" t)) ""))))
+  ;; Use the table name as the alias
+  (format "%s" (name table))
+  ;; Create an alias from the camel case name
+  ;; (let [t (name table)]
+  ;;   (str
+  ;;    (str (first t))
+  ;;    (s/lower-case (or (apply str (re-seq #"[A-Z]" t)) ""))))
   )
+
+(defn qualify
+  "Qualify a column with the alias: (qualify \"caseFileId\" :with \"d\") => \"d.caseFileId\""
+  [column _ alias]
+  (format "%s.%s" alias column)
+  )
+
 
 (defn primary-key
   "Get the qualified primary key for the table. This is a naive function that
@@ -178,12 +194,6 @@
   (let [t (name table)]
     (str (table-alias t) ".id")
     ))
-
-(defn qualify
-  "Qualify a column with the alias: (qualify \"caseFileId\" :with \"d\") => \"d.caseFileId\""
-  [column _ alias]
-  (format "%s.%s" alias column)
-  )
 
 ;; -----------------
 ;; Operations to AST
@@ -323,20 +333,20 @@
 
 (defn filter->where-condition
   "Convert the filter part of an operation to a where sql"
-  [entity [column value]]
-  (let [a      (table-alias entity)
+  [entity qualify? [column value]]
+  (let [col (cond qualify? (qualify column :with (name entity)) :else column)
         operator (cond (re-find #"\*" value) "LIKE" :else "=")
         val      (s/replace value "*" "%")]
-    [(format "%s.%s %s ?" a column operator) val])
+    [(format "%s %s ?" col operator) val])
   )
 
 (defn operation->where
   "Get the where condition for an operation."
-  [schema operation]
+  [schema qualify? operation]
   (let [fs (:filters operation)]
     (cond (empty? fs) { :conditions "1" :params nil}
           :else       (->> fs
-                           (map (partial filter->where-condition (:entity operation)))
+                           (map (partial filter->where-condition (:entity operation) qualify?))
                            ((fn [where-conditions] { :conditions (->> where-conditions
                                                          (map first)
                                                          (s/join " AND ")
@@ -350,9 +360,9 @@
 
 (defn operations->where
   "Get the joins from the operations"
-  [schema ops]
+  [schema ops qualify?]
   (let [
-        wheres (map (partial operation->where schema) ops)
+        wheres (map (partial operation->where schema qualify?) ops)
         ]
     {
      :conditions (->> wheres
@@ -370,11 +380,16 @@
 (defn operations->limit
   "Get the joins from the operations"
   [ops]
-  (->> ops
-       (filter (operation-type? ["limit"]))
-       last
-       ((fn [op] (format "LIMIT %s" (or (:count op) 50))))
-       )
+  (let [delete? (->> ops
+                     (filter (operation-type? ["delete"]))
+                     count
+                     (#(> %1 0))
+                     )]
+    (->> ops
+         (filter (operation-type? ["limit"]))
+         last
+         ((fn [op] (format "LIMIT %s" (or (:count op) (cond delete? 1 :else 50)))))
+         ))
   )
 
 (defn operations->order
@@ -451,6 +466,28 @@
         )
   )
 
+(defn operations->delete
+  "Execute the command related to the meta function"
+  [ops]
+  (cond (operation-type? ["delete"] (last ops)) (let [[condition-op delete-op]
+                                                    (->> ops
+                                                                                  (filter (operation-type? ["condition", "delete"]))
+                                                                                  (partition 2 1)
+                                                                                  (filter (fn [ops] (and (operation-type? ["condition"] (first ops))
+                                                                                                         (operation-type? ["delete"] (second ops))
+                                                                                                         )))
+                                                                                  (last)
+                                                                                  )
+                                                      ]
+                                                  (cond (and condition-op delete-op) (let [entity (:entity condition-op)]
+                                                                                       (name entity))
+                                                        :else nil
+                                                        )
+                                                  )
+        :else nil
+        )
+  )
+
 ;; (str->operations "users * | l: 1 | count: test")
 
 (defn operations->ast
@@ -459,8 +496,9 @@
   (let [columns (operations->select-columns schema ops)
         condition-ops (filter (operation-type? ["condition"]) ops)
         table (operations->primary-table schema condition-ops)
+        delete (operations->delete ops)
         joins (operations->joins schema condition-ops)
-        where (operations->where schema condition-ops)
+        where (operations->where schema condition-ops (cond delete nil :else true))
         order (operations->order ops)
         group (operations->group ops)
         limit (operations->limit ops)
@@ -475,6 +513,7 @@
      :group group
      :limit limit
      :meta  meta
+     :delete delete   ; if 'delete' exists, 'select' will be ignored
      }
     )
   )
