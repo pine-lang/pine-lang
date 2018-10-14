@@ -78,11 +78,10 @@
     (is
      (=
       { :conditions "customers.id = ?" :params ["1"] }
-      (ast/operation->where
-       fixtures/schema
-       true
-       {:entity :customers, :filters [[ "id" "1" ]]}
-       )
+      (->> (ast/str->operations "customers 1")
+           first
+           (ast/operation->where fixtures/schema true)
+           )
       ))))
 
 (deftest operation->where:customer-name-is-acme
@@ -90,10 +89,9 @@
     (is
      (=
       { :conditions "customers.name = ?" :params ["acme"] }
-      (ast/operation->where
-       fixtures/schema
-       true
-       {:entity :customers, :filters [[ "name" "acme" ]]})
+      (->> (ast/str->operations "customers name=acme")
+           first
+           (ast/operation->where fixtures/schema true))
       ))))
 
 (deftest operation->where:customer-name-is-acme-something
@@ -101,10 +99,9 @@
     (is
      (=
       { :conditions "customers.name LIKE ?" :params ["acme%"] }
-      (ast/operation->where
-       fixtures/schema
-       true
-       {:entity :customers, :filters [[ "name" "acme*" ]]})
+      (->> (ast/str->operations "customers name=acme*")
+           first
+           (ast/operation->where fixtures/schema true))
       ))))
 
 (deftest operations->where
@@ -117,14 +114,10 @@
        :params ["acme"
                 "1"]
        }
-      (ast/operations->where
-       fixtures/schema
-       [
-        {:entity :customers, :filters [[ "name" "acme" ]]}
-        {:entity :users    , :filters [[ "id" "1" ]]}
-        ]
-       true
-       )
+      (->> "customers name=acme | users 1"
+           ast/str->operations
+           (ast/operations->where fixtures/schema true)
+           )
       ))))
 
 (deftest operations->join:entity-owns-another-entity
@@ -168,12 +161,12 @@
   (testing "Create operations for a query"
     (is
      (=
+      [:caseFiles "caseFiles" ["caseFiles.customerId" "customers.id"]]
       (ast/operations->joins
        fixtures/schema
        [{:type "condition" :entity :customers, :filters []}
         {:type "condition" :entity :caseFiles, :filters []}
         ])
-      [:caseFiles "caseFiles" ["caseFiles.customerId" "customers.id"]]
       ))))
 
 (deftest operations->group:no-filter

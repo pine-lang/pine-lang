@@ -360,7 +360,7 @@
 
 (defn operations->where
   "Get the joins from the operations"
-  [schema ops qualify?]
+  [schema qualify? ops]
   (let [
         wheres (map (partial operation->where schema qualify?) ops)
         ]
@@ -498,7 +498,7 @@
         table (operations->primary-table schema condition-ops)
         delete (operations->delete ops)
         joins (operations->joins schema condition-ops)
-        where (operations->where schema condition-ops (cond delete nil :else true))
+        where (operations->where schema (cond delete nil :else true) condition-ops)
         order (operations->order ops)
         group (operations->group ops)
         limit (operations->limit ops)
