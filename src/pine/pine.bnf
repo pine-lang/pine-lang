@@ -27,5 +27,5 @@ META            := #"(references)" <"?">
 DELETE          := <#"delete!">
 
 number     := #"[0-9]+"
-string     := #"[A-Za-z0-9-_*.]+"
+string     := #"[A-Za-z0-9-_*.@]+"
 whitespace := #"\s+"
