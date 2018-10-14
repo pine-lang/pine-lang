@@ -56,23 +56,51 @@
        ((keyword "create table"))
        ))
 
-(defn schema-
+;; (defn change-db
+;;   "Change the db being used"
+;;   [db-config db-name]
+;;   (->> db-name
+;;        (format "use %s")
+;;        (j/execute! db-config)))
+
+(defn tables
+  "Get all the tables for a schema"
+  [db-config]
+  (->> "show tables"
+       (exec db-config)
+       )
+  )
+
+(defn schema-db
   "Get the schema for the database. This function gets the schema for every table
   and can be very slow. Should be called once and the schema should be passed
   around."
-  [db-config db-name ]
-  (prn (format "Loading schema definition for db: %s." db-name))
-  (let [column-name (format "tables_in_%s" db-name)
+  [db-config]
+  (let [db-name (:name db-config)
+        column-name (format "tables_in_%s" db-name)
         column      (keyword column-name)]
-    (->> "show tables"
-         (exec db-config)
-         (map column)
-         (map (fn [c] {(keyword c) (table-definition db-config c)}))
-         (apply merge)
-    )
+    (prn (format "Loading schema definition for db: %s." db-name))
+    ;; { (keyword db-name)
+     (->> "show tables"
+          (exec db-config)
+          (map column)
+          (map (fn [c] {(keyword c) (table-definition db-config c)}))
+          (apply merge)
+          )
+     ;; }
   ))
 
-(def schema (memoize schema-))
+(defn schema-dbs
+  "Get the schemas for all the databases."
+  [db-config]
+  (->> "show databases"
+       (exec db-config)
+       (map :database)
+       )
+  )
+
+(def schema (memoize schema-db))
+;; (def schema schema-)
 
 ;; Helpers
 

@@ -30,7 +30,7 @@
              (POST "/" request
                    (->> (get-in request [:params "expression"])
                         ((fn [x] (prn x) x))
-                        (build-query (db/schema c/db "penneo")) ;; TODO: shouldn't need to specify db
+                        (build-query (db/schema c/db)) ;; TODO: shouldn't need to specify db
                         ;; ((fn [x] {:query x}))
                         response
                         )
