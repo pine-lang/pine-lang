@@ -165,6 +165,9 @@ to
 SHOW CREATE TABLE customers
 ```
 
+### [ ] Support multiple database schemas
+For now, the API runs with one predefined database name.
+
 ### [ ] Meta function - getting inverse relationships
 
 Also, need to find inverse relationships i.e.
@@ -174,9 +177,6 @@ customers | references?
 ```
 
 should find all the tables and the references that point to `customers`
-
-### [ ] Support multiple database schemas
-For now, the API runs with one predefined database name.
 
 ### [ ] Support multiple filters (OR)
 
@@ -251,6 +251,7 @@ have to go back to modify an operation.
 ## Tasks
 
 ### [x] Use instaparse and the [pine grammar](src/pine/pine.bnf) to generate a parser
+### [x] Connection pooling
 ### [ ] Enclose strings with quotes
 ```
 customers "Acme Inc."

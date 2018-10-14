@@ -1,8 +1,27 @@
 (ns pine.db
+  (:import (com.mchange.v2.c3p0 ComboPooledDataSource))
   (:require [clojure.java.jdbc :as j]
             [pine.config :as c]
             [clojure.string :as s])
   )
+
+;; Connection Pooling
+(defn pool
+  [spec]
+  (let [cpds (doto (ComboPooledDataSource.)
+               (.setDriverClass (:classname spec))
+               (.setJdbcUrl (str "jdbc:" (:subprotocol spec) ":" (:subname spec)))
+               (.setUser (:user spec))
+               (.setPassword (:password spec))
+               ;; expire excess connections after 30 minutes of inactivity:
+               (.setMaxIdleTimeExcessConnections (* 30 60))
+               ;; expire connections after 3 hours of inactivity:
+               (.setMaxIdleTime (* 3 60 60))
+               )
+        ]
+    {:datasource cpds}))
+(def pooled-db (delay (pool c/db)))
+(defn connection [] @pooled-db)
 
 ;; Utils
 
@@ -40,34 +59,34 @@
 
 (defn exec
   "Execute raw sql queries"
-  [db-config query]
+  [spec query]
   (->> query
-       (j/query db-config)))
+       (j/query spec)))
 
 (defn table-definition
   "Create table definition"
-  [db-config table]
+  [spec table]
   (prn (format "Loading schema definition for table: %s." table))
   (->> table
        escape
        (format "show create table %s")
-       (exec db-config)
+       (exec spec)
        first
        ((keyword "create table"))
        ))
 
 ;; (defn change-db
 ;;   "Change the db being used"
-;;   [db-config db-name]
+;;   [spec db-name]
 ;;   (->> db-name
 ;;        (format "use %s")
-;;        (j/execute! db-config)))
+;;        (j/execute! spec)))
 
 (defn tables
   "Get all the tables for a schema"
-  [db-config]
+  [spec]
   (->> "show tables"
-       (exec db-config)
+       (exec spec)
        )
   )
 
@@ -75,32 +94,31 @@
   "Get the schema for the database. This function gets the schema for every table
   and can be very slow. Should be called once and the schema should be passed
   around."
-  [db-config]
-  (let [db-name (:name db-config)
+  [spec]
+  (let [db-name (:name spec)
         column-name (format "tables_in_%s" db-name)
         column      (keyword column-name)]
     (prn (format "Loading schema definition for db: %s." db-name))
     ;; { (keyword db-name)
      (->> "show tables"
-          (exec db-config)
+          (exec spec)
           (map column)
-          (map (fn [c] {(keyword c) (table-definition db-config c)}))
+          (map (fn [c] {(keyword c) (table-definition spec c)}))
           (apply merge)
           )
      ;; }
   ))
 
-(defn schema-dbs
-  "Get the schemas for all the databases."
-  [db-config]
-  (->> "show databases"
-       (exec db-config)
-       (map :database)
-       )
-  )
+;; (defn schema-dbs
+;;   "Get the schemas for all the databases."
+;;   [spec]
+;;   (->> "show databases"
+;;        (exec spec)
+;;        (map :database)
+;;        )
+;;   )
 
 (def schema (memoize schema-db))
-;; (def schema schema-)
 
 ;; Helpers
 
@@ -111,7 +129,21 @@
   "
   ([fn query]
    (->> query
-        (j/query c/db)
+        (j/query (connection))
         fn))
   ([query]
    ($ (fn[x] x) query)))
+
+(defn $!
+  "Execute non select queries:
+  ($ \"use tmp\")
+  "
+  ([fn query]
+   (->> query
+        (j/execute! (connection))
+        fn))
+  ([query]
+   ($! (fn[x] x) query)))
+
+;; ($ "show tables")
+;; ($! "use tmp")

@@ -1,9 +1,9 @@
 (ns pine.core
   (:require [clojure.java.jdbc :as j]
             [pine.ast :as ast]
-            [pine.config :as c]
             [pine.fixtures :as fixtures]
-            [pine.db :as db])
+            [pine.db :as db]
+            [clojure.string :as s])
   )
 
 ;; Eval
@@ -19,16 +19,19 @@
      :params params})
   )
 
+;; ($prepare (db/schema c/db) "caseFiles 1 | delete!")
+
+;; ($prepare (db/schema c/db) "caseFiles 1 | s: id")
 
 ;; TODO: make sure that the db connection is reused instead of creating a new one with each evaluation.
 ;;
 (defn pine-eval
   "Evalate a query"
-  [db prepared]
+  [spec prepared]
   (let [query (prepared :query)
         params (prepared :params)
         args   (cons query params)]
-    (j/query db args)
+    (j/query spec args)
     ))
 
 ;; Helpers
@@ -44,8 +47,8 @@
   "
   ([fn schema expression]
    (->> expression
-        (pine-prepare schema) ;; prepare the sql for executing using cached schema
-        (pine-eval c/db)        ;; execute
+        (pine-prepare schema)       ;; prepare the sql for executing using cached schema
+        (pine-eval (db/connection)) ;; execute
         fn))
   ([schema expression]
    ($ (fn[x] x) schema expression)))
@@ -57,6 +60,4 @@
        (pine-prepare schema) ;; prepare the sql for executing using cached schema
        ))
 
-
-
-;; ($ (db/schema c/db "penneo") "caseFiles 1")
+;; ($prepare (db/schema c/db) "penneo_com.caseFiles 1")

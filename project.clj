@@ -7,6 +7,7 @@
                  [org.clojure/clojure "1.8.0"]
                  [org.clojure/java.jdbc "0.7.3"]
                  [mysql/mysql-connector-java "5.1.18"]
+                 [com.mchange/c3p0 "0.9.5.2"] ;; connection pooling
                  [compojure "1.5.1"]
                  [ring/ring-defaults "0.2.1"]
                  [ring/ring-json "0.4.0"]
