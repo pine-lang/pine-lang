@@ -70,7 +70,7 @@
                  [:ORDER [:column [:string column]]]                           {:type "order" :direction "descending" :column column}
 
                  ;; meta
-                 [:META "references"]                                          {:type "meta" :fn-name "references"}
+                 [:META [:ref]]                                                {:type "meta" :fn-name "references"}
 
                  ;; meta
                  [:DELETE]                                                     {:type "delete"}

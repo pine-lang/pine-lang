@@ -22,7 +22,8 @@ GROUP           := <#"g(roup)?:"> <whitespace+> columns
 
 LIMIT           := <#"l(imit)?:"> <whitespace+> number
 
-META            := #"(references)" <"?">
+META            := ref
+ref             := <#"ref(erences)?"> <"?">
 
 DELETE          := <#"delete!">
 
