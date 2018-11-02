@@ -16,4 +16,6 @@
            :subprotocol "mysql"
            :subname (str "//" db-host ":" db-port "/" db-name)
            :user db-user
-           :password db-password}))
+           :password db-password
+           :name db-name
+           }))
