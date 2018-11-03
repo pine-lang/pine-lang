@@ -65,6 +65,20 @@ SELECT c.id, u.email
    AND u.name = "John"
 ```
 
+### [ ] Unselect specific columns
+
+The following pine expression to select specific columns:
+```
+customers name=Acme | unselect: id
+```
+should build the following query:
+
+```
+SELECT c.name -- everything but id
+  FROM customers AS c
+ WHERE c.id = 1
+```
+
 ### [x] Support for limit
 
 ```
