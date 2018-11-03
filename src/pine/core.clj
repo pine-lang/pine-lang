@@ -23,15 +23,13 @@
 
 ;; ($prepare (db/schema c/db) "caseFiles 1 | s: id")
 
-;; TODO: make sure that the db connection is reused instead of creating a new one with each evaluation.
-;;
 (defn pine-eval
   "Evalate a query"
-  [spec prepared]
+  [connection prepared]
   (let [query (prepared :query)
         params (prepared :params)
         args   (cons query params)]
-    (j/query spec args)
+    (j/query connection args)
     ))
 
 ;; Helpers

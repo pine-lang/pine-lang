@@ -59,34 +59,34 @@
 
 (defn exec
   "Execute raw sql queries"
-  [spec query]
+  [connection query]
   (->> query
-       (j/query spec)))
+       (j/query connection)))
 
 (defn table-definition
   "Create table definition"
-  [spec table]
+  [connection table]
   (prn (format "Loading schema definition for table: %s." table))
   (->> table
        escape
        (format "show create table %s")
-       (exec spec)
+       (exec connection)
        first
        ((keyword "create table"))
        ))
 
 ;; (defn change-db
 ;;   "Change the db being used"
-;;   [spec db-name]
+;;   [connection db-name]
 ;;   (->> db-name
 ;;        (format "use %s")
-;;        (j/execute! spec)))
+;;        (j/execute! connection)))
 
 (defn tables
   "Get all the tables for a schema"
-  [spec]
+  [connection]
   (->> "show tables"
-       (exec spec)
+       (exec connection)
        )
   )
 
@@ -94,16 +94,16 @@
   "Get the schema for the database. This function gets the schema for every table
   and can be very slow. Should be called once and the schema should be passed
   around."
-  [spec]
-  (let [db-name (:name spec)
+  [connection]
+  (let [db-name (:name connection)
         column-name (format "tables_in_%s" db-name)
         column      (keyword column-name)]
     (prn (format "Loading schema definition for db: %s." db-name))
     ;; { (keyword db-name)
      (->> "show tables"
-          (exec spec)
+          (exec connection)
           (map column)
-          (map (fn [c] {(keyword c) (table-definition spec c)}))
+          (map (fn [t] {(keyword t) (table-definition connection t)}))
           (apply merge)
           )
      ;; }
@@ -111,9 +111,9 @@
 
 ;; (defn schema-dbs
 ;;   "Get the schemas for all the databases."
-;;   [spec]
+;;   [connection]
 ;;   (->> "show databases"
-;;        (exec spec)
+;;        (exec connection)
 ;;        (map :database)
 ;;        )
 ;;   )
