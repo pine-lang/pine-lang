@@ -26,6 +26,12 @@ lein deps
 lein ring server
 ```
 
+### Faster bootup
+
+```
+LEIN_FAST_TRAMPOLINE=y lein trampoline ring server
+```
+
 ## Philosophy
 
 - **Compositional**                  : operations are composed together to perform a bigger task
