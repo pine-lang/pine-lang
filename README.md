@@ -22,14 +22,10 @@ SELECT u.id, u.email
 ## Run the pine server
 
 ```
-lein deps
-lein ring server
-```
-
-### Faster bootup
-
-```
-LEIN_FAST_TRAMPOLINE=y lein trampoline ring server
+UID=${UID}  \
+GID=${UID}  \
+USR=${USER} \
+ docker-compose up
 ```
 
 ## Philosophy

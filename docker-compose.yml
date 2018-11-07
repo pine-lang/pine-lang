@@ -1,0 +1,19 @@
+version: "2"
+services:
+  app:
+    image: "clojure:lein-2.8.1"
+    command: "lein trampoline ring server-headless"
+    user: "${UID}:${GID}"
+    ports:
+      - "3000:3000"
+    working_dir: ${PWD}
+    volumes:
+      - ./:/mnt
+      - /ssh-agent:/ssh-agent
+      - ~/.ssh:/root/.ssh
+      - ~/.m2/repository:/root/.m2/repository
+      - /etc/passwd:/etc/passwd
+      - ~/:/home/${USR}
+    environment:
+      TERM: xterm
+      LEIN_FAST_TRAMPOLINE: y
