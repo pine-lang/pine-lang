@@ -268,6 +268,14 @@ have to go back to modify an operation.
 
 ### [x] Use instaparse and the [pine grammar](src/pine/pine.bnf) to generate a parser
 ### [x] Connection pooling
+### [x] Create docker image with the pine server
+If the db is running locally, use the `ip` that points to the local host. You
+can find it by running the following:
+
+```
+ifconfig | grep docker0 -A1 | tail -1 | grep -E -o '([0-9.]*)' | head -1
+```
+
 ### [ ] Enclose strings with quotes
 ```
 customers "Acme Inc."
@@ -276,4 +284,3 @@ customers "Acme Inc."
 I should start using something like a parsec library and have a formal specification for the syntax at this point.
 
 
-### [ ] Create docker image with the pine server
