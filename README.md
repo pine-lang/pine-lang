@@ -273,7 +273,7 @@ If the db is running locally, use the `ip` that points to the local host. You
 can find it by running the following:
 
 ```
-ifconfig | grep docker0 -A1 | tail -1 | grep -E -o '([0-9.]*)' | head -1
+ip address show dev docker0 | grep 'inet ' | grep -E -o '([0-9.]*)' | head -1
 ```
 
 ### [ ] Enclose strings with quotes
