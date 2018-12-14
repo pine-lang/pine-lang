@@ -26,5 +26,13 @@
   `caseFileId` int(11) DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `IDX_A2B0728870B85BE3` (`caseFileId`),
-  CONSTRAINT `FK_1` FOREIGN KEY (`caseFileId`) REFERENCES `caseFiles` (`id`))"}
+  CONSTRAINT `FK_1` FOREIGN KEY (`caseFileId`) REFERENCES `caseFiles` (`id`))"
+             :folders "CREATE TABLE `folders` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `title` longtext COLLATE utf8_unicode_ci NOT NULL,
+  `parentId` int(11) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `IDX_FE37D30F10EE4CEE` (`parentId`),
+  CONSTRAINT `FK_FE37D30F10EE4CEE` FOREIGN KEY (`parentId`) REFERENCES `folders` (`id`) ON DELETE CASCADE"
+             }
   )

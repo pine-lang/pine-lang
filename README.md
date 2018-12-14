@@ -242,13 +242,59 @@ caseFiles 1 | delete!
 accessKey key=sha256(xxxxxx)
 ```
 
-### [ ] Support for aliases
+### [x] Self joins
+
+```
+folders 42 | folders
+```
+
+This can be used as following:
+
+```
+-- How many folders that have the height 5:
+
+folders | folders | folders | folders | folders | folders | group: id | s: id, title
+```
+
+We are narrowing the results. See the `directionality` section below.
+
+### [ ] Directionality / Specifying the relationship
+
+Some entities are related in different ways and it would be cool to be able to
+specify the `directionality`. What I mean by that is it should be possible to
+ask the following questions
+
+- `folders` that are owned by `user` : Narrowing down the result set
+- `users` that own `folders`         : Expanding the result set
+
+At the moment, our pipe operator `|` chooses a relationship but it should be
+possible to specify this somehow. I don't have a syntax for this at the moment but maybe adding the `narrowing`/`expanding` characters as follows might work:
+
+
+```
+Narrowing down the result set : |>
+Expanding the result set      : |<
+```
+
+So an example could be:
+
+```
+users |< folders
+```
+
+or
+
+```
+folders |> users
+```
+
+### [ ] Specify aliases
 
 Allow the following:
 
 
 ```
-c 1 => SELECT c.* FROM customers AS c WHERE c.id = 1
+customers as c 1 => SELECT c.* FROM customers AS c WHERE c.id = 1
 
 ```
 
@@ -262,6 +308,7 @@ Maybe we don't need this since the default operation already supports filters
 i.e. `caseFiles title=Sample*` at the moment. But I guess it supports the
 incremental calculation model where you can keep on adding operations and don't
 have to go back to modify an operation.
+
 
 
 ## Tasks

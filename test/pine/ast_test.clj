@@ -11,7 +11,10 @@
   (testing "Create operations for a query"
     (is
      (=
-      [{:type "condition" :entity :customers, :filters [[ "id" "1" ]]}]
+      [{:type    "condition"
+        :entity  :customers
+        :alias   "customers_0"
+        :filters [[ "id" "1" ]]}]
       (ast/str->operations "customers 1")
       ))))
 
@@ -19,8 +22,13 @@
   (testing "Create operations for a max function"
     (is
      (=
-      [{:type "condition" :entity :customers :filters []}
-       {:type "function" :fn-name "max" :columns ["created"]}]
+      [{:type    "condition"
+        :entity  :customers
+        :alias   "customers_0"
+        :filters []}
+       {:type    "function"
+        :fn-name "max"
+        :columns ["created"]}]
       (ast/str->operations "customers | max: created")
       ))))
 
@@ -28,7 +36,10 @@
   (testing "Create operations for a query explicitly specifying the id"
     (is
      (=
-      [{:type "condition" :entity :customers, :filters [[ "id" "1" ]]}]
+      [{:type    "condition"
+        :entity  :customers
+        :alias   "customers_0"
+        :filters [[ "id" "1" ]]}]
       (ast/str->operations "customers id=1")
       ))))
 
@@ -36,7 +47,10 @@
   (testing "Create operations for a query explicitly specifying the id"
     (is
      (=
-      [{:type "condition" :entity :customers, :filters [[ "name" "1*" ]]}]
+      [{:type    "condition"
+        :entity  :customers
+        :alias   "customers_0"
+        :filters [[ "name" "1*" ]]}]
       (ast/str->operations "customers name=1*")
       ))))
 
@@ -44,8 +58,14 @@
   (testing "Create operations for a query"
     (is
      (=
-      [{:type "condition" :entity :customers, :filters [[ "id" "1" ]]}
-       {:type "condition" :entity :users, :filters [[ "id" "2" ]]}]
+      [{:type    "condition"
+        :entity  :customers
+        :alias   "customers_0"
+        :filters [[ "id" "1" ]]}
+       {:type    "condition"
+        :entity  :users
+        :alias   "users_1"
+        :filters [[ "id" "2" ]]}]
       (ast/str->operations "customers 1 | users 2")
       ))))
 
@@ -53,9 +73,18 @@
   (testing "Create operations for a query"
     (is
      (=
-      [{:type "condition" :entity :customers, :filters [[ "id" "1" ]]}
-       {:type "condition" :entity :users, :filters [[ "name" "John" ]]}
-       {:type "condition" :entity :address, :filters []}
+      [{:type    "condition"
+        :entity  :customers
+        :alias   "customers_0"
+        :filters [[ "id" "1" ]]}
+       {:type    "condition"
+        :entity  :users
+        :alias   "users_1"
+        :filters [[ "name" "John" ]]}
+       {:type    "condition"
+        :entity  :address
+        :alias   "address_2"
+        :filters []}
        ]
       (ast/str->operations "customers 1 | users name=John | address")
       ))))
@@ -66,9 +95,9 @@
   (testing "Create a where condition from operations"
     (is
      (=
-      ["max(customers.created)"]
+      ["max(customers_0.created)"]
       (ast/operations->function-columns
-       [{:type "condition" :entity :customers :filters []}
+       [{:type "condition" :entity :customers :filters [] :alias "customers_0"}
         {:type "function" :fn-name "max" :columns ["created"]}]
        )
       ))))
@@ -77,7 +106,7 @@
   (testing "Create a where condition from an operation"
     (is
      (=
-      { :conditions "customers.id = ?" :params ["1"] }
+      { :conditions "customers_0.id = ?" :params ["1"] }
       (->> (ast/str->operations "customers 1")
            first
            (ast/operation->where fixtures/schema true)
@@ -88,7 +117,7 @@
   (testing "Create a where condition from an operation"
     (is
      (=
-      { :conditions "customers.name = ?" :params ["acme"] }
+      { :conditions "customers_0.name = ?" :params ["acme"] }
       (->> (ast/str->operations "customers name=acme")
            first
            (ast/operation->where fixtures/schema true))
@@ -98,7 +127,7 @@
   (testing "Create a where condition from an operation"
     (is
      (=
-      { :conditions "customers.name LIKE ?" :params ["acme%"] }
+      { :conditions "customers_0.name LIKE ?" :params ["acme%"] }
       (->> (ast/str->operations "customers name=acme*")
            first
            (ast/operation->where fixtures/schema true))
@@ -109,8 +138,8 @@
     (is
      (=
       {
-       :conditions ["customers.name = ?"
-                    "users.id = ?"]
+       :conditions ["customers_0.name = ?"
+                    "users_1.id = ?"]
        :params ["acme"
                 "1"]
        }
@@ -124,22 +153,22 @@
   (testing "Create operations for a query"
     (is
      (=
-      [:documents "documents" ["documents.caseFileId" "caseFiles.id"]]
+      [:documents "d" ["d.caseFileId" "cf.id"]]
       (ast/operations->join
        fixtures/schema
-       {:entity :caseFiles, :filters [[ "id" "1" ]]}
-       {:entity :documents, :filters [[ "id" "2" ]]})
+       {:entity :caseFiles :filters [[ "id" "1" ]], :alias "cf"}
+       {:entity :documents :filters [[ "id" "2" ]], :alias "d"})
       ))))
 
 (deftest operations->join:entity-owned-by-another-entity
   (testing "Create operations for a query"
     (is
      (=
-      [:caseFiles "caseFiles" ["caseFiles.id" "documents.caseFileId"]]
+      [:caseFiles "cf" ["cf.id" "d.caseFileId"]]
       (ast/operations->join
        fixtures/schema
-       {:entity :documents, :filters [[ "id" "2" ]]}
-       {:entity :caseFiles, :filters [[ "id" "1" ]]}
+       {:entity :documents :filters [[ "id" "2" ]] :alias "d"}
+       {:entity :caseFiles :filters [[ "id" "1" ]] :alias "cf"}
        )
       ))))
 
@@ -149,23 +178,23 @@
      (=
       (ast/operations->joins
        fixtures/schema
-       [{:entity :customers, :filters [[ "id" "1" ]]}
-        {:entity :caseFiles, :filters [[ "id" "2" ]]}
-        {:entity :documents, :filters [[ "name" "test" ]]}
+       [{:entity :customers :filters [[ "id" "1" ]]      :alias "c"}
+        {:entity :caseFiles :filters [[ "id" "2" ]]      :alias "cf"}
+        {:entity :documents :filters [[ "name" "test" ]] :alias "d"}
         ])
-      [:caseFiles "caseFiles" ["caseFiles.customerId" "customers.id"]
-       :documents "documents" ["documents.caseFileId" "caseFiles.id"]]
+      [:caseFiles "cf" ["cf.customerId" "c.id"]
+       :documents "d" ["d.caseFileId" "cf.id"]]
       ))))
 
 (deftest operations->joins:no-filter
   (testing "Create operations for a query"
     (is
      (=
-      [:caseFiles "caseFiles" ["caseFiles.customerId" "customers.id"]]
+      [:caseFiles "cf" ["cf.customerId" "c.id"]]
       (ast/operations->joins
        fixtures/schema
-       [{:type "condition" :entity :customers, :filters []}
-        {:type "condition" :entity :caseFiles, :filters []}
+       [{:type "condition" :entity :customers :filters [] :alias "c"}
+        {:type "condition" :entity :caseFiles :filters [] :alias "cf"}
         ])
       ))))
 
@@ -184,15 +213,14 @@
     (is
      (=
       {
-       :select ["documents.*"]
-       :from [:customers "customers"]
-       :joins [:caseFiles "caseFiles" ["caseFiles.customerId" "customers.id"]
-               :documents "documents" ["documents.caseFileId" "caseFiles.id"]]
+       :select ["documents_2.*"]
+       :from [:customers "customers_0"]
+       :joins [:caseFiles "caseFiles_1" ["caseFiles_1.customerId" "customers_0.id"]
+               :documents "documents_2" ["documents_2.caseFileId" "caseFiles_1.id"]]
        :where {
-               :conditions ["customers.id = ?"
-                            "caseFiles.name = ?"
-                            "documents.name = ?"
-
+               :conditions ["customers_0.id = ?"
+                            "caseFiles_1.name = ?"
+                            "documents_2.name = ?"
                             ]
                :params     ["1" "john" "test"]
                }
@@ -204,10 +232,8 @@
        }
       (ast/operations->ast
        fixtures/schema
-       [{:type "condition" :entity :customers, :filters [[ "id" "1" ]]}
-        {:type "condition" :entity :caseFiles, :filters [[ "name" "john" ]]}
-        {:type "condition" :entity :documents, :filters [[ "name" "test" ]]}
-        ])
+       (ast/str->operations "customers 1 | caseFiles name=john | documents name=test")
+       )
       ))))
 
 ;; AST to SQL

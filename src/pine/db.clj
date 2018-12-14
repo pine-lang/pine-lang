@@ -132,7 +132,7 @@
         (j/query (connection))
         fn))
   ([query]
-   ($ (fn[x] x) query)))
+   ($ identity query)))
 
 (defn $!
   "Execute non select queries:
@@ -143,7 +143,7 @@
         (j/execute! (connection))
         fn))
   ([query]
-   ($! (fn[x] x) query)))
+   ($! identity query)))
 
 ;; ($ "show tables")
 ;; ($! "use tmp")

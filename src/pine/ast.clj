@@ -28,6 +28,14 @@
                  grammar (slurp file)]
              (insta/parser grammar)))
 
+(defn add-aliases
+  "Add aliases to the the operations"
+  [ops]
+  (map-indexed (fn [idx op]
+                 (cond (:entity op) (assoc op :alias (format "%s_%d" (name (:entity op)) idx))
+                       :else op))
+               ops))
+
 (defn str->operations
   "Create a filter AST from the raw query part"
   [expression]
@@ -89,6 +97,7 @@
        parse
        get-parsed-ops
        (map index)
+       add-aliases
        )))
 
 ;; Build SQL from the AST
@@ -168,11 +177,10 @@
 ;; -----------------
 
 (defn table-alias
-  "Alias for a table. At some point, fix this so that it also works for snake case
-  strings."
-  [table]
+  "Alias for a table."
+  [op]
   ;; Use the table name as the alias
-  (format "%s" (name table))
+  (:alias op)
   ;; Create an alias from the camel case name
   ;; (let [t (name table)]
   ;;   (str
@@ -190,28 +198,17 @@
 (defn primary-key
   "Get the qualified primary key for the table. This is a naive function that
   assumes that the primary key is always Id."
-  [table]
-  (let [t (name table)]
-    (str (table-alias t) ".id")
-    ))
+  [op]
+  (format "%s.%s" (op :alias) "id"))
 
 ;; -----------------
 ;; Operations to AST
 ;; -----------------
 
-
-(defn operations->primary-table
-  "Get the primary table from the operations"
-  [schema operations]
-  (->> operations
-       first
-       :entity))
-
 (defn operation->select-all
   "Get the columns for the last 'condition' operation or the select operation"
-  [schema op]
-  (let [entity (op :entity)]
-    [(format "%s.*" (table-alias entity))]))
+  [op]
+  [(format "%s.*" (table-alias op))])
 
 (defn operations->function-columns
   "Get the columns for the last 'condition' operation or the select operation"
@@ -225,8 +222,7 @@
                                         last)
         fn-name (function-op :fn-name)
         columns (function-op :columns)
-        entity (:entity condition-op)
-        a      (table-alias entity)
+        a       (table-alias condition-op)
 
         ]
     [(format "%s(%s.%s)" fn-name a (first columns))]))
@@ -240,9 +236,7 @@
        (partition 2 1)
        (filter (fn [[a b]] (and (operation-type? ["condition"] a)
                                (operation-type? ["select"] b))))
-       (map (fn [pair] (let [
-                             entity (:entity (first pair))
-                             a      (table-alias entity)
+       (map (fn [pair] (let [a       (table-alias (first pair))
                              columns (:columns (second pair))]
                          (map (fn [c] (format "%s.%s" a c)) columns)
                          )))
@@ -273,7 +267,7 @@
         all-columns      (->> operations
                               (filter (operation-type? ["select", "condition"]))
                               last
-                              ((fn [op] (cond (operation-type? ["condition"] op) (operation->select-all schema op)
+                              ((fn [op] (cond (operation-type? ["condition"] op) (operation->select-all op)
                                               :else [])))
                               )]
 
@@ -302,15 +296,14 @@
   [schema o1 o2]
   (let [e1  (:entity o1)
         e2  (:entity o2)
-        a1 (table-alias e1)
-        a2 (table-alias e2)
+        a1 (table-alias o1)
+        a2 (table-alias o2)
         e1-foreign-key (db/relation schema e2 :owns e1)
         e2-foreign-key (db/relation schema e1 :owns e2)
-        join-on (cond e1-foreign-key [(primary-key e2) (qualify e1-foreign-key :with (table-alias e1))]
-                      e2-foreign-key [(qualify e2-foreign-key :with (table-alias e2)) (primary-key e1)]
+        join-on (cond e1-foreign-key [(primary-key o2) (qualify e1-foreign-key :with a1)]
+                      e2-foreign-key [(qualify e2-foreign-key :with a2) (primary-key o1)]
                       :else ["1" "2 /* No relationship exists */"])
         ]
-
     [e2 a2 join-on]
     ))
 
@@ -346,7 +339,7 @@
   (let [fs (:filters operation)]
     (cond (empty? fs) { :conditions "1" :params nil}
           :else       (->> fs
-                           (map (partial filter->where-condition (:entity operation) qualify?))
+                           (map (partial filter->where-condition (:alias operation) qualify?))
                            ((fn [where-conditions] { :conditions (->> where-conditions
                                                          (map first)
                                                          (s/join " AND ")
@@ -406,8 +399,7 @@
         ]
     (cond (and condition-op order-op) (let [direction (order-op :direction)
                                             column (order-op :column)
-                                            entity (:entity condition-op)
-                                            a      (table-alias entity)
+                                            a      (table-alias condition-op)
                                          ]
                                      (format "ORDER BY %s.%s %s" a column (cond (= direction "ascending") "ASC" :else "DESC"))
                                      )
@@ -430,8 +422,7 @@
     (cond (and condition-op group-op) (let [
 
                                          columns (group-op :columns)
-                                         entity (:entity condition-op)
-                                         a      (table-alias entity)
+                                         a      (table-alias condition-op)
 
                                          ]
                                      (format "GROUP BY %s.%s" a (first columns))
@@ -488,25 +479,24 @@
         )
   )
 
-;; (str->operations "users * | l: 1 | count: test")
-
 (defn operations->ast
   "operations to ast"
   [schema ops]
-  (let [columns (operations->select-columns schema ops)
+  (let [columns       (operations->select-columns schema ops)
         condition-ops (filter (operation-type? ["condition"]) ops)
-        table (operations->primary-table schema condition-ops)
-        delete (operations->delete ops)
-        joins (operations->joins schema condition-ops)
-        where (operations->where schema (cond delete nil :else true) condition-ops)
-        order (operations->order ops)
-        group (operations->group ops)
-        limit (operations->limit ops)
-        meta  (operations->meta ops)
+        primary-op    (first condition-ops)
+        table         (:entity primary-op)
+        delete        (operations->delete ops)
+        joins         (operations->joins schema condition-ops)
+        where         (operations->where schema (cond delete nil :else true) condition-ops)
+        order         (operations->order ops)
+        group         (operations->group ops)
+        limit         (operations->limit ops)
+        meta          (operations->meta ops)
         ]
     {
      :select columns
-     :from [table (table-alias table)]
+     :from [table (table-alias primary-op)]
      :joins joins
      :where where
      :order order
