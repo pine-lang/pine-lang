@@ -10,7 +10,7 @@
     (is
      (=
       {
-       :query "SELECT customers.* FROM customers AS customers WHERE 1 LIMIT 50"
+       :query "SELECT customers_0.* FROM customers AS customers_0 WHERE 1 LIMIT 50"
        :params []
        }
       (pine-prepare fixtures/schema "customers")
@@ -23,7 +23,7 @@
     (is
      (=
       {
-       :query "SELECT customers.* FROM customers AS customers WHERE customers.id = ? LIMIT 50"
+       :query "SELECT customers_0.* FROM customers AS customers_0 WHERE customers_0.id = ? LIMIT 50"
        :params ["1"]
        }
       (pine-prepare fixtures/schema  "customers 1")
@@ -34,7 +34,7 @@
     (is
      (=
       {
-       :query "SELECT customers.* FROM customers AS customers WHERE customers.name LIKE ? AND customers.industry = ? LIMIT 50"
+       :query "SELECT customers_0.* FROM customers AS customers_0 WHERE customers_0.name LIKE ? AND customers_0.industry = ? LIMIT 50"
        :params ["acme%", "test"]
        }
       (pine-prepare fixtures/schema  "customers name=acme* industry=test")
@@ -45,7 +45,7 @@
     (is
      (=
       {
-       :query "SELECT caseFiles.* FROM customers AS customers JOIN caseFiles AS caseFiles ON (caseFiles.customerId = customers.id) WHERE customers.name = ? AND caseFiles.title = ? LIMIT 50"
+       :query "SELECT caseFiles_1.* FROM customers AS customers_0 JOIN caseFiles AS caseFiles_1 ON (caseFiles_1.customerId = customers_0.id) WHERE customers_0.name = ? AND caseFiles_1.title = ? LIMIT 50"
        :params ["Acme" "John"]
        }
       (pine-prepare fixtures/schema "customers name=Acme | caseFiles title=John")
@@ -56,7 +56,7 @@
     (is
      (=
       {
-       :query "SELECT customers.* FROM customers AS customers WHERE 1 LIMIT 50"
+       :query "SELECT customers_0.* FROM customers AS customers_0 WHERE 1 LIMIT 50"
        :params []
        }
       (pine-prepare fixtures/schema "customers")
@@ -67,7 +67,7 @@
     (is
      (=
       {
-       :query "SELECT caseFiles.* FROM customers AS customers JOIN caseFiles AS caseFiles ON (caseFiles.customerId = customers.id) WHERE 1 AND 1 LIMIT 50"
+       :query "SELECT caseFiles_1.* FROM customers AS customers_0 JOIN caseFiles AS caseFiles_1 ON (caseFiles_1.customerId = customers_0.id) WHERE 1 AND 1 LIMIT 50"
        :params []
        }
       (pine-prepare fixtures/schema "customers | caseFiles")
@@ -79,7 +79,7 @@
     (is
      (=
       {
-       :query "SELECT caseFiles.* FROM users AS users JOIN caseFiles AS caseFiles ON (caseFiles.userId = users.id) WHERE 1 AND 1 LIMIT 50"
+       :query "SELECT caseFiles_1.* FROM users AS users_0 JOIN caseFiles AS caseFiles_1 ON (caseFiles_1.userId = users_0.id) WHERE 1 AND 1 LIMIT 50"
        :params []
        }
       (pine-prepare fixtures/schema "users | caseFiles")
@@ -90,7 +90,7 @@
     (is
      (=
       {
-       :query "SELECT users.id, users.fullName FROM users AS users WHERE 1 LIMIT 50"
+       :query "SELECT users_0.id, users_0.fullName FROM users AS users_0 WHERE 1 LIMIT 50"
        :params []
        }
       (pine-prepare fixtures/schema "users | select: id, fullName")
@@ -101,7 +101,7 @@
     (is
      (=
       {
-       :query "SELECT users.id, users.fullName, caseFiles.id FROM users AS users JOIN caseFiles AS caseFiles ON (caseFiles.userId = users.id) WHERE 1 AND 1 LIMIT 50"
+       :query "SELECT users_0.id, users_0.fullName, caseFiles_2.id FROM users AS users_0 JOIN caseFiles AS caseFiles_2 ON (caseFiles_2.userId = users_0.id) WHERE 1 AND 1 LIMIT 50"
        :params []
        }
       (pine-prepare fixtures/schema "users | select: id, fullName | caseFiles | select: id")
@@ -112,8 +112,20 @@
     (is
      (=
       {
-       :query "SELECT users.id, users.fullName, caseFiles.* FROM users AS users JOIN caseFiles AS caseFiles ON (caseFiles.userId = users.id) WHERE 1 AND 1 ORDER BY caseFiles.id DESC LIMIT 50"
+       :query "SELECT users_0.id, users_0.fullName, caseFiles_2.* FROM users AS users_0 JOIN caseFiles AS caseFiles_2 ON (caseFiles_2.userId = users_0.id) WHERE 1 AND 1 ORDER BY caseFiles_2.id DESC LIMIT 50"
        :params []
        }
       (pine-prepare fixtures/schema "users | select: id, fullName | caseFiles | o: id")
+      ))))
+
+
+(deftest pine-prepare:self-join
+  (testing "Self join"
+    (is
+     (=
+      {
+       :query "SELECT folders_1.* FROM folders AS folders_0 JOIN folders AS folders_1 ON (folders_1.id = folders_0.parentId) WHERE folders_0.id = ? AND 1 LIMIT 50"
+       :params ["1"]
+       }
+      (pine-prepare fixtures/schema "folders 1 | folders")
       ))))
