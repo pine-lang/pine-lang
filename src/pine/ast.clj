@@ -28,6 +28,32 @@
                  grammar (slurp file)]
              (insta/parser grammar)))
 
+
+(defn add-context
+  "Add the entity and the relevant alias which serves as the context for all the operations."
+  [ops]
+  (->> ops
+   (reduce (fn [acc op]
+             (clojure.pprint/pprint acc)
+             (let [prev-entity  (->> acc
+                                     :context
+                                     :entity)
+                   prev-alias   (->> acc
+                                     :context
+                                     :alias)
+                   curr-entity  (:entity op)
+                   curr-alias   (:alias op)
+                   context      (cond (operation-type? ["condition"] op) {:entity curr-entity :alias curr-alias}
+                                      :else                              {:entity prev-entity :alias prev-alias})]
+               {:context context
+                :ops    (cons (assoc op :context context) (:ops acc) )}
+               )
+             ) [])
+   :ops
+   reverse
+   )
+  )
+
 (defn add-aliases
   "Add aliases to the the operations"
   [ops]
@@ -36,6 +62,8 @@
                        :else op))
                ops))
 
+;; Parse 'anything' comes from the parse tree
+;; Indexed 'anything' is what we need int the AST
 (defn str->operations
   "Create a filter AST from the raw query part"
   [expression]
@@ -93,11 +121,12 @@
                  :else (throw (Exception. (format  "Can't index operation: %s" op)))
                  ))
         ]
-  (->> expression
-       parse
-       get-parsed-ops
-       (map index)
-       add-aliases
+  (->> expression         ;; users 1
+       parse              ;; [ :OPERATIONS .. [:CONDITION .. ].. ]
+       get-parsed-ops     ;; [ [:CONDITION ..                ] ]
+       (map index)        ;; [ {:type "condition" ...} ]
+       add-aliases        ;; [ {:type "condition" ... :entity :users :alias "u"} ]
+       add-context        ;; [ [:type "condition" ... :context {:entity .. :alias ..} ] ]
        )))
 
 ;; Build SQL from the AST
@@ -210,6 +239,7 @@
   [op]
   [(format "%s.*" (table-alias op))])
 
+;; TODO: we don't need to find the previous condition-op now that we already have the :entity and the :alias
 (defn operations->function-columns
   "Get the columns for the last 'condition' operation or the select operation"
   [ops]
