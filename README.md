@@ -67,20 +67,6 @@ SELECT c.id, u.email
    AND u.name = "John"
 ```
 
-### [ ] Unselect specific columns
-
-The following pine expression to select specific columns:
-```
-customers name=Acme | unselect: id
-```
-should build the following query:
-
-```
-SELECT c.name -- everything but id
-  FROM customers AS c
- WHERE c.id = 1
-```
-
 ### [x] Support for limit
 
 ```
@@ -194,6 +180,19 @@ customers | references?
 
 should find all the tables and the references that point to `customers`
 
+### [ ] Support null checks
+
+Not null
+```
+users expireAt
+```
+
+Null
+```
+users !expireAt
+```
+
+
 ### [ ] Support multiple filters (OR)
 
 Multiple filters seperated by a comma `,`:
@@ -234,6 +233,20 @@ caseFiles 1 | set! title=new_title
 
 ```
 caseFiles 1 | delete!
+```
+
+### [ ] Unselect specific columns
+
+The following pine expression to select specific columns:
+```
+customers name=Acme | unselect: id
+```
+should build the following query:
+
+```
+SELECT c.name -- everything but id
+  FROM customers AS c
+ WHERE c.id = 1
 ```
 
 ### [ ] Functions on values in a condition
@@ -330,4 +343,8 @@ customers "Acme Inc."
 
 I should start using something like a parsec library and have a formal specification for the syntax at this point.
 
+
+### [ ] Keep track of the context `entity`
+The indexed operations should contain the `entity` as well so that we don't have
+to look at previous operations to figure out which entity is being used
 

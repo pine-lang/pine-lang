@@ -34,7 +34,6 @@
   [ops]
   (->> ops
    (reduce (fn [acc op]
-             (clojure.pprint/pprint acc)
              (let [prev-entity  (->> acc
                                      :context
                                      :entity)
