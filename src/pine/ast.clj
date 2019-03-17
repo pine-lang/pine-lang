@@ -42,10 +42,10 @@
                                      :alias)
                    curr-entity  (:entity op)
                    curr-alias   (:alias op)
-                   context      (cond (operation-type? ["condition"] op) {:entity curr-entity :alias curr-alias}
-                                      :else                              {:entity prev-entity :alias prev-alias})]
-               {:context context
-                :ops    (cons (assoc op :context context) (:ops acc) )}
+                   next      (cond (operation-type? ["condition"] op) {:entity curr-entity :alias curr-alias}
+                                   :else                              {:entity prev-entity :alias prev-alias})]
+               {:context next
+                :ops    (cons (assoc op :context {:entity prev-entity :alias prev-alias}) (:ops acc) )}
                )
              ) [])
    :ops

@@ -15,7 +15,7 @@
         :entity  :customers
         :alias   "customers_0"
         :filters [[ "id" "1" ]]
-        :context {:entity :customers, :alias "customers_0"}
+        :context {:entity nil, :alias nil}
         }]
       (ast/str->operations "customers 1")
       ))))
@@ -28,18 +28,12 @@
         :entity  :customers
         :alias   "customers_0"
         :filters []
-        :context {
-                  :entity :customers
-                  :alias "customers_0"
-                  }
+        :context {:entity nil :alias nil}
         }
        {:type    "function"
         :fn-name "max"
         :columns ["created"]
-        :context {
-                  :entity :customers
-                  :alias "customers_0"
-                  }
+        :context {:entity :customers :alias "customers_0"}
         }]
       (ast/str->operations "customers | max: created")
       ))))
@@ -52,7 +46,7 @@
         :entity  :customers
         :alias   "customers_0"
         :filters [[ "id" "1" ]]
-        :context {:entity :customers, :alias "customers_0"}
+        :context {:entity nil, :alias nil}
         }
        ]
       (ast/str->operations "customers id=1")
@@ -66,7 +60,7 @@
         :entity  :customers
         :alias   "customers_0"
         :filters [[ "name" "1*" ]]
-        :context {:entity :customers, :alias "customers_0"}
+        :context {:entity nil, :alias nil}
         }]
       (ast/str->operations "customers name=1*")
       ))))
@@ -79,13 +73,13 @@
         :entity  :customers
         :alias   "customers_0"
         :filters [[ "id" "1" ]]
-        :context {:entity :customers, :alias "customers_0"}
+        :context {:entity nil, :alias nil}
         }
        {:type    "condition"
         :entity  :users
         :alias   "users_1"
         :filters [[ "id" "2" ]]
-        :context {:entity :users, :alias "users_1"}
+        :context {:entity :customers, :alias "customers_0"}
         }]
       (ast/str->operations "customers 1 | users 2")
       ))))
@@ -98,19 +92,19 @@
         :entity  :customers
         :alias   "customers_0"
         :filters [[ "id" "1" ]]
-        :context {:entity :customers, :alias "customers_0"}
+        :context {:entity nil, :alias nil}
         }
        {:type    "condition"
         :entity  :users
         :alias   "users_1"
         :filters [[ "name" "John" ]]
-        :context {:entity :users, :alias "users_1"}
+        :context {:entity :customers, :alias "customers_0"}
         }
        {:type    "condition"
         :entity  :address
         :alias   "address_2"
         :filters []
-        :context {:entity :address, :alias "address_2"}
+        :context {:entity :users, :alias "users_1"}
         }
        ]
       (ast/str->operations "customers 1 | users name=John | address")
