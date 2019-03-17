@@ -233,28 +233,25 @@
 ;; Operations to AST
 ;; -----------------
 
-(defn operation->select-all
+(defn alias->select-all
   "Get the columns for the last 'condition' operation or the select operation"
-  [op]
-  [(format "%s.*" (table-alias op))])
+  [alias]
+  [(format "%s.*" alias)])
 
-;; TODO: we don't need to find the previous condition-op now that we already have the :entity and the :alias
+(defn operation->function-columns
+  "Generate the sql for the 'function' operation"
+  [op]
+  (let [fn-name (op :fn-name)
+        columns (op :columns)
+        alias   (->> op
+                     :context
+                     :alias)]
+    (format "%s(%s.%s)" fn-name alias (first columns))))
+
 (defn operations->function-columns
   "Get the columns for the last 'condition' operation or the select operation"
   [ops]
-  (let [[condition-op function-op] (->> ops
-                                        (filter (operation-type? ["condition", "function"]))
-                                        (partition 2 1)
-                                        (filter (fn [[a b]] (and (operation-type? ["condition"] a)
-                                                                 (operation-type? ["function"] b)
-                                                               )))
-                                        last)
-        fn-name (function-op :fn-name)
-        columns (function-op :columns)
-        a       (table-alias condition-op)
-
-        ]
-    [(format "%s(%s.%s)" fn-name a (first columns))]))
+  (map operation->function-columns ops))
 
 
 (defn operations->select-specific
@@ -276,37 +273,27 @@
 (defn operations->select-columns
   "Get the columns for the last 'condition' operation or the select operation"
   [schema operations]
-  (let [specific-columns (operations->select-specific schema operations)
-        condition-ops    (filter (operation-type? ["condition"]) operations)
-        function-columns (let [pairs        (->> operations
-                                                 (filter (operation-type? ["condition", "function"]))
-                                                 (partition 2 1)
-                                                 (filter (fn [[a b]] (and (operation-type? ["condition"] a)
-                                                                          (operation-type? ["function"] b)))))
-                               relevant-ops (cond (empty? pairs) []
-                                                  :else (->> pairs
-                                                             ((fn [pairs]
-                                                                (concat
-                                                                 (->> pairs
-                                                                      (map first))
-                                                                 [(second (last pairs))]
-                                                                 )))))]
-                           (cond (empty? relevant-ops) []
-                                 :else (operations->function-columns relevant-ops)))
-        all-columns      (->> operations
-                              (filter (operation-type? ["select", "condition"]))
-                              last
-                              ((fn [op] (cond (operation-type? ["condition"] op) (operation->select-all op)
-                                              :else [])))
-                              )]
+  (let [specific-columns    (operations->select-specific schema operations)
+        function-columns    (->> operations
+                                 (filter (operation-type? ["function"]))
+                                 operations->function-columns
+                                 )
+        all-columns-needed?  (->> operations
+                                  (filter (operation-type? ["select", "condition"]))
+                                  last
+                                  (operation-type? ["condition"]))
+        last-op              (-> operations last)
+        all-columns          (cond all-columns-needed? (alias->select-all (or (last-op :alias) (->> last-op :context :alias)))
+                                   :else               [])
+        ]
 
     ;; only show all the columns if function columns are not specified
     ;;
     ;; | specific columns | function columns | SELECTED            |
-    ;; | x                | x                | specific + function |
-    ;; | x                | o                | specific + all      |
-    ;; | o                | x                | function            |
-    ;; | o                | o                | all                 |
+    ;; | ✓                | ✓                | specific + function |
+    ;; | ✓                | x                | specific + all      |
+    ;; | x                | ✓                | function            |
+    ;; | x                | x                | all                 |
 
     (cond (and (not-empty specific-columns) (not-empty function-columns)) (concat specific-columns function-columns)
           (and (not-empty specific-columns) (empty? function-columns))    (concat specific-columns all-columns)
@@ -316,8 +303,6 @@
           )
     )
   )
-
-;; (pine/$prepare fixtures/schema "caseFiles 1 | l: 1 | count: status | s: id" )
 
 
 (defn operations->join

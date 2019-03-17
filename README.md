@@ -336,6 +336,10 @@ can find it by running the following:
 ip address show dev docker0 | grep 'inet ' | grep -E -o '([0-9.]*)' | head -1
 ```
 
+### [x] Keep track of the context `entity`
+The indexed operations should contain the `entity` as well so that we don't have
+to look at previous operations to figure out which entity is being used
+
 ### [ ] Enclose strings with quotes
 ```
 customers "Acme Inc."
@@ -343,8 +347,4 @@ customers "Acme Inc."
 
 I should start using something like a parsec library and have a formal specification for the syntax at this point.
 
-
-### [ ] Keep track of the context `entity`
-The indexed operations should contain the `entity` as well so that we don't have
-to look at previous operations to figure out which entity is being used
 

@@ -117,9 +117,10 @@
     (is
      (=
       ["max(customers_0.created)"]
-      (ast/operations->function-columns
-       [{:type "condition" :entity :customers :filters [] :alias "customers_0"}
-        {:type "function" :fn-name "max" :columns ["created"]}]
+      (->> "customers 1 | max: created"
+       ast/str->operations
+       (filter (ast/operation-type? ["function"]))
+       ast/operations->function-columns
        )
       ))))
 
