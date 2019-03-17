@@ -161,22 +161,27 @@
   "Create an sql query"
   [ast]
   (let [select-columns (s/join ", " (ast :select))
-        [table alias] (ast :from)
-        select (str "SELECT %s FROM %s AS %s")
-        delete-table (ast :delete)
-        delete (str "DELETE FROM %s")
-        where (ast :where)
-        order (ast :order)
-        group (ast :group)
-        limit (ast :limit)
-        joins (ast :joins)
-        join? (not (empty? joins))
-        conditions (where :conditions)
-        parameters (where :params)
+        [table alias]  (ast :from)
+        select-sql     (str "SELECT %s FROM %s AS %s")
+        update-sql     (str "UPDATE %s AS %s")
+        delete-table   (ast :delete)
+        set-values     (ast :set)
+        delete-sql     (str "DELETE FROM %s")
+        where          (ast :where)
+        order          (ast :order)
+        group          (ast :group)
+        limit          (ast :limit)
+        joins          (ast :joins)
+        join?          (not (empty? joins))
+        conditions     (where :conditions)
+        parameters (concat (cond set-values (set-values :params) :else []) (where :params))
         ]
 
     [(apply format
-            (->> [(cond delete-table delete :else select)
+            (->> [(cond set-values   update-sql
+                        delete-table delete-sql
+                        :else        select-sql)
+                  (cond set-values "SET %s" :else nil)
                   (cond join? "%s" :else nil)
                   "WHERE %s"
                   order
@@ -187,11 +192,17 @@
                  (s/join " ")
                  )
 
-            (->> [(cond delete-table nil :else select-columns)    ;; select columns
-                  (name table)                                    ;; table
-                  (cond delete-table nil :else alias)             ;; alias
-                  (cond join? (ast-joins->sql joins) :else nil)   ;; joins
-                  (s/join " AND " conditions)                     ;; where
+            (->> [(cond set-values   nil
+                        delete-table nil
+                        :else        select-columns)                   ;; update/delete/select
+                  (name table)                                         ;; table
+                  (cond set-values   alias
+                        delete-table nil
+                        :else        alias)                            ;; alias
+                  (cond set-values  (s/join ", " (set-values :values))
+                        :else        nil)                              ;; set
+                  (cond join? (ast-joins->sql joins) :else nil)        ;; joins
+                  (s/join " AND " conditions)                          ;; where
                   ]
                  (remove nil?))
             )
@@ -210,10 +221,10 @@
 ;; -----------------
 
 (defn table-alias
-  "Alias for a table."
+  "Alias for a table. This function needs a better name. This is more like a reference to the most relevant `condition` operation. Maybe this should be called `reference`"
   [op]
   ;; Use the table name as the alias
-  (:alias op)
+  (or (:alias op) (-> op :context :alias))
   ;; Create an alias from the camel case name
   ;; (let [t (name table)]
   ;;   (str
@@ -287,8 +298,11 @@
                                   (filter (operation-type? ["select", "condition"]))
                                   last
                                   (operation-type? ["condition"]))
-        last-op              (-> operations last)
-        all-columns          (cond all-columns-needed? (alias->select-all (or (last-op :alias) (->> last-op :context :alias)))
+        all-columns          (cond all-columns-needed? (->> operations
+                                                            last
+                                                            table-alias
+                                                            alias->select-all
+                                                            )
                                    :else               [])
         ]
 
@@ -354,7 +368,7 @@
 
 (defn operation->where
   "Get the where condition for an operation."
-  [schema qualify? operation]
+  [qualify? operation]
   (let [vs (:values operation)]
     (cond (empty? vs) { :conditions "1" :params nil}
           :else       (->> vs
@@ -372,9 +386,9 @@
 
 (defn operations->where
   "Get the joins from the operations"
-  [schema qualify? ops]
+  [qualify? ops]
   (let [
-        wheres (map (partial operation->where schema qualify?) ops)
+        wheres (map (partial operation->where qualify?) ops)
         ]
     {
      :conditions (->> wheres
@@ -498,23 +512,30 @@
         )
   )
 
-(defn operations->where
-  "Get the joins from the operations"
-  [schema qualify? ops]
-  (let [
-        wheres (map (partial operation->where schema qualify?) ops)
+(defn operation->set
+  "Execute the command "
+  [op]
+  (let [values (op :values)
+        alias  (table-alias op)
         ]
     {
-     :conditions (->> wheres
-                      (map :conditions)
-                      )
-     :params (->> wheres
-                  (map :params)
-                  (apply concat)
-                  vec
-                  )
-     }
-    )
+     :values (->> values
+                  (map first)
+                  (map (fn [column]
+                         (str (qualify column :with alias) " = ?"))))
+     :params (->> values
+                  (map second)
+                  vec)
+     }))
+
+(defn operations->set
+  "Create the AST for the SET part"
+  [operations]
+  (let [ops (filter (operation-type? ["set"]) operations)]
+    (cond (empty? ops) nil
+          :else        (->> ops
+                            last
+                            operation->set)))
   )
 
 (defn operations->ast
@@ -525,8 +546,9 @@
         primary-op    (first condition-ops)
         table         (:entity primary-op)
         delete        (operations->delete ops)
+        set-values    (operations->set ops)
         joins         (operations->joins schema condition-ops)
-        where         (operations->where schema (cond delete nil :else true) condition-ops)
+        where         (operations->where (cond delete nil :else true) condition-ops)
         order         (operations->order ops)
         group         (operations->group ops)
         limit         (operations->limit ops)
@@ -541,7 +563,8 @@
      :group group
      :limit limit
      :meta  meta
-     :delete delete     ; takes precedence over `select`
+     :delete delete
+     :set    set-values
      }
     )
   )

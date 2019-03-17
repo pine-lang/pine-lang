@@ -223,7 +223,7 @@ customers "Acme Inc" | address "xyz"
 
 In case we find multiple paths with an equal distance, then I need to find a priority algorithm.. More on that later.
 
-### [ ] Updates
+### [x] Updates
 
 ```
 caseFiles 1 | set! title=new_title

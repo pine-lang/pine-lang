@@ -129,3 +129,14 @@
        }
       (pine-prepare fixtures/schema "folders 1 | folders")
       ))))
+
+(deftest pine-prepare:set-values
+  (testing "Set values"
+    (is
+     (=
+      {
+       :query "UPDATE folders AS folders_0 SET folders_0.title = ? WHERE folders_0.id = ? LIMIT 50"
+       :params ["test" "1"]
+       }
+      (pine-prepare fixtures/schema "folders 1 | set! title=test")
+      ))))

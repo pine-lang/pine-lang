@@ -131,9 +131,16 @@
       { :conditions "customers_0.id = ?" :params ["1"] }
       (->> (ast/str->operations "customers 1")
            first
-           (ast/operation->where fixtures/schema true)
+           (ast/operation->where true)
            )
       ))))
+
+;; (->>
+;;  "customers 3 | set! id=1 name=1231"
+;;  ast/str->operations
+;;  (ast/operations->ast fixtures/schema)
+;;  ast/ast->sql-and-params
+;;  )
 
 (deftest operation->where:customer-name-is-acme
   (testing "Create a where condition from an operation"
@@ -142,7 +149,7 @@
       { :conditions "customers_0.name = ?" :params ["acme"] }
       (->> (ast/str->operations "customers name=acme")
            first
-           (ast/operation->where fixtures/schema true))
+           (ast/operation->where true))
       ))))
 
 (deftest operation->where:customer-name-is-acme-something
@@ -152,7 +159,7 @@
       { :conditions "customers_0.name LIKE ?" :params ["acme%"] }
       (->> (ast/str->operations "customers name=acme*")
            first
-           (ast/operation->where fixtures/schema true))
+           (ast/operation->where true))
       ))))
 
 (deftest operations->where
@@ -167,9 +174,14 @@
        }
       (->> "customers name=acme | users 1"
            ast/str->operations
-           (ast/operations->where fixtures/schema true)
+           (ast/operations->where true)
            )
       ))))
+
+;; (->> "customers 1 | test"
+;;      ast/str->operations
+;;      (ast/operations->set)
+;;      )
 
 (deftest operations->join:entity-owns-another-entity
   (testing "Create operations for a query"
@@ -251,12 +263,18 @@
        :limit "LIMIT 50"
        :meta nil
        :delete nil
+       :set nil
        }
-      (ast/operations->ast
-       fixtures/schema
-       (ast/str->operations "customers 1 | caseFiles name=john | documents name=test")
-       )
+      (->> "customers 1 | caseFiles name=john | documents name=test"
+      ast/str->operations
+      (ast/operations->ast fixtures/schema))
       ))))
+
+
+;; (->> "customers 1 | caseFiles name=john | documents name=test"
+;;      ast/str->operations
+;;      (ast/operations->ast fixtures/schema)
+;;      )
 
 ;; AST to SQL
 
@@ -306,15 +324,15 @@
     (is
      (=
       (ast/ast->sql-and-params {
-                     :select ["u.*"]
-                     :from [:customers "c"]
-                     :joins [:users "u" ["u.customerId" "c.id"]]
-                     :where {
-                             :conditions ["c.id = ?"
-                                          "u.name = ?"
-                                          ]
-                             :params     ["1" "john"]
-                             }
+                                :select ["u.*"]
+                                :from [:customers "c"]
+                                :joins [:users "u" ["u.customerId" "c.id"]]
+                                :where {
+                                        :conditions ["c.id = ?"
+                                                     "u.name = ?"
+                                                     ]
+                                        :params     ["1" "john"]
+                                        }
                      })
       ["SELECT u.* FROM customers AS c JOIN users AS u ON (u.customerId = c.id) WHERE c.id = ? AND u.name = ?" ["1" "john"]]
       ))))
