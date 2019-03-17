@@ -70,11 +70,10 @@
           (match ops
            [:OPERATIONS & parsed] parsed
            :else ops))
-        (parsed-filter->indexed-filter [f]
-          (match f
-                 [:filter [:implicit-filter [:string value]]]                  ["id" value]
-                 [:filter [:explicit-filter [:string column] [:string value]]] [column value]
-                 :else (throw (Exception. "Can't index filter"))
+        (parsed-value->indexed-value [v]
+          (match v
+                 [:key-value [:string column] [:string value]] [column value]
+                 :else (throw (Exception. (format "Can't index value: %s" v)))
                  )
           )
         (parsed-cols->indexed-cols [cs]
@@ -87,8 +86,11 @@
         (parsed-op->indexed-op [op]
           (match op
                  ;; conditions
-                 [:CONDITION [:entity [:string table]] ]                       {:type "condition" :entity (keyword table) :filters []}
-                 [:CONDITION [:entity [:string table]] [:filters & filters]]   {:type "condition" :entity (keyword table) :filters (map parsed-filter->indexed-filter filters)}
+                 [:CONDITION [:entity [:string table]] ]                       {:type "condition" :entity (keyword table) :values []}
+                 [:CONDITION [:entity [:string table]] [:values
+                                                        [:id [:string id]]]]   {:type "condition" :entity (keyword table) :values [["id" id]]}
+                 [:CONDITION [:entity [:string table]] [:values
+                                                        [:key-values & values]]]     {:type "condition" :entity (keyword table) :values (map parsed-value->indexed-value values)}
                  ;; select
                  [:SELECT [:specific [:columns & columns]]]                    {:type "select" :columns (parsed-cols->indexed-cols columns)}
                  [:SELECT [:invert-specific [:columns & columns]]]             (throw (Exception. "Unselect key word is not supported yet."))
@@ -107,8 +109,11 @@
                  ;; meta
                  [:META [:ref]]                                                {:type "meta" :fn-name "references"}
 
-                 ;; meta
+                 ;; Delete
                  [:DELETE]                                                     {:type "delete"}
+
+                 ;; Set
+                 [:SET [:key-values & values] ]                                {:type "set" :values (map parsed-value->indexed-value values)}
 
                  ;; not specified
                  :else (throw (Exception. (format "Can't convert format of operation: %s" op)))
@@ -350,9 +355,9 @@
 (defn operation->where
   "Get the where condition for an operation."
   [schema qualify? operation]
-  (let [fs (:filters operation)]
-    (cond (empty? fs) { :conditions "1" :params nil}
-          :else       (->> fs
+  (let [vs (:values operation)]
+    (cond (empty? vs) { :conditions "1" :params nil}
+          :else       (->> vs
                            (map (partial filter->where-condition (:alias operation) qualify?))
                            ((fn [where-conditions] { :conditions (->> where-conditions
                                                          (map first)
@@ -493,6 +498,25 @@
         )
   )
 
+(defn operations->where
+  "Get the joins from the operations"
+  [schema qualify? ops]
+  (let [
+        wheres (map (partial operation->where schema qualify?) ops)
+        ]
+    {
+     :conditions (->> wheres
+                      (map :conditions)
+                      )
+     :params (->> wheres
+                  (map :params)
+                  (apply concat)
+                  vec
+                  )
+     }
+    )
+  )
+
 (defn operations->ast
   "operations to ast"
   [schema ops]
@@ -517,7 +541,7 @@
      :group group
      :limit limit
      :meta  meta
-     :delete delete   ; if 'delete' exists, 'select' will be ignored
+     :delete delete     ; takes precedence over `select`
      }
     )
   )

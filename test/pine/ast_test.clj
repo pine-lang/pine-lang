@@ -14,7 +14,7 @@
       [{:type    "condition"
         :entity  :customers
         :alias   "customers_0"
-        :filters [[ "id" "1" ]]
+        :values  [[ "id" "1" ]]
         :context {:entity nil, :alias nil}
         }]
       (ast/str->operations "customers 1")
@@ -27,7 +27,7 @@
       [{:type    "condition"
         :entity  :customers
         :alias   "customers_0"
-        :filters []
+        :values  []
         :context {:entity nil :alias nil}
         }
        {:type    "function"
@@ -45,7 +45,7 @@
       [{:type    "condition"
         :entity  :customers
         :alias   "customers_0"
-        :filters [[ "id" "1" ]]
+        :values  [[ "id" "1" ]]
         :context {:entity nil, :alias nil}
         }
        ]
@@ -59,7 +59,7 @@
       [{:type    "condition"
         :entity  :customers
         :alias   "customers_0"
-        :filters [[ "name" "1*" ]]
+        :values  [[ "name" "1*" ]]
         :context {:entity nil, :alias nil}
         }]
       (ast/str->operations "customers name=1*")
@@ -72,13 +72,13 @@
       [{:type    "condition"
         :entity  :customers
         :alias   "customers_0"
-        :filters [[ "id" "1" ]]
+        :values  [[ "id" "1" ]]
         :context {:entity nil, :alias nil}
         }
        {:type    "condition"
         :entity  :users
         :alias   "users_1"
-        :filters [[ "id" "2" ]]
+        :values  [[ "id" "2" ]]
         :context {:entity :customers, :alias "customers_0"}
         }]
       (ast/str->operations "customers 1 | users 2")
@@ -91,19 +91,19 @@
       [{:type    "condition"
         :entity  :customers
         :alias   "customers_0"
-        :filters [[ "id" "1" ]]
+        :values  [[ "id" "1" ]]
         :context {:entity nil, :alias nil}
         }
        {:type    "condition"
         :entity  :users
         :alias   "users_1"
-        :filters [[ "name" "John" ]]
+        :values  [[ "name" "John" ]]
         :context {:entity :customers, :alias "customers_0"}
         }
        {:type    "condition"
         :entity  :address
         :alias   "address_2"
-        :filters []
+        :values  []
         :context {:entity :users, :alias "users_1"}
         }
        ]
@@ -178,8 +178,8 @@
       [:documents "d" ["d.caseFileId" "cf.id"]]
       (ast/operations->join
        fixtures/schema
-       {:entity :caseFiles :filters [[ "id" "1" ]], :alias "cf"}
-       {:entity :documents :filters [[ "id" "2" ]], :alias "d"})
+       {:entity :caseFiles :values [[ "id" "1" ]], :alias "cf"}
+       {:entity :documents :values [[ "id" "2" ]], :alias "d"})
       ))))
 
 (deftest operations->join:entity-owned-by-another-entity
@@ -189,8 +189,8 @@
       [:caseFiles "cf" ["cf.id" "d.caseFileId"]]
       (ast/operations->join
        fixtures/schema
-       {:entity :documents :filters [[ "id" "2" ]] :alias "d"}
-       {:entity :caseFiles :filters [[ "id" "1" ]] :alias "cf"}
+       {:entity :documents :values [[ "id" "2" ]] :alias "d"}
+       {:entity :caseFiles :values [[ "id" "1" ]] :alias "cf"}
        )
       ))))
 
@@ -200,9 +200,9 @@
      (=
       (ast/operations->joins
        fixtures/schema
-       [{:entity :customers :filters [[ "id" "1" ]]      :alias "c"}
-        {:entity :caseFiles :filters [[ "id" "2" ]]      :alias "cf"}
-        {:entity :documents :filters [[ "name" "test" ]] :alias "d"}
+       [{:entity :customers :values [[ "id" "1" ]]      :alias "c"}
+        {:entity :caseFiles :values [[ "id" "2" ]]      :alias "cf"}
+        {:entity :documents :values [[ "name" "test" ]] :alias "d"}
         ])
       [:caseFiles "cf" ["cf.customerId" "c.id"]
        :documents "d" ["d.caseFileId" "cf.id"]]
@@ -215,8 +215,8 @@
       [:caseFiles "cf" ["cf.customerId" "c.id"]]
       (ast/operations->joins
        fixtures/schema
-       [{:type "condition" :entity :customers :filters [] :alias "c"}
-        {:type "condition" :entity :caseFiles :filters [] :alias "cf"}
+       [{:type "condition" :entity :customers :values [] :alias "c"}
+        {:type "condition" :entity :caseFiles :values [] :alias "cf"}
         ])
       ))))
 
@@ -226,7 +226,7 @@
      (=
       nil
       (ast/operations->group
-       [{:type "condition" :entity :customers, :filters []}
+       [{:type "condition" :entity :customers, :values []}
         ])
       ))))
 

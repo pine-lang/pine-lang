@@ -1,5 +1,5 @@
 OPERATIONS := OPERATION <whitespace*> (<"|"?> <whitespace*> OPERATION <whitespace*>)*
-OPERATION  := SELECT | CONDITION | LIMIT | FUNCTION | GROUP | ORDER | META | DELETE
+OPERATION  := SELECT | CONDITION | LIMIT | FUNCTION | GROUP | ORDER | META | DELETE | SET
 
 SELECT          := specific | invert-specific
 specific        := <#"s(el(ect)?)?:"> <whitespace+> columns
@@ -7,12 +7,7 @@ invert-specific := <#"u(ns(elect)?)?:"> <whitespace+> columns
 columns         := column (<","> <whitespace*> column)*
 column          := string
 
-CONDITION       := entity | entity <whitespace+> filters
-entity          := string
-filters         := filter (<whitespace+> filter)*
-filter          := implicit-filter | explicit-filter
-implicit-filter := string
-explicit-filter := string <whitespace*> <"="> <whitespace*> string
+CONDITION       := entity | entity <whitespace+> values
 
 FUNCTION        := #"(count|min|max)" <":"> <whitespace+> columns
 
@@ -27,6 +22,14 @@ ref             := <#"ref(erences)?"> <"?">
 
 DELETE          := <#"delete!">
 
+SET             := <#"set!"> <whitespace+> key-values
+
 number     := #"[0-9]+"
 string     := #"[A-Za-z0-9-_*.@]+"
 whitespace := #"\s+"
+entity     := string
+
+values      := id | key-values
+id          := string
+key-values  := key-value (<whitespace+> key-value)*
+key-value   := string <whitespace*> <"="> <whitespace*> string
