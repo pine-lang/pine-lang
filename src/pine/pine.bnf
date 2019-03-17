@@ -1,4 +1,4 @@
-OPERATIONS := OPERATION <whitespace*> (<"|"?> <whitespace*> OPERATION <whitespace*>)*
+OPERATIONS := OPERATION <whitespace*> (<"|"> <whitespace*> OPERATION <whitespace*>)*
 OPERATION  := SELECT | CONDITION | LIMIT | FUNCTION | GROUP | ORDER | META | DELETE | SET
 
 SELECT          := specific | invert-specific
