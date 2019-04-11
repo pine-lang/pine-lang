@@ -72,8 +72,8 @@
            :else ops))
         (parsed-value->indexed-value [v]
           (match v
-                 [:comparison [:string column] [:string value]] [column value]
-                 [:assignment [:string column] [:string value]] [column value]
+                 [:comparison [:string column] [:operator op ] [:string value]] [column value op]
+                 [:assignment [:string column] [:string value]]                 [column value "="]
                  :else (throw (Exception. (format "Can't index value: %s" v)))
                  )
           )
@@ -88,7 +88,7 @@
           (match op
                  ;; conditions
                  [:CONDITION [:entity [:string table]] ]                        {:type "condition" :entity (keyword table) :values []}
-                 [:CONDITION [:entity [:string table]] [:id [:string id]]]      {:type "condition" :entity (keyword table) :values [["id" id]]}
+                 [:CONDITION [:entity [:string table]] [:id [:string id]]]      {:type "condition" :entity (keyword table) :values [["id" id "="]]}
                  [:CONDITION [:entity [:string table]] [:comparisons & values]] {:type "condition" :entity (keyword table) :values (map parsed-value->indexed-value values)}
                  ;; select
                  [:SELECT [:specific [:columns & columns]]]                    {:type "select" :columns (parsed-cols->indexed-cols columns)}
@@ -358,9 +358,9 @@
 
 (defn filter->where-condition
   "Convert the filter part of an operation to a where sql"
-  [entity qualify? [column value]]
+  [entity qualify? [column value op]]
   (let [col (cond qualify? (qualify column :with (name entity)) :else column)
-        operator (cond (re-find #"\*" value) "LIKE" :else "=")
+        operator (cond (re-find #"\*" value) "LIKE" :else op)
         val      (s/replace value "*" "%")]
     [(format "%s %s ?" col operator) val])
   )

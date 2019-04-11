@@ -14,7 +14,7 @@
       [{:type    "condition"
         :entity  :customers
         :alias   "customers_0"
-        :values  [[ "id" "1" ]]
+        :values  [[ "id" "1" "="]]
         :context {:entity nil, :alias nil}
         }]
       (ast/str->operations "customers 1")
@@ -45,7 +45,7 @@
       [{:type    "condition"
         :entity  :customers
         :alias   "customers_0"
-        :values  [[ "id" "1" ]]
+        :values  [[ "id" "1"  "="]]
         :context {:entity nil, :alias nil}
         }
        ]
@@ -59,7 +59,7 @@
       [{:type    "condition"
         :entity  :customers
         :alias   "customers_0"
-        :values  [[ "name" "1*" ]]
+        :values  [[ "name" "1*" "="]]
         :context {:entity nil, :alias nil}
         }]
       (ast/str->operations "customers name=1*")
@@ -72,13 +72,13 @@
       [{:type    "condition"
         :entity  :customers
         :alias   "customers_0"
-        :values  [[ "id" "1" ]]
+        :values  [[ "id" "1" "="]]
         :context {:entity nil, :alias nil}
         }
        {:type    "condition"
         :entity  :users
         :alias   "users_1"
-        :values  [[ "id" "2" ]]
+        :values  [[ "id" "2" "="]]
         :context {:entity :customers, :alias "customers_0"}
         }]
       (ast/str->operations "customers 1 | users 2")
@@ -91,13 +91,13 @@
       [{:type    "condition"
         :entity  :customers
         :alias   "customers_0"
-        :values  [[ "id" "1" ]]
+        :values  [[ "id" "1" "="]]
         :context {:entity nil, :alias nil}
         }
        {:type    "condition"
         :entity  :users
         :alias   "users_1"
-        :values  [[ "name" "John" ]]
+        :values  [[ "name" "John" "="]]
         :context {:entity :customers, :alias "customers_0"}
         }
        {:type    "condition"
@@ -335,4 +335,32 @@
                                         }
                      })
       ["SELECT u.* FROM customers AS c JOIN users AS u ON (u.customerId = c.id) WHERE c.id = ? AND u.name = ?" ["1" "john"]]
+      ))))
+
+(deftest str->operations:one-operation-comparison-less-than
+  (testing "Create operations for a query explicitly specifying the id with a comparison operator"
+    (is
+     (=
+      [{:type    "condition"
+        :entity  :customers
+        :alias   "customers_0"
+        :values  [[ "id" "1"  "<"]]
+        :context {:entity nil, :alias nil}
+        }
+       ]
+      (ast/str->operations "customers id<1")
+      ))))
+
+(deftest str->operations:one-operation-comparison-greater-than
+  (testing "Create operations for a query explicitly specifying the id with a comparison operator"
+    (is
+     (=
+      [{:type    "condition"
+        :entity  :customers
+        :alias   "customers_0"
+        :values  [[ "id" "1"  ">"]]
+        :context {:entity nil, :alias nil}
+        }
+       ]
+      (ast/str->operations "customers id>1")
       ))))

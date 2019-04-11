@@ -46,6 +46,14 @@ Multiple filters seperated by a whitespace:
 users name="John" email="john*"
 ```
 
+### [x] Comparisons in the filters
+
+Support operators like `<`, and `>`, along with the standard `=`:
+
+```
+users id>1000
+```
+
 ### [x] Select specific columns
 
 The following pine expression to select specific columns:

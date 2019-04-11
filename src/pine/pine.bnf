@@ -24,15 +24,16 @@ DELETE          := <#"delete!">
 
 SET             := <#"set!"> <whitespace+> assignments
 
-number     := #"[0-9]+"
-string     := #"[A-Za-z0-9-_*.@]+"
-whitespace := #"\s+"
-entity     := string
-
 id          := string
 assignments  := assignment (<whitespace+> assignment)*
 assignment   := string <whitespace*> <"="> <whitespace*> string
 
 comparisons  := comparison (<whitespace+> comparison)*
-comparison   := string <whitespace*> <"="> <whitespace*> string
+comparison   := string <whitespace*> operator <whitespace*> string
 
+
+number     := #"[0-9]+"
+string     := #"[A-Za-z0-9-_*.@]+"
+whitespace := #"\s+"
+entity     := string
+operator   := #"<|>|="

@@ -29,6 +29,28 @@
       (pine-prepare fixtures/schema  "customers 1")
       ))))
 
+(deftest pine-prepare:one-operation-explicit-filter-on-id
+  (testing "Create sql a pine expression containing one operation"
+    (is
+     (=
+      {
+       :query "SELECT customers_0.* FROM customers AS customers_0 WHERE customers_0.id = ? LIMIT 50"
+       :params ["1"]
+       }
+      (pine-prepare fixtures/schema  "customers id=1")
+      ))))
+
+(deftest pine-prepare:one-operation-comprison-operator
+  (testing "Create sql a pine expression containing one operation"
+    (is
+     (=
+      {
+       :query "SELECT customers_0.* FROM customers AS customers_0 WHERE customers_0.id > ? LIMIT 50"
+       :params ["1"]
+       }
+      (pine-prepare fixtures/schema  "customers id>1")
+      ))))
+
 (deftest pine-prepare:one-operation-multiple-and-filters
   (testing "Create sql a pine expression containing one operation with AND filters"
     (is
