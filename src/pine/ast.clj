@@ -80,7 +80,8 @@
         (parsed-cols->indexed-cols [cs]
           (reduce (fn [acc c]
                     (match c
-                           [:column [:string column-name]] (conj acc column-name)
+                           [:column [:string column-name]]                           (conj acc column-name)
+                           [:column [:string column-name] [:alias [:string a]]]      (conj acc (format "%s AS %s" column-name a))
                            :else (throw (Exception. (format "Can't index column: %s" c)))
                            )) [] cs)
           )

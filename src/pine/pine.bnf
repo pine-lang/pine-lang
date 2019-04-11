@@ -5,7 +5,8 @@ SELECT          := specific | invert-specific
 specific        := <#"s(el(ect)?)?:"> <whitespace+> columns
 invert-specific := <#"u(ns(elect)?)?:"> <whitespace+> columns
 columns         := column (<","> <whitespace*> column)*
-column          := string
+column          := string | string <whitespace*> <#"as|AS"> <whitespace*> alias
+alias           := string
 
 CONDITION       := entity | entity <whitespace+> id | entity <whitespace+> comparisons
 
@@ -24,7 +25,7 @@ DELETE          := <#"delete!">
 
 SET             := <#"set!"> <whitespace+> assignments
 
-id          := string
+id           := string
 assignments  := assignment (<whitespace+> assignment)*
 assignment   := string <whitespace*> <"="> <whitespace*> string
 

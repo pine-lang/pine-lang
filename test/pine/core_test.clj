@@ -112,10 +112,10 @@
     (is
      (=
       {
-       :query "SELECT users_0.id, users_0.fullName FROM users AS users_0 WHERE 1 LIMIT 50"
+       :query "SELECT users_0.id, users_0.fullName AS name FROM users AS users_0 WHERE 1 LIMIT 50"
        :params []
        }
-      (pine-prepare fixtures/schema "users | select: id, fullName")
+      (pine-prepare fixtures/schema "users | select: id, fullName AS name")
       ))))
 
 (deftest pine-prepare:two-tables-selected-columns

@@ -309,7 +309,7 @@ or
 folders |> users
 ```
 
-### [ ] Specify aliases
+### [ ] Resource aliases
 
 Allow the following:
 
@@ -331,6 +331,20 @@ incremental calculation model where you can keep on adding operations and don't
 have to go back to modify an operation.
 
 
+
+### [x] Column aliases
+
+Column aliases
+```
+customers 1 | s: id as customer_id, name as customer_name
+```
+should build the following query:
+
+```
+SELECT c.id AS customer_id, c.name AS customer_name
+  FROM customers AS c
+ WHERE c.id = 1
+```
 
 ## Tasks
 
