@@ -72,7 +72,8 @@
            :else ops))
         (parsed-value->indexed-value [v]
           (match v
-                 [:key-value [:string column] [:string value]] [column value]
+                 [:comparison [:string column] [:string value]] [column value]
+                 [:assignment [:string column] [:string value]] [column value]
                  :else (throw (Exception. (format "Can't index value: %s" v)))
                  )
           )
@@ -86,11 +87,9 @@
         (parsed-op->indexed-op [op]
           (match op
                  ;; conditions
-                 [:CONDITION [:entity [:string table]] ]                       {:type "condition" :entity (keyword table) :values []}
-                 [:CONDITION [:entity [:string table]] [:values
-                                                        [:id [:string id]]]]   {:type "condition" :entity (keyword table) :values [["id" id]]}
-                 [:CONDITION [:entity [:string table]] [:values
-                                                        [:key-values & values]]]     {:type "condition" :entity (keyword table) :values (map parsed-value->indexed-value values)}
+                 [:CONDITION [:entity [:string table]] ]                        {:type "condition" :entity (keyword table) :values []}
+                 [:CONDITION [:entity [:string table]] [:id [:string id]]]      {:type "condition" :entity (keyword table) :values [["id" id]]}
+                 [:CONDITION [:entity [:string table]] [:comparisons & values]] {:type "condition" :entity (keyword table) :values (map parsed-value->indexed-value values)}
                  ;; select
                  [:SELECT [:specific [:columns & columns]]]                    {:type "select" :columns (parsed-cols->indexed-cols columns)}
                  [:SELECT [:invert-specific [:columns & columns]]]             (throw (Exception. "Unselect key word is not supported yet."))
@@ -113,7 +112,7 @@
                  [:DELETE]                                                     {:type "delete"}
 
                  ;; Set
-                 [:SET [:key-values & values] ]                                {:type "set" :values (map parsed-value->indexed-value values)}
+                 [:SET [:assignments & values] ]                               {:type "set" :values (map parsed-value->indexed-value values)}
 
                  ;; not specified
                  :else (throw (Exception. (format "Can't convert format of operation: %s" op)))

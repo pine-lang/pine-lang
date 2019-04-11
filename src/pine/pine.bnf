@@ -7,7 +7,7 @@ invert-specific := <#"u(ns(elect)?)?:"> <whitespace+> columns
 columns         := column (<","> <whitespace*> column)*
 column          := string
 
-CONDITION       := entity | entity <whitespace+> values
+CONDITION       := entity | entity <whitespace+> id | entity <whitespace+> comparisons
 
 FUNCTION        := #"(count|min|max)" <":"> <whitespace+> columns
 
@@ -22,14 +22,17 @@ ref             := <#"ref(erences)?"> <"?">
 
 DELETE          := <#"delete!">
 
-SET             := <#"set!"> <whitespace+> key-values
+SET             := <#"set!"> <whitespace+> assignments
 
 number     := #"[0-9]+"
 string     := #"[A-Za-z0-9-_*.@]+"
 whitespace := #"\s+"
 entity     := string
 
-values      := id | key-values
 id          := string
-key-values  := key-value (<whitespace+> key-value)*
-key-value   := string <whitespace*> <"="> <whitespace*> string
+assignments  := assignment (<whitespace+> assignment)*
+assignment   := string <whitespace*> <"="> <whitespace*> string
+
+comparisons  := comparison (<whitespace+> comparison)*
+comparison   := string <whitespace*> <"="> <whitespace*> string
+
