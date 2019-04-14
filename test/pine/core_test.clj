@@ -162,3 +162,25 @@
        }
       (pine-prepare fixtures/schema "folders 1 | set! title=test")
       ))))
+
+(deftest pine-prepare:one-operation-group-implicit-fn
+  (testing "Group by id and implicitly use the default group function i.e. count"
+    (is
+     (=
+      {
+       :query "SELECT customers_0.status, count(customers_0.status) FROM customers AS customers_0 WHERE 1 GROUP BY customers_0.status LIMIT 50"
+       :params []
+       }
+      (pine-prepare fixtures/schema  "customers | group: status")
+      ))))
+
+(deftest pine-prepare:one-operation-group-explicity-fn
+  (testing "Group by id and specify a group function"
+    (is
+     (=
+      {
+       :query "SELECT customers_0.status, max(customers_0.id) FROM customers AS customers_0 WHERE 1 GROUP BY customers_0.status LIMIT 50"
+       :params []
+       }
+      (pine-prepare fixtures/schema  "customers | group: status max: id")
+      ))))

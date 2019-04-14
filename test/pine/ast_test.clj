@@ -20,7 +20,7 @@
       (ast/str->operations "customers 1")
       ))))
 
-(deftest str->operations:max-function
+(deftest str->operations:group-explicit-fn
   (testing "Create operations for a max function"
     (is
      (=
@@ -30,12 +30,13 @@
         :values  []
         :context {:entity nil :alias nil}
         }
-       {:type    "function"
+       {:type    "group"
+        :column  "status"
         :fn-name "max"
-        :columns ["created"]
+        :fn-column "id"
         :context {:entity :customers :alias "customers_0"}
         }]
-      (ast/str->operations "customers | max: created")
+      (ast/str->operations "customers | group: status max: id")
       ))))
 
 (deftest str->operations:one-operation-explicit-id
@@ -112,15 +113,15 @@
 
 ;; Opertations to AST
 
-(deftest operations->function-columns
+(deftest operations->group-implicit-fn
   (testing "Create a where condition from operations"
     (is
      (=
-      ["max(customers_0.created)"]
-      (->> "customers 1 | max: created"
+      ["customers_0.id, count(customers_0.id)"]
+      (->> "customers 1 | group: id"
        ast/str->operations
-       (filter (ast/operation-type? ["function"]))
-       ast/operations->function-columns
+       (filter (ast/operation-type? ["group"]))
+       ast/operations->group-columns
        )
       ))))
 

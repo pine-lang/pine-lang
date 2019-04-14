@@ -103,28 +103,29 @@ SELECT count(c.id)
 ### [x] Group on a column
 
 ```
-customers | count: id | group: status
+customers | group: id
 ```
 
 evaluates to:
 
 ```
-  SELECT count(c.id)
+  SELECT id, count(c.id)
     FROM customers AS c
-GROUP BY c.status
+  GROUP BY c.id
 ```
 
-```
-customers name=dummy* | s: status | count: status | group: status
-```
-
-should evaluate something like:
+If you want to specify the group function, use the following syntax:
 
 ```
-SELECT c.status, count(c.status)
-  FROM customers AS c
- WHERE c.name LIKE "dummy%"
- GROUP BY c.status
+customers | group: status join: id
+```
+
+evaluates to:
+
+```
+  SELECT status, GROUP_CONCAT(c.id)
+    FROM customers AS c
+  GROUP BY c.status
 ```
 
 ### [x] Order by a column

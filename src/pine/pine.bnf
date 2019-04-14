@@ -1,5 +1,5 @@
 OPERATIONS := OPERATION <whitespace*> (<"|"> <whitespace*> OPERATION <whitespace*>)*
-OPERATION  := SELECT | CONDITION | LIMIT | FUNCTION | GROUP | ORDER | META | DELETE | SET
+OPERATION  := SELECT | CONDITION | LIMIT | GROUP | ORDER | META | DELETE | SET
 
 SELECT          := specific | invert-specific
 specific        := <#"s(el(ect)?)?:"> <whitespace+> columns
@@ -10,11 +10,11 @@ alias           := string
 
 CONDITION       := entity | entity <whitespace+> id | entity <whitespace+> comparisons
 
-FUNCTION        := #"(count|min|max)" <":"> <whitespace+> columns
 
 ORDER           := <#"o(rder)?:"> <whitespace*> "+"? column
 
-GROUP           := <#"g(roup)?:"> <whitespace+> columns
+GROUP           := <#"g(roup)?:"> <whitespace+> column (<whitespace+> group-fn)?
+group-fn        := #"(count|min|max|join)" <":"> <whitespace+> column
 
 LIMIT           := <#"l(imit)?:"> <whitespace+> number
 

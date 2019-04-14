@@ -96,11 +96,11 @@
                  [:SELECT [:invert-specific [:columns & columns]]]             (throw (Exception. "Unselect key word is not supported yet."))
                  ;; limit
                  [:LIMIT [:number number]]                                     {:type "limit" :count (Integer. number)}
-                 ;; function
-                 [:FUNCTION fn-name [:columns [:column [:string column]]]]     {:type "function" :fn-name fn-name :columns [column]}
 
                  ;; group
-                 [:GROUP [:columns [:column [:string column]]]]                {:type "group" :columns [column]}
+                 [:GROUP [:column [:string col]] ]                             {:type "group" :column col :fn-name "count" :fn-column col}
+                 [:GROUP [:column [:string col-a]]
+                  [:group-fn fn-name [:column [:string col-b]]]]               {:type "group" :column col-a :fn-name fn-name :fn-column col-b}
 
                  ;; order
                  [:ORDER "+" [:column [:string column]]]                       {:type "order" :direction "ascending"  :column column}
@@ -254,20 +254,26 @@
   [alias]
   [(format "%s.*" alias)])
 
-(defn operation->function-columns
+(defn operation->group-columns
   "Generate the sql for the 'function' operation"
   [op]
-  (let [fn-name (op :fn-name)
-        columns (op :columns)
-        alias   (->> op
-                     :context
-                     :alias)]
-    (format "%s(%s.%s)" fn-name alias (first columns))))
+  (let [fn-name     (op :fn-name)
+        sql-fn-name (case fn-name
+                      "join" "GROUP_CONCAT"
+                      fn-name
+                      )
+        column      (op :column)
+        fn-column   (op :fn-column)
+        alias       (->> op
+                         :context
+                         :alias)]
+    ;; @todo: return a vector instead of a string with all the columns
+    (format "%s.%s, %s(%s.%s)" alias column sql-fn-name alias fn-column)))
 
-(defn operations->function-columns
+(defn operations->group-columns
   "Get the columns for the last 'condition' operation or the select operation"
   [ops]
-  (map operation->function-columns ops))
+  (map operation->group-columns ops))
 
 
 (defn operations->select-specific
@@ -290,9 +296,9 @@
   "Get the columns for the last 'condition' operation or the select operation"
   [schema operations]
   (let [specific-columns    (operations->select-specific schema operations)
-        function-columns    (->> operations
-                                 (filter (operation-type? ["function"]))
-                                 operations->function-columns
+        group-columns       (->> operations
+                                 (filter (operation-type? ["group"]))
+                                 operations->group-columns
                                  )
         all-columns-needed?  (->> operations
                                   (filter (operation-type? ["select", "condition"]))
@@ -314,10 +320,10 @@
     ;; | x                | ✓                | function            |
     ;; | x                | x                | all                 |
 
-    (cond (and (not-empty specific-columns) (not-empty function-columns)) (concat specific-columns function-columns)
-          (and (not-empty specific-columns) (empty? function-columns))    (concat specific-columns all-columns)
-          (and (empty? specific-columns)    (not-empty function-columns)) function-columns
-          (and (empty? specific-columns)    (empty? function-columns))    all-columns
+    (cond (and (not-empty specific-columns) (not-empty group-columns)) (concat specific-columns group-columns)
+          (and (not-empty specific-columns) (empty? group-columns))    (concat specific-columns all-columns)
+          (and (empty? specific-columns)    (not-empty group-columns)) group-columns
+          (and (empty? specific-columns)    (empty? group-columns))    all-columns
           :else                                                           ["?"]
           )
     )
@@ -454,11 +460,11 @@
         ]
     (cond (and condition-op group-op) (let [
 
-                                         columns (group-op :columns)
+                                         column (group-op :column)
                                          a      (table-alias condition-op)
 
                                          ]
-                                     (format "GROUP BY %s.%s" a (first columns))
+                                     (format "GROUP BY %s.%s" a column)
                                      )
           :else nil
           )
