@@ -202,7 +202,7 @@ users !expireAt
 ```
 
 
-### [ ] Support multiple filters (OR)
+### [x] Support multiple filters (OR)
 
 Multiple filters seperated by a comma `,`:
 

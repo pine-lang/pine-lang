@@ -87,33 +87,38 @@
           )
         (parsed-op->indexed-op [op]
           (match op
-                 ;; conditions
-                 [:CONDITION [:entity [:string table]] ]                        {:type "condition" :entity (keyword table) :values []}
-                 [:CONDITION [:entity [:string table]] [:id [:string id]]]      {:type "condition" :entity (keyword table) :values [["id" id "="]]}
-                 [:CONDITION [:entity [:string table]] [:comparisons & values]] {:type "condition" :entity (keyword table) :values (map parsed-value->indexed-value values)}
+                 ;; resource/conditions
+                 ;;
+                 ;; At the moment the resource and condition operations are
+                 ;; grouped
+                 [:RESOURCE [:entity [:string table]] ]                   {:type "condition" :entity (keyword table) :values []}
+                 [:RESOURCE [:entity [:string table]] [:id [:string id]]] {:type "condition" :entity (keyword table) :values [["id" id "="]]}
+                 [:RESOURCE [:entity [:string table]] [:ids & ids]]       {:type "condition" :entity (keyword table) :values [["id" (str "(" (s/join "," (map second ids)) ")") "IN"]]}
+                 [:RESOURCE [:entity [:string table]] [:ands & values]]   {:type "condition" :entity (keyword table) :values (map parsed-value->indexed-value values) :or false}
+                 [:RESOURCE [:entity [:string table]] [:ors & values]]    {:type "condition" :entity (keyword table) :values (map parsed-value->indexed-value values) :or true}
                  ;; select
-                 [:SELECT [:specific [:columns & columns]]]                    {:type "select" :columns (parsed-cols->indexed-cols columns)}
-                 [:SELECT [:invert-specific [:columns & columns]]]             (throw (Exception. "Unselect key word is not supported yet."))
+                 [:SELECT [:specific [:columns & columns]]]               {:type "select" :columns (parsed-cols->indexed-cols columns)}
+                 [:SELECT [:invert-specific [:columns & columns]]]        (throw (Exception. "Unselect key word is not supported yet."))
                  ;; limit
-                 [:LIMIT [:number number]]                                     {:type "limit" :count (Integer. number)}
+                 [:LIMIT [:number number]]                                {:type "limit" :count (Integer. number)}
 
                  ;; group
-                 [:GROUP [:column [:string col]] ]                             {:type "group" :column col :fn-name "count" :fn-column col}
+                 [:GROUP [:column [:string col]] ]                        {:type "group" :column col :fn-name "count" :fn-column col}
                  [:GROUP [:column [:string col-a]]
-                  [:group-fn fn-name [:column [:string col-b]]]]               {:type "group" :column col-a :fn-name fn-name :fn-column col-b}
+                  [:group-fn fn-name [:column [:string col-b]]]]          {:type "group" :column col-a :fn-name fn-name :fn-column col-b}
 
                  ;; order
-                 [:ORDER "+" [:column [:string column]]]                       {:type "order" :direction "ascending"  :column column}
-                 [:ORDER [:column [:string column]]]                           {:type "order" :direction "descending" :column column}
+                 [:ORDER "+" [:column [:string column]]]                  {:type "order" :direction "ascending"  :column column}
+                 [:ORDER [:column [:string column]]]                      {:type "order" :direction "descending" :column column}
 
                  ;; meta
-                 [:META [:ref]]                                                {:type "meta" :fn-name "references"}
+                 [:META [:ref]]                                           {:type "meta" :fn-name "references"}
 
                  ;; Delete
-                 [:DELETE]                                                     {:type "delete"}
+                 [:DELETE]                                                {:type "delete"}
 
                  ;; Set
-                 [:SET [:assignments & values] ]                               {:type "set" :values (map parsed-value->indexed-value values)}
+                 [:SET [:assignments & values] ]                          {:type "set" :values (map parsed-value->indexed-value values)}
 
                  ;; not specified
                  :else (throw (Exception. (format "Can't convert format of operation: %s" op)))
@@ -375,14 +380,14 @@
 (defn operation->where
   "Get the where condition for an operation."
   [qualify? operation]
-  (let [vs (:values operation)]
+  (let [vs (:values operation)
+        or (:or operation)]
     (cond (empty? vs) { :conditions "1" :params nil}
           :else       (->> vs
                            (map (partial filter->where-condition (:alias operation) qualify?))
-                           ((fn [where-conditions] { :conditions (->> where-conditions
-                                                         (map first)
-                                                         (s/join " AND ")
-                                                         )
+                           ((fn [where-conditions] { :conditions (str "(" (->> where-conditions
+                                                                               (map first)
+                                                                               (s/join (cond or " OR " :else " AND "))) ")")
                                                     :params (->> where-conditions
                                                          (map second)
                                                          vec

@@ -1,5 +1,5 @@
 OPERATIONS := OPERATION <whitespace*> (<"|"> <whitespace*> OPERATION <whitespace*>)*
-OPERATION  := SELECT | CONDITION | LIMIT | GROUP | ORDER | META | DELETE | SET
+OPERATION  := SELECT | RESOURCE | LIMIT | GROUP | ORDER | META | DELETE | SET
 
 SELECT          := specific | invert-specific
 specific        := <#"s(el(ect)?)?:"> <whitespace+> columns
@@ -8,8 +8,7 @@ columns         := column (<","> <whitespace*> column)*
 column          := string | string <whitespace*> <#"as|AS"> <whitespace*> alias
 alias           := string
 
-CONDITION       := entity | entity <whitespace+> id | entity <whitespace+> comparisons
-
+RESOURCE        := entity | entity <whitespace+> id | entity <whitespace+> ids | entity <whitespace+> ands | entity <whitespace+> ors
 
 ORDER           := <#"o(rder)?:"> <whitespace*> "+"? column
 
@@ -29,8 +28,10 @@ id           := string
 assignments  := assignment (<whitespace+> assignment)*
 assignment   := string <whitespace*> <"="> <whitespace*> string
 
-comparisons  := comparison (<whitespace+> comparison)*
-comparison   := string <whitespace*> operator <whitespace*> string
+ids         := string (<whitespace*> <","> <whitespace*> string)*
+ors         := comparison (<whitespace*> <","> <whitespace*> comparison)*
+ands        := comparison (<whitespace*> comparison)*
+comparison  := string <whitespace*> operator <whitespace*> string
 
 
 number     := #"[0-9]+"

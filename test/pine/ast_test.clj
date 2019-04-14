@@ -48,6 +48,7 @@
         :alias   "customers_0"
         :values  [[ "id" "1"  "="]]
         :context {:entity nil, :alias nil}
+        :or      false
         }
        ]
       (ast/str->operations "customers id=1")
@@ -62,6 +63,7 @@
         :alias   "customers_0"
         :values  [[ "name" "1*" "="]]
         :context {:entity nil, :alias nil}
+        :or      false
         }]
       (ast/str->operations "customers name=1*")
       ))))
@@ -100,6 +102,7 @@
         :alias   "users_1"
         :values  [[ "name" "John" "="]]
         :context {:entity :customers, :alias "customers_0"}
+        :or      false
         }
        {:type    "condition"
         :entity  :address
@@ -129,7 +132,7 @@
   (testing "Create a where condition from an operation"
     (is
      (=
-      { :conditions "customers_0.id = ?" :params ["1"] }
+      { :conditions "(customers_0.id = ?)" :params ["1"] }
       (->> (ast/str->operations "customers 1")
            first
            (ast/operation->where true)
@@ -147,7 +150,7 @@
   (testing "Create a where condition from an operation"
     (is
      (=
-      { :conditions "customers_0.name = ?" :params ["acme"] }
+      { :conditions "(customers_0.name = ?)" :params ["acme"] }
       (->> (ast/str->operations "customers name=acme")
            first
            (ast/operation->where true))
@@ -157,7 +160,7 @@
   (testing "Create a where condition from an operation"
     (is
      (=
-      { :conditions "customers_0.name LIKE ?" :params ["acme%"] }
+      { :conditions "(customers_0.name LIKE ?)" :params ["acme%"] }
       (->> (ast/str->operations "customers name=acme*")
            first
            (ast/operation->where true))
@@ -168,8 +171,8 @@
     (is
      (=
       {
-       :conditions ["customers_0.name = ?"
-                    "users_1.id = ?"]
+       :conditions ["(customers_0.name = ?)"
+                    "(users_1.id = ?)"]
        :params ["acme"
                 "1"]
        }
@@ -253,9 +256,9 @@
        :joins [:caseFiles "caseFiles_1" ["caseFiles_1.customerId" "customers_0.id"]
                :documents "documents_2" ["documents_2.caseFileId" "caseFiles_1.id"]]
        :where {
-               :conditions ["customers_0.id = ?"
-                            "caseFiles_1.name = ?"
-                            "documents_2.name = ?"
+               :conditions ["(customers_0.id = ?)"
+                            "(caseFiles_1.name = ?)"
+                            "(documents_2.name = ?)"
                             ]
                :params     ["1" "john" "test"]
                }
@@ -347,6 +350,7 @@
         :alias   "customers_0"
         :values  [[ "id" "1"  "<"]]
         :context {:entity nil, :alias nil}
+        :or      false
         }
        ]
       (ast/str->operations "customers id<1")
@@ -361,6 +365,7 @@
         :alias   "customers_0"
         :values  [[ "id" "1"  ">"]]
         :context {:entity nil, :alias nil}
+        :or      false
         }
        ]
       (ast/str->operations "customers id>1")
