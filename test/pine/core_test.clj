@@ -228,3 +228,14 @@
        }
       (pine-prepare fixtures/schema  "users !name")
       ))))
+
+(deftest pine-prepare:function-count
+  (testing "Count all the rows"
+    (is
+     (=
+      {
+       :query "SELECT count(users_0.id) FROM users AS users_0 WHERE 1 LIMIT 50"
+       :params []
+       }
+      (pine-prepare fixtures/schema  "users | count: id")
+      ))))

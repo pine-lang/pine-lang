@@ -1,5 +1,5 @@
 OPERATIONS := OPERATION <whitespace*> (<"|"> <whitespace*> OPERATION <whitespace*>)*
-OPERATION  := SELECT | RESOURCE | LIMIT | GROUP | ORDER | META | DELETE | SET
+OPERATION  := SELECT | RESOURCE | LIMIT | GROUP | ORDER | META | DELETE | SET | FUNCTION
 
 SELECT          := specific | invert-specific
 specific        := <#"s(el(ect)?)?:"> <whitespace+> columns
@@ -12,8 +12,8 @@ RESOURCE        := entity | entity <whitespace+> id | entity <whitespace+> ids |
 
 ORDER           := <#"o(rder)?:"> <whitespace*> "+"? column
 
-GROUP           := <#"g(roup)?:"> <whitespace+> column (<whitespace+> group-fn)?
-group-fn        := #"(count|min|max|join)" <":"> <whitespace+> column
+GROUP           := <#"g(roup)?:"> <whitespace+> column (<whitespace+> FUNCTION)?
+FUNCTION        := #"(count|min|max|join)" <":"> <whitespace+> column
 
 LIMIT           := <#"l(imit)?:"> <whitespace+> number
 

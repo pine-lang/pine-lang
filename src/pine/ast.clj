@@ -107,7 +107,10 @@
                  ;; group
                  [:GROUP [:column [:string col]] ]                        {:type "group" :column col :fn-name "count" :fn-column col}
                  [:GROUP [:column [:string col-a]]
-                  [:group-fn fn-name [:column [:string col-b]]]]          {:type "group" :column col-a :fn-name fn-name :fn-column col-b}
+                  [:FUNCTION fn-name [:column [:string col-b]]]]          {:type "group" :column col-a :fn-name fn-name :fn-column col-b}
+
+                 ;; function
+                 [:FUNCTION fn-name [:column [:string col]]]              {:type "function" :fn-name fn-name :fn-column col}
 
                  ;; order
                  [:ORDER "+" [:column [:string column]]]                  {:type "order" :direction "ascending"  :column column}
@@ -261,8 +264,23 @@
   [alias]
   [(format "%s.*" alias)])
 
-(defn operation->group-columns
+(defn operation->function-columns
   "Generate the sql for the 'function' operation"
+  [op]
+  (let [fn-name     (op :fn-name)
+        sql-fn-name (case fn-name
+                      "join" "GROUP_CONCAT"
+                      fn-name
+                      )
+        fn-column   (op :fn-column)
+        alias       (->> op
+                         :context
+                         :alias)]
+    ;; @todo: return a vector instead of a string with all the columns
+    (format "%s(%s.%s)" sql-fn-name alias fn-column)))
+
+(defn operation->group-columns
+  "Generate the sql for the 'group' operation"
   [op]
   (let [fn-name     (op :fn-name)
         sql-fn-name (case fn-name
@@ -299,6 +317,7 @@
        )
   )
 
+
 (defn operations->select-columns
   "Get the columns for the last 'condition' operation or the select operation"
   [schema operations]
@@ -317,17 +336,27 @@
                                                             alias->select-all
                                                             )
                                    :else               [])
+        function-columns-needed? (->> operations
+                                      last
+                                      (operation-type? ["function"]))
+        function-columns          (cond function-columns-needed? (->> operations
+                                                            last
+                                                            operation->function-columns
+                                                            vector
+                                                            )
+                                   :else               [])
         ]
 
-    ;; only show all the columns if function columns are not specified
+    ;; If function columns are needed, ignore everything else and just show them, otherwise following the table:
     ;;
-    ;; | specific columns | function columns | SELECTED            |
-    ;; | ✓                | ✓                | specific + function |
-    ;; | ✓                | x                | specific + all      |
-    ;; | x                | ✓                | function            |
-    ;; | x                | x                | all                 |
+    ;; | specific columns | group columns | SELECTED            |
+    ;; | ✓                | ✓             | specific + function |
+    ;; | ✓                | x             | specific + all      |
+    ;; | x                | ✓             | function            |
+    ;; | x                | x             | all                 |
 
-    (cond (and (not-empty specific-columns) (not-empty group-columns)) (concat specific-columns group-columns)
+    (cond (not-empty function-columns)                                 function-columns
+          (and (not-empty specific-columns) (not-empty group-columns)) (concat specific-columns group-columns)
           (and (not-empty specific-columns) (empty? group-columns))    (concat specific-columns all-columns)
           (and (empty? specific-columns)    (not-empty group-columns)) group-columns
           (and (empty? specific-columns)    (empty? group-columns))    all-columns

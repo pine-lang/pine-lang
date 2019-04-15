@@ -127,6 +127,22 @@ evaluates to:
     FROM customers AS c
   GROUP BY c.status
 ```
+### [x] Functions on the dataset
+
+This is like the `group` operation. It differs in the fact that the function
+gets applied on the complete data set (instead of groups) and all previously
+selected columns are ignored. This needs to be the last operation.
+
+```
+users | count: id
+```
+
+evaluates to:
+
+```
+  SELECT GROUP_CONCAT(c.id)
+    FROM customers AS c
+```
 
 ### [x] Order by a column
 
