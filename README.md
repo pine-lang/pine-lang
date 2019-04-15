@@ -193,7 +193,7 @@ should find all the tables and the references that point to `customers`
 
 Not null
 ```
-users expireAt?
+users ?expireAt
 ```
 
 Null
