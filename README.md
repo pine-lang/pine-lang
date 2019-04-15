@@ -189,11 +189,11 @@ customers | references?
 
 should find all the tables and the references that point to `customers`
 
-### [ ] Support null checks
+### [x] Support null checks
 
 Not null
 ```
-users expireAt
+users expireAt?
 ```
 
 Null

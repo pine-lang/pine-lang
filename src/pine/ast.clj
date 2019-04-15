@@ -73,6 +73,8 @@
         (parsed-value->indexed-value [v]
           (match v
                  [:comparison [:string column] [:operator op ] [:string value]] [column value op]
+                 [:comparison [:string column] "?"]                             [column "NULL" "IS NOT"]
+                 [:comparison "!" [:string column] ]                            [column "NULL" "IS"]
                  [:assignment [:string column] [:string value]]                 [column value "="]
                  :else (throw (Exception. (format "Can't index value: %s" v)))
                  )

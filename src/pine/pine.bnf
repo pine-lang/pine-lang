@@ -31,7 +31,7 @@ assignment   := string <whitespace*> <"="> <whitespace*> string
 ids         := string (<whitespace*> <","> <whitespace*> string)*
 ors         := comparison (<whitespace*> <","> <whitespace*> comparison)*
 ands        := comparison (<whitespace*> comparison)*
-comparison  := string <whitespace*> operator <whitespace*> string
+comparison  := string <whitespace*> operator <whitespace*> string | string "?" | "!" string
 
 
 number     := #"[0-9]+"

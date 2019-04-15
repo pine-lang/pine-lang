@@ -206,3 +206,25 @@
        }
       (pine-prepare fixtures/schema  "users 1,2,3,4")
       ))))
+
+(deftest pine-prepare:condition-is-not-null
+  (testing "Check if the value is not null"
+    (is
+     (=
+      {
+       :query "SELECT users_0.* FROM users AS users_0 WHERE (users_0.name IS NOT ?) LIMIT 50"
+       :params ["NULL"]
+       }
+      (pine-prepare fixtures/schema  "users name?")
+      ))))
+
+(deftest pine-prepare:condition-is-null
+  (testing "Check if the value is null"
+    (is
+     (=
+      {
+       :query "SELECT users_0.* FROM users AS users_0 WHERE (users_0.name IS ?) LIMIT 50"
+       :params ["NULL"]
+       }
+      (pine-prepare fixtures/schema  "users !name")
+      ))))
