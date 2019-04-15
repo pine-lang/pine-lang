@@ -73,8 +73,8 @@
         (parsed-value->indexed-value [v]
           (match v
                  [:comparison [:string column] [:operator op ] [:string value]] [column value op]
-                 [:comparison [:string column] "?"]                             [column "NULL" "IS NOT"]
-                 [:comparison "!" [:string column] ]                            [column "NULL" "IS"]
+                 [:comparison [:string column] "?"]                             [column :null "IS NOT NULL"]
+                 [:comparison "!" [:string column] ]                            [column :null "IS NULL"]
                  [:assignment [:string column] [:string value]]                 [column value "="]
                  :else (throw (Exception. (format "Can't index value: %s" v)))
                  )
@@ -181,7 +181,7 @@
         joins          (ast :joins)
         join?          (not (empty? joins))
         conditions     (where :conditions)
-        parameters (concat (cond set-values (set-values :params) :else []) (where :params))
+        parameters (remove nil? (concat (cond set-values (set-values :params) :else []) (where :params)))
         ]
 
     [(apply format
@@ -374,9 +374,18 @@
   "Convert the filter part of an operation to a where sql"
   [entity qualify? [column value op]]
   (let [col (cond qualify? (qualify column :with (name entity)) :else column)
-        operator (cond (re-find #"\*" value) "LIKE" :else op)
-        val      (s/replace value "*" "%")]
-    [(format "%s %s ?" col operator) val])
+        operator (cond (= :null value) op
+                       (re-find #"\*" value) "LIKE"
+                       :else op)
+        val      (case value
+                   :null :null
+                   (s/replace value "*" "%")
+                   )]
+    (case val
+      :null [(format "%s %s" col operator)]
+      [(format "%s %s ?" col operator) val]
+      )
+    )
   )
 
 (defn operation->where
