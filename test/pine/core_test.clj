@@ -24,7 +24,7 @@
      (=
       {
        :query "SELECT customers_0.* FROM customers AS customers_0 WHERE (customers_0.id = ?) LIMIT 50"
-       :params ["1"]
+       :params [[:number "1"]]
        }
       (pine-prepare fixtures/schema  "customers 1")
       ))))
@@ -35,7 +35,7 @@
      (=
       {
        :query "SELECT customers_0.* FROM customers AS customers_0 WHERE (customers_0.id = ?) LIMIT 50"
-       :params ["1"]
+       :params [[:string "1"]]
        }
       (pine-prepare fixtures/schema  "customers id=1")
       ))))
@@ -46,7 +46,7 @@
      (=
       {
        :query "SELECT customers_0.* FROM customers AS customers_0 WHERE (customers_0.id > ?) LIMIT 50"
-       :params ["1"]
+       :params [[:string "1"]]
        }
       (pine-prepare fixtures/schema  "customers id>1")
       ))))
@@ -57,7 +57,7 @@
      (=
       {
        :query "SELECT customers_0.* FROM customers AS customers_0 WHERE (customers_0.name LIKE ? AND customers_0.industry = ?) LIMIT 50"
-       :params ["acme%", "test"]
+       :params [[:string "acme%"], [:string "test"]]
        }
       (pine-prepare fixtures/schema  "customers name=acme* industry=test")
       ))))
@@ -68,7 +68,7 @@
      (=
       {
        :query "SELECT customers_0.* FROM customers AS customers_0 WHERE (customers_0.name LIKE ? OR customers_0.industry = ?) LIMIT 50"
-       :params ["acme%", "test"]
+       :params [[:string "acme%"], [:string "test"]]
        }
       (pine-prepare fixtures/schema  "customers name=acme*, industry=test")
       ))))
@@ -79,7 +79,7 @@
      (=
       {
        :query "SELECT caseFiles_1.* FROM customers AS customers_0 JOIN caseFiles AS caseFiles_1 ON (caseFiles_1.customerId = customers_0.id) WHERE (customers_0.name = ?) AND (caseFiles_1.title = ?) LIMIT 50"
-       :params ["Acme" "John"]
+       :params [[:string "Acme"] [:string "John"]]
        }
       (pine-prepare fixtures/schema "customers name=Acme | caseFiles title=John")
       ))))
@@ -158,7 +158,7 @@
      (=
       {
        :query "SELECT folders_1.* FROM folders AS folders_0 JOIN folders AS folders_1 ON (folders_1.id = folders_0.parentId) WHERE (folders_0.id = ?) AND 1 LIMIT 50"
-       :params ["1"]
+       :params [[:number "1"]]
        }
       (pine-prepare fixtures/schema "folders 1 | folders")
       ))))
@@ -169,7 +169,7 @@
      (=
       {
        :query "UPDATE folders AS folders_0 SET folders_0.title = ? WHERE (folders_0.id = ?) LIMIT 50"
-       :params ["test" "1"]
+       :params [[:string "test"] [:number "1"]]
        }
       (pine-prepare fixtures/schema "folders 1 | set! title=test")
       ))))
@@ -202,7 +202,7 @@
      (=
       {
        :query "SELECT users_0.* FROM users AS users_0 WHERE (users_0.id IN ?) LIMIT 50"
-       :params ["(1,2,3,4)"]
+       :params [[:expression "(1,2,3,4)"]]
        }
       (pine-prepare fixtures/schema  "users 1,2,3,4")
       ))))

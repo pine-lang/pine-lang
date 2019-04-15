@@ -16,8 +16,13 @@
   (let [prepared (pine/pine-prepare schema expression)
         query    (:query prepared)
         params   (->> (:params prepared)
-                      (map (fn [x] (s/replace x "\"" "\\\"")))
-                      (map (partial format "\"%s\""))
+
+                      (map (fn [[t x]] [t (s/replace x "\"" "\\\"")]))
+
+                      (map (fn [[t x]] (case t
+                                             :string (format "\"%s\"" x)
+                                             (format "%s" x)
+                                             )))
                       )
         ]
     (str

@@ -14,7 +14,7 @@
       [{:type    "condition"
         :entity  :customers
         :alias   "customers_0"
-        :values  [[ "id" "1" "="]]
+        :values  [[ "id" [:number "1"] "="]]
         :context {:entity nil, :alias nil}
         }]
       (ast/str->operations "customers 1")
@@ -46,7 +46,7 @@
       [{:type    "condition"
         :entity  :customers
         :alias   "customers_0"
-        :values  [[ "id" "1"  "="]]
+        :values  [[ "id" [:string "1"]  "="]]
         :context {:entity nil, :alias nil}
         :or      false
         }
@@ -61,7 +61,7 @@
       [{:type    "condition"
         :entity  :customers
         :alias   "customers_0"
-        :values  [[ "name" "1*" "="]]
+        :values  [[ "name" [:string "1*"] "="]]
         :context {:entity nil, :alias nil}
         :or      false
         }]
@@ -75,13 +75,13 @@
       [{:type    "condition"
         :entity  :customers
         :alias   "customers_0"
-        :values  [[ "id" "1" "="]]
+        :values  [[ "id" [:number "1"] "="]]
         :context {:entity nil, :alias nil}
         }
        {:type    "condition"
         :entity  :users
         :alias   "users_1"
-        :values  [[ "id" "2" "="]]
+        :values  [[ "id" [:number "2"] "="]]
         :context {:entity :customers, :alias "customers_0"}
         }]
       (ast/str->operations "customers 1 | users 2")
@@ -94,13 +94,13 @@
       [{:type    "condition"
         :entity  :customers
         :alias   "customers_0"
-        :values  [[ "id" "1" "="]]
+        :values  [[ "id" [:number "1"] "="]]
         :context {:entity nil, :alias nil}
         }
        {:type    "condition"
         :entity  :users
         :alias   "users_1"
-        :values  [[ "name" "John" "="]]
+        :values  [[ "name" [:string "John"] "="]]
         :context {:entity :customers, :alias "customers_0"}
         :or      false
         }
@@ -132,7 +132,7 @@
   (testing "Create a where condition from an operation"
     (is
      (=
-      { :conditions "(customers_0.id = ?)" :params ["1"] }
+      { :conditions "(customers_0.id = ?)" :params [[:number "1"]] }
       (->> (ast/str->operations "customers 1")
            first
            (ast/operation->where true)
@@ -150,7 +150,7 @@
   (testing "Create a where condition from an operation"
     (is
      (=
-      { :conditions "(customers_0.name = ?)" :params ["acme"] }
+      { :conditions "(customers_0.name = ?)" :params [[:string "acme"]] }
       (->> (ast/str->operations "customers name=acme")
            first
            (ast/operation->where true))
@@ -160,7 +160,7 @@
   (testing "Create a where condition from an operation"
     (is
      (=
-      { :conditions "(customers_0.name LIKE ?)" :params ["acme%"] }
+      { :conditions "(customers_0.name LIKE ?)" :params [[:string "acme%"]] }
       (->> (ast/str->operations "customers name=acme*")
            first
            (ast/operation->where true))
@@ -173,8 +173,7 @@
       {
        :conditions ["(customers_0.name = ?)"
                     "(users_1.id = ?)"]
-       :params ["acme"
-                "1"]
+       :params [[:string "acme"] [:number "1"]]
        }
       (->> "customers name=acme | users 1"
            ast/str->operations
@@ -260,7 +259,7 @@
                             "(caseFiles_1.name = ?)"
                             "(documents_2.name = ?)"
                             ]
-               :params     ["1" "john" "test"]
+               :params     [[:number "1"] [:string "john"] [:string "test"]]
                }
        :order nil
        :group nil
@@ -348,7 +347,7 @@
       [{:type    "condition"
         :entity  :customers
         :alias   "customers_0"
-        :values  [[ "id" "1"  "<"]]
+        :values  [[ "id" [:string "1"]  "<"]]
         :context {:entity nil, :alias nil}
         :or      false
         }
@@ -363,7 +362,7 @@
       [{:type    "condition"
         :entity  :customers
         :alias   "customers_0"
-        :values  [[ "id" "1"  ">"]]
+        :values  [[ "id" [:string "1"]  ">"]]
         :context {:entity nil, :alias nil}
         :or      false
         }
