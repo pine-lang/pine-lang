@@ -5,33 +5,33 @@ SELECT          := specific | invert-specific
 specific        := <#"s(el(ect)?)?:"> <whitespace+> columns
 invert-specific := <#"u(ns(elect)?)?:"> <whitespace+> columns
 columns         := column (<","> <whitespace*> column)*
-column          := string | string <whitespace*> <#"as|AS"> <whitespace*> alias
+column          := string | string <whitespace+> <"as"> <whitespace+> alias
 alias           := string
 
 RESOURCE        := entity | entity <whitespace+> id | entity <whitespace+> ids | entity <whitespace+> ands | entity <whitespace+> ors
 
 ORDER           := <#"o(rder)?:"> <whitespace*> "+"? column
 
-GROUP           := <#"g(roup)?:"> <whitespace+> column (<whitespace+> FUNCTION)?
+GROUP           := <#"g(roup)?:"> <whitespace*> column (<whitespace+> FUNCTION)?
 FUNCTION        := #"(count|min|max|join)" <":"> <whitespace+> column
 
-LIMIT           := <#"l(imit)?:"> <whitespace+> number
+LIMIT           := <#"l(imit)?:"> <whitespace*> number
 
 META            := ref
 ref             := <#"ref(erences)?"> <"?">
 
 DELETE          := <#"delete!">
 
-SET             := <#"set!"> <whitespace+> assignments
+SET             := <#"set!"> <whitespace*> assignments
 
-id           := string
-assignments  := assignment (<whitespace+> assignment)*
+id           := number
+assignments  := assignment (<whitespace*> assignment)*
 assignment   := string <whitespace*> <"="> <whitespace*> string
 
-ids         := string (<whitespace*> <","> <whitespace*> string)*
+ids         := number (<whitespace*> <","> <whitespace*> number)*
 ors         := comparison (<whitespace*> <","> <whitespace*> comparison)*
-ands        := comparison (<whitespace*> comparison)*
-comparison  := string <whitespace*> operator <whitespace*> string | string "?"  | "!" string "?"
+ands        := comparison (<whitespace+> comparison)*
+comparison  := string <whitespace*> <"="> <whitespace*> ids | string <whitespace*> operator <whitespace*> string | string "?"  | "!" string "?"
 
 
 number     := #"[0-9]+"

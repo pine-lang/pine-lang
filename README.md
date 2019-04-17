@@ -225,6 +225,7 @@ Multiple filters seperated by a comma `,`:
 ```
 users name="John", email="john*"
 users 1,2
+users id=1,2
 ```
 
 ### [ ] Figure out relationships between entities

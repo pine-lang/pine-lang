@@ -126,7 +126,7 @@
        :query "SELECT users_0.id, users_0.fullName AS name FROM users AS users_0 WHERE 1 LIMIT 50"
        :params []
        }
-      (pine-prepare fixtures/schema "users | select: id, fullName AS name")
+      (pine-prepare fixtures/schema "users | select: id, fullName as name")
       ))))
 
 (deftest pine-prepare:two-tables-selected-columns
@@ -207,13 +207,24 @@
       (pine-prepare fixtures/schema  "users 1,2,3,4")
       ))))
 
+(deftest pine-prepare:condition-value-in
+  (testing "Specify multiple ids to select from"
+    (is
+     (=
+      {
+       :query "SELECT users_0.* FROM users AS users_0 WHERE (users_0.id IN ?) LIMIT 50"
+       :params [[:expression "(1,2,3)"]]
+       }
+      (pine-prepare fixtures/schema  "users id=1,2,3")
+      ))))
+
 (deftest pine-prepare:condition-is-not-null
   (testing "Check if the value is not null"
     (is
      (=
       {
-       :query "SELECT users_0.* FROM users AS users_0 WHERE (users_0.name IS NOT NULL) LIMIT 50"
-       :params []
+       :query "SELECT users_0.* FROM users AS users_0 WHERE (users_0.name IS NOT ?) LIMIT 50"
+       :params [[:expression "NULL"]]
        }
       (pine-prepare fixtures/schema  "users name?")
       ))))
@@ -223,8 +234,8 @@
     (is
      (=
       {
-       :query "SELECT users_0.* FROM users AS users_0 WHERE (users_0.name IS NULL) LIMIT 50"
-       :params []
+       :query "SELECT users_0.* FROM users AS users_0 WHERE (users_0.name IS ?) LIMIT 50"
+       :params [[:expression "NULL"]]
        }
       (pine-prepare fixtures/schema  "users !name?")
       ))))

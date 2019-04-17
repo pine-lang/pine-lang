@@ -72,10 +72,11 @@
            :else ops))
         (parsed-value->indexed-value [v]
           (match v
-                 [:comparison [:string column] [:operator op ] [:string value]] [column [:string value] op]
-                 [:comparison [:string column] "?" ]                            [column [:symbol :null] "IS NOT NULL"]
-                 [:comparison "!" [:string column] "?" ]                        [column [:symbol :null] "IS NULL"]
-                 [:assignment [:string column] [:string value]]                 [column [:string value] "="]
+                 [:comparison [:string column] [:operator op ] [:string value]] [column [:string value]                                           op]
+                 [:comparison [:string column] [:ids & ids]]                    [column [:expression (str "(" (s/join "," (map second ids)) ")")] "IN"]
+                 [:comparison [:string column] "?" ]                            [column [:expression "NULL"]                                      "IS NOT"]
+                 [:comparison "!" [:string column] "?" ]                        [column [:expression "NULL"]                                      "IS"]
+                 [:assignment [:string column] [:string value]]                 [column [:string value]                                           "="]
                  :else (throw (Exception. (format "Can't index value: %s" v)))
                  )
           )
@@ -94,7 +95,7 @@
                  ;; At the moment the resource and condition operations are
                  ;; grouped
                  [:RESOURCE [:entity [:string table]] ]                   {:type "condition" :entity (keyword table) :values []}
-                 [:RESOURCE [:entity [:string table]] [:id [:string id]]] {:type "condition" :entity (keyword table) :values [["id" [:number id] "="]]}
+                 [:RESOURCE [:entity [:string table]] [:id [:number id]]] {:type "condition" :entity (keyword table) :values [["id" [:number id] "="]]}
                  [:RESOURCE [:entity [:string table]] [:ids & ids]]       {:type "condition" :entity (keyword table) :values [["id" [:expression (str "(" (s/join "," (map second ids)) ")")] "IN"]]}
                  [:RESOURCE [:entity [:string table]] [:ands & values]]   {:type "condition" :entity (keyword table) :values (map parsed-value->indexed-value values) :or false}
                  [:RESOURCE [:entity [:string table]] [:ors & values]]    {:type "condition" :entity (keyword table) :values (map parsed-value->indexed-value values) :or true}
