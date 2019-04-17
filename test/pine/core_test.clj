@@ -215,7 +215,7 @@
        :query "SELECT users_0.* FROM users AS users_0 WHERE (users_0.name IS NOT NULL) LIMIT 50"
        :params []
        }
-      (pine-prepare fixtures/schema  "users ?name")
+      (pine-prepare fixtures/schema  "users name?")
       ))))
 
 (deftest pine-prepare:condition-is-null
@@ -226,7 +226,7 @@
        :query "SELECT users_0.* FROM users AS users_0 WHERE (users_0.name IS NULL) LIMIT 50"
        :params []
        }
-      (pine-prepare fixtures/schema  "users !name")
+      (pine-prepare fixtures/schema  "users !name?")
       ))))
 
 (deftest pine-prepare:function-count

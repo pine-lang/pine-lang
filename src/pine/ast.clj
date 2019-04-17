@@ -73,8 +73,8 @@
         (parsed-value->indexed-value [v]
           (match v
                  [:comparison [:string column] [:operator op ] [:string value]] [column [:string value] op]
-                 [:comparison "?" [:string column] ]                            [column [:symbol :null] "IS NOT NULL"]
-                 [:comparison "!" [:string column] ]                            [column [:symbol :null] "IS NULL"]
+                 [:comparison [:string column] "?" ]                            [column [:symbol :null] "IS NOT NULL"]
+                 [:comparison "!" [:string column] "?" ]                        [column [:symbol :null] "IS NULL"]
                  [:assignment [:string column] [:string value]]                 [column [:string value] "="]
                  :else (throw (Exception. (format "Can't index value: %s" v)))
                  )
@@ -264,14 +264,19 @@
   [alias]
   [(format "%s.*" alias)])
 
+(defn pine-fn->sql-fn
+  "Get the relevant SQL function to be used"
+  [fn-name]
+  (case fn-name
+    "join" "GROUP_CONCAT"
+    fn-name
+    )
+  )
+
 (defn operation->function-columns
   "Generate the sql for the 'function' operation"
   [op]
-  (let [fn-name     (op :fn-name)
-        sql-fn-name (case fn-name
-                      "join" "GROUP_CONCAT"
-                      fn-name
-                      )
+  (let [sql-fn-name (->> op :fn-name pine-fn->sql-fn)
         fn-column   (op :fn-column)
         alias       (->> op
                          :context
@@ -282,11 +287,8 @@
 (defn operation->group-columns
   "Generate the sql for the 'group' operation"
   [op]
-  (let [fn-name     (op :fn-name)
-        sql-fn-name (case fn-name
-                      "join" "GROUP_CONCAT"
-                      fn-name
-                      )
+  (let [
+        sql-fn-name (->> op :fn-name pine-fn->sql-fn)
         column      (op :column)
         fn-column   (op :fn-column)
         alias       (->> op
