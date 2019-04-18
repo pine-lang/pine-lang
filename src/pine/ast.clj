@@ -119,7 +119,7 @@
                  [:RESOURCE [:entity [:string table]] [:ors & values]]    {:type "condition" :entity (keyword table) :values (map parsed-value->indexed-value values) :or true}
                  ;; select
                  [:SELECT [:specific [:columns & columns]]]               {:type "select" :columns (parsed-cols->indexed-cols columns)}
-                 [:SELECT [:invert-specific [:columns & columns]]]        (throw (Exception. "Unselect key word is not supported yet."))
+                 [:SELECT [:invert-specific [:columns & columns]]]        {:type "unselect" :columns (parsed-cols->indexed-cols columns)}
                  ;; limit
                  [:LIMIT [:number number]]                                {:type "limit" :count (Integer. number)}
 
@@ -338,6 +338,19 @@
        )
   )
 
+(defn operation->exclude-columns
+  "Removes unselected columns from results"
+  [columns unselect-ops]
+  ;; TODO: select *
+
+  (let [excluded-columns (mapcat
+             (fn [op] (map
+                        (fn [column] (format "%s.%s" (:alias (:context op)) column))
+                        (:columns op)))
+             unselect-ops)
+        ]
+    (remove (set excluded-columns) columns))
+  )
 
 (defn operations->select-columns
   "Get the columns for the last 'condition' operation or the select operation"
@@ -376,13 +389,22 @@
     ;; | x                | ✓             | function            |
     ;; | x                | x             | all                 |
 
-    (cond (not-empty function-columns)                                 function-columns
-          (and (not-empty specific-columns) (not-empty group-columns)) (concat specific-columns group-columns)
-          (and (not-empty specific-columns) (empty? group-columns))    (concat specific-columns all-columns)
-          (and (empty? specific-columns)    (not-empty group-columns)) group-columns
-          (and (empty? specific-columns)    (empty? group-columns))    all-columns
-          :else                                                           ["?"]
+    (let [columns-before-exclusion (cond
+            (not-empty function-columns)                                 function-columns
+            (and (not-empty specific-columns) (not-empty group-columns)) (concat specific-columns group-columns)
+            (and (not-empty specific-columns) (empty? group-columns))    (concat specific-columns all-columns)
+            (and (empty? specific-columns)    (not-empty group-columns)) group-columns
+            (and (empty? specific-columns)    (empty? group-columns))    all-columns
+            :else                                                           ["?"]
           )
+          columns-after-exclusion (->> operations
+                                       (filter (operation-type? ["unselect"]))
+                                       (operation->exclude-columns columns-before-exclusion)
+                                       )
+        ]
+
+      columns-after-exclusion
+      )
     )
   )
 
