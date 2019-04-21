@@ -5,7 +5,7 @@
 Pine uses pipes to query a database. When you evaluate the following pine expression:
 
 ```
-customers 1 | users name=John* | s: id, email
+customers 1 | users name="John Doe" | s: id, email
 ```
 
 the following SQL is executed:
@@ -16,7 +16,7 @@ SELECT u.id, u.email
   JOIN users AS u
     ON (u.customerId = c.id)
  WHERE c.id = 1
-   AND u.name LIKE "John*"
+   AND u.name LIKE "John Doe"
 ```
 
 ## Run the pine server
@@ -58,11 +58,11 @@ users id>1000
 
 The following pine expression to select specific columns:
 ```
-customers name=Acme | select: id | users name=John | select: email
+customers name="Acme" | select: id | users name="John" | select: email
 ```
 or even shorter:
 ```
-customers name=Acme | s: id | users name=John | s: email
+customers name="Acme" | s: id | users name="John" | s: email
 ```
 should build the following query:
 
@@ -237,7 +237,7 @@ of them have an `address`. A pine expression as following should be able to
 generate a result:
 
 ```
-customers "Acme Inc" | address "xyz"
+customers name="Acme Inc" | address street="xyz"
 ```
 
 `customer` is not directly linked to `address` but I want to get a result and also the other way around. A way to do this is to:
@@ -252,7 +252,7 @@ In case we find multiple paths with an equal distance, then I need to find a pri
 ### [x] Updates
 
 ```
-caseFiles 1 | set! title=new_title
+caseFiles 1 | set! title="new_title"
 ```
 
 ### [x] Deletes
@@ -265,7 +265,7 @@ caseFiles 1 | delete!
 
 The following pine expression to select specific columns:
 ```
-customers name=Acme | unselect: id
+customers name="Acme" | unselect: id
 ```
 should build the following query:
 
@@ -340,11 +340,11 @@ customers as c 1 => SELECT c.* FROM customers AS c WHERE c.id = 1
 ### [ ] Compose filters/conditions
 
 ```
-caseFiles 1 | c: title=Sample*
+caseFiles 1 | c: title="Sample*"
 ```
 
 Maybe we don't need this since the default operation already supports filters
-i.e. `caseFiles title=Sample*` at the moment. But I guess it supports the
+i.e. `caseFiles title="Sample*"` at the moment. But I guess it supports the
 incremental calculation model where you can keep on adding operations and don't
 have to go back to modify an operation.
 
@@ -363,28 +363,4 @@ SELECT c.id AS customer_id, c.name AS customer_name
   FROM customers AS c
  WHERE c.id = 1
 ```
-
-## Tasks
-
-### [x] Use instaparse and the [pine grammar](src/pine/pine.bnf) to generate a parser
-### [x] Connection pooling
-### [x] Create docker image with the pine server
-If the db is running locally, use the `ip` that points to the local host. You
-can find it by running the following:
-
-```
-ip address show dev docker0 | grep 'inet ' | grep -E -o '([0-9.]*)' | head -1
-```
-
-### [x] Keep track of the context `entity`
-The indexed operations should contain the `entity` as well so that we don't have
-to look at previous operations to figure out which entity is being used
-
-### [ ] Enclose strings with quotes
-```
-customers "Acme Inc."
-```
-
-I should start using something like a parsec library and have a formal specification for the syntax at this point.
-
 
