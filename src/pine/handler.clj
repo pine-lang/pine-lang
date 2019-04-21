@@ -17,7 +17,16 @@
         query    (:query prepared)
         params   (->> (:params prepared)
 
-                      (map (fn [[t x]] [t (s/replace x "\"" "\\\"")]))
+                      ;; Quotes are not supported by the language
+                      ;;
+                      ;; Still, this function needs to be protected in case the
+                      ;; params contain a quote
+                      (map (fn [[t x]]
+                             [t (-> x
+                                    (s/replace "\"" "_")
+                                    (s/replace "'"  "_")
+                                    )
+                              ]))
 
                       (map (fn [[t x]] (case t
                                              :string (format "\"%s\"" x)

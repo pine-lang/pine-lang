@@ -28,7 +28,6 @@
                  grammar (slurp file)]
              (insta/parser grammar)))
 
-
 (defn add-context
   "Add the entity and the relevant alias which serves as the context for all the operations."
   [ops]
@@ -72,12 +71,19 @@
            :else ops))
         (parsed-value->indexed-value [v]
           (match v
-                 [:comparison [:string column] [:operator op ] [:string value]] [column [:string value]                                           op]
-                 [:comparison [:string column] [:ids & ids]]                    [column [:expression (str "(" (s/join "," (map second ids)) ")")] "IN"]
-                 [:comparison [:string column] "?" ]                            [column [:expression "NULL"]                                      "IS NOT"]
-                 [:comparison "!" [:string column] "?" ]                        [column [:expression "NULL"]                                      "IS"]
-                 [:assignment [:string column] [:string value]]                 [column [:string value]                                           "="]
-                 :else (throw (Exception. (format "Can't index value: %s" v)))
+                 [:comparison
+                  [:string column]
+                  [:operator op ]
+                  [:quoted-string [:space-string value]]]        [column [:string value]                                           op]
+                 [:comparison
+                  [:string column]
+                  [:operator op ]
+                  [:number value]]                               [column [:number value]                                           op]
+                 [:comparison [:string column] [:ids & ids]]     [column [:expression (str "(" (s/join "," (map second ids)) ")")] "IN"]
+                 [:comparison [:string column] "?" ]             [column [:expression "NULL"]                                      "IS NOT"]
+                 [:comparison "!" [:string column] "?" ]         [column [:expression "NULL"]                                      "IS"]
+                 [:assignment [:string column] [:string value]]  [column [:string value]                                           "="]
+                 :else                                           (throw (Exception. (format "Can't index value: %s" v)))
                  )
           )
         (parsed-cols->indexed-cols [cs]

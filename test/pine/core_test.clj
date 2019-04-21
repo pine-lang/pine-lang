@@ -35,7 +35,7 @@
      (=
       {
        :query "SELECT customers_0.* FROM customers AS customers_0 WHERE (customers_0.id = ?) LIMIT 50"
-       :params [[:string "1"]]
+       :params [[:number "1"]]
        }
       (pine-prepare fixtures/schema  "customers id=1")
       ))))
@@ -46,7 +46,7 @@
      (=
       {
        :query "SELECT customers_0.* FROM customers AS customers_0 WHERE (customers_0.id > ?) LIMIT 50"
-       :params [[:string "1"]]
+       :params [[:number "1"]]
        }
       (pine-prepare fixtures/schema  "customers id>1")
       ))))
@@ -59,7 +59,7 @@
        :query "SELECT customers_0.* FROM customers AS customers_0 WHERE (customers_0.name LIKE ? AND customers_0.industry = ?) LIMIT 50"
        :params [[:string "acme%"], [:string "test"]]
        }
-      (pine-prepare fixtures/schema  "customers name=acme* industry=test")
+      (pine-prepare fixtures/schema  "customers name='acme*' industry='test'")
       ))))
 
 (deftest pine-prepare:one-operation-multiple-or-filters
@@ -70,7 +70,7 @@
        :query "SELECT customers_0.* FROM customers AS customers_0 WHERE (customers_0.name LIKE ? OR customers_0.industry = ?) LIMIT 50"
        :params [[:string "acme%"], [:string "test"]]
        }
-      (pine-prepare fixtures/schema  "customers name=acme*, industry=test")
+      (pine-prepare fixtures/schema  "customers name='acme*', industry='test'")
       ))))
 
 (deftest pine-prepare:two-operation
@@ -81,7 +81,7 @@
        :query "SELECT caseFiles_1.* FROM customers AS customers_0 JOIN caseFiles AS caseFiles_1 ON (caseFiles_1.customerId = customers_0.id) WHERE (customers_0.name = ?) AND (caseFiles_1.title = ?) LIMIT 50"
        :params [[:string "Acme"] [:string "John"]]
        }
-      (pine-prepare fixtures/schema "customers name=Acme | caseFiles title=John")
+      (pine-prepare fixtures/schema "customers name='Acme' | caseFiles title='John'")
       ))))
 
 (deftest pine-prepare:one-operation-without-filters

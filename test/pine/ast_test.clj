@@ -46,7 +46,7 @@
       [{:type    "condition"
         :entity  :customers
         :alias   "customers_0"
-        :values  [[ "id" [:string "1"]  "="]]
+        :values  [[ "id" [:number "1"]  "="]]
         :context {:entity nil, :alias nil}
         :or      false
         }
@@ -65,7 +65,7 @@
         :context {:entity nil, :alias nil}
         :or      false
         }]
-      (ast/str->operations "customers name=1*")
+      (ast/str->operations "customers name='1*'")
       ))))
 
 (deftest str->operations:two-operations
@@ -111,7 +111,7 @@
         :context {:entity :users, :alias "users_1"}
         }
        ]
-      (ast/str->operations "customers 1 | users name=John | address")
+      (ast/str->operations "customers 1 | users name='John' | address")
       ))))
 
 ;; Opertations to AST
@@ -151,7 +151,7 @@
     (is
      (=
       { :conditions "(customers_0.name = ?)" :params [[:string "acme"]] }
-      (->> (ast/str->operations "customers name=acme")
+      (->> (ast/str->operations "customers name='acme'")
            first
            (ast/operation->where true))
       ))))
@@ -161,7 +161,7 @@
     (is
      (=
       { :conditions "(customers_0.name LIKE ?)" :params [[:string "acme%"]] }
-      (->> (ast/str->operations "customers name=acme*")
+      (->> (ast/str->operations "customers name='acme*'")
            first
            (ast/operation->where true))
       ))))
@@ -175,7 +175,7 @@
                     "(users_1.id = ?)"]
        :params [[:string "acme"] [:number "1"]]
        }
-      (->> "customers name=acme | users 1"
+      (->> "customers name='acme' | users 1"
            ast/str->operations
            (ast/operations->where true)
            )
@@ -268,7 +268,7 @@
        :delete nil
        :set nil
        }
-      (->> "customers 1 | caseFiles name=john | documents name=test"
+      (->> "customers 1 | caseFiles name='john' | documents name='test'"
       ast/str->operations
       (ast/operations->ast fixtures/schema))
       ))))
@@ -347,7 +347,7 @@
       [{:type    "condition"
         :entity  :customers
         :alias   "customers_0"
-        :values  [[ "id" [:string "1"]  "<"]]
+        :values  [[ "id" [:number "1"]  "<"]]
         :context {:entity nil, :alias nil}
         :or      false
         }
@@ -362,7 +362,7 @@
       [{:type    "condition"
         :entity  :customers
         :alias   "customers_0"
-        :values  [[ "id" [:string "1"]  ">"]]
+        :values  [[ "id" [:number "1"]  ">"]]
         :context {:entity nil, :alias nil}
         :or      false
         }
