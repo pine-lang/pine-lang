@@ -35,9 +35,3 @@ USR=${USER} \
 - **Hide the plumbing**              : let the machine figure out what it can
 - **Concise**                        : less to type
 - **Doesn't replace existing tools** : it reduces the surface area of the underlying platform
-
-## Features
-
-For a list of features (existing and planned), check out the [Features][features] document.
-
-[features]: FEATURES.md
