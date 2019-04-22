@@ -338,24 +338,32 @@
        )
   )
 
+(defn expand-signle-column
+  "Expands table.* selections if they match the operation"
+  [schema column op]
+  (if
+   (= column (format "%s.*" (:alias (:context op))))
+     (->>
+       (:entity (:context op))
+       (db/get-columns schema)
+       (map #(format "%s.%s" (:alias (:context op)) %)))
+     [column]))
+
+(defn expand-columns-if-operated-on
+  "Expands 'table.*' selections if they are related to operations"
+  [schema columns ops]
+  (match [columns ops]
+         [some-columns                       ([]  :seq)] some-columns
+         [[first-column & rest-of-columns]   ([first-op & rest-of-ops] :seq)]
+           (let [expanded       (expand-signle-column schema first-column first-op)
+                 columns-so-far (reduce conj (vec expanded) rest-of-columns)]
+             (expand-columns-if-operated-on schema columns-so-far rest-of-ops))))
+
 (defn operation->exclude-columns
   "Removes unselected columns from results"
   [schema columns unselect-ops]
-  ;; TODO make sure it works with aliases
 
-  (let [expanded-columns (mapcat
-                           (fn [column]
-                             (mapcat
-                               (fn [op] (if
-                                          (= column (format "%s.*" (:alias (:context op))))
-                                            (->>
-                                              (:entity (:context op))
-                                              (db/get-columns schema)
-                                              (map #(format "%s.%s" (:alias (:context op)) %)))
-                                            [column]))
-                               unselect-ops))
-                           columns)
-
+  (let [expanded-columns (expand-columns-if-operated-on schema columns unselect-ops)
         excluded-columns (mapcat
              (fn [op] (map
                         (fn [column] (format "%s.%s" (:alias (:context op)) column))
