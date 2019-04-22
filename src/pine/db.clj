@@ -54,6 +54,15 @@
     :else     nil)
   )
 
+(defn get-columns
+  "Returns the list of columns a table has"
+  [schema table-name]
+  (->>
+    schema
+    ((keyword table-name))
+    (re-seq #"(?m)^  `(\S+)`")
+    (map #(second %))
+  ))
 
 ;; Query the database
 

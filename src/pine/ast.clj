@@ -340,16 +340,29 @@
 
 (defn operation->exclude-columns
   "Removes unselected columns from results"
-  [columns unselect-ops]
-  ;; TODO: select *
+  [schema columns unselect-ops]
+  ;; TODO make sure it works with aliases
 
-  (let [excluded-columns (mapcat
+  (let [expanded-columns (mapcat
+                           (fn [column]
+                             (mapcat
+                               (fn [op] (if
+                                          (= column (format "%s.*" (:alias (:context op))))
+                                            (->>
+                                              (:entity (:context op))
+                                              (db/get-columns schema)
+                                              (map #(format "%s.%s" (:alias (:context op)) %)))
+                                            [column]))
+                               unselect-ops))
+                           columns)
+
+        excluded-columns (mapcat
              (fn [op] (map
                         (fn [column] (format "%s.%s" (:alias (:context op)) column))
                         (:columns op)))
              unselect-ops)
         ]
-    (remove (set excluded-columns) columns))
+    (remove (set excluded-columns) expanded-columns))
   )
 
 (defn operations->select-columns
@@ -399,7 +412,7 @@
           )
           columns-after-exclusion (->> operations
                                        (filter (operation-type? ["unselect"]))
-                                       (operation->exclude-columns columns-before-exclusion)
+                                       (operation->exclude-columns schema columns-before-exclusion)
                                        )
         ]
 
