@@ -163,8 +163,8 @@
       (pine-prepare fixtures/schema "folders 1 | folders")
       ))))
 
-(deftest pine-prepare:set-values
-  (testing "Set values"
+(deftest pine-prepare:set-value-string
+  (testing "Set string values"
     (is
      (=
       {
@@ -172,6 +172,17 @@
        :params [[:string "test"] [:number "1"]]
        }
       (pine-prepare fixtures/schema "folders 1 | set! title='test'")
+      ))))
+
+(deftest pine-prepare:set-value-number
+  (testing "Set number values"
+    (is
+     (=
+      {
+       :query "UPDATE folders AS folders_0 SET folders_0.title = ? WHERE (folders_0.id = ?) LIMIT 50"
+       :params [[:number "123"] [:number "1"]]
+       }
+      (pine-prepare fixtures/schema "folders 1 | set! title=123")
       ))))
 
 (deftest pine-prepare:one-operation-group-implicit-fn

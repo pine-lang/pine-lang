@@ -10,6 +10,7 @@ customers industry=""
 - Setting string values wasn't working e.g.
 ```
 customers 1 | set! industry="Test"
+customers 1 | set! industry=123
 ```
 
 ## 0.1.0 - 2019-04-21

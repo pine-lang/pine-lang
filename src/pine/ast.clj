@@ -92,6 +92,9 @@
                  [:assignment
                   [:string column]
                   [:quoted-string ]]                             [column [:string ""]                                              "="]
+                 [:assignment
+                  [:string column]
+                  [:number value]]                               [column [:number value]                                           "="]
                  :else                                           (throw (Exception. (format "Can't index value: %s" v)))
                  )
           )
