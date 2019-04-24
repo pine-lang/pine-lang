@@ -78,6 +78,10 @@
                  [:comparison
                   [:string column]
                   [:operator op ]
+                  [:quoted-string ]]                             [column [:string ""]                                              op]
+                 [:comparison
+                  [:string column]
+                  [:operator op ]
                   [:number value]]                               [column [:number value]                                           op]
                  [:comparison [:string column] [:ids & ids]]     [column [:expression (str "(" (s/join "," (map second ids)) ")")] "IN"]
                  [:comparison [:string column] "?" ]             [column [:expression "NULL"]                                      "IS NOT"]

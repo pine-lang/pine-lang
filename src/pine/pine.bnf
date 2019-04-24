@@ -39,6 +39,6 @@ whitespace    := #"\s+"
 entity        := string
 operator      := #"<|>|="
 
-quoted-string := <"'"> space-string <"'"> | <'"'> space-string <'"'>
+quoted-string := <"'"> space-string? <"'"> | <'"'> space-string? <'"'>
 space-string  := #"[A-Za-z0-9-_*.@ ]+"
 string        := #"[A-Za-z0-9-_*.@]+"

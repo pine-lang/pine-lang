@@ -250,3 +250,14 @@
        }
       (pine-prepare fixtures/schema  "users | count: id")
       ))))
+
+(deftest pine-prepare:condition-empty-string
+  (testing "Create sql a pine expression containing one operation with a condition where the value is an empty string"
+    (is
+     (=
+      {
+       :query "SELECT customers_0.* FROM customers AS customers_0 WHERE (customers_0.industry = ?) LIMIT 50"
+       :params [[:string ""]]
+       }
+      (pine-prepare fixtures/schema  "customers industry=''")
+      ))))
