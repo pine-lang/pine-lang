@@ -86,7 +86,12 @@
                  [:comparison [:string column] [:ids & ids]]     [column [:expression (str "(" (s/join "," (map second ids)) ")")] "IN"]
                  [:comparison [:string column] "?" ]             [column [:expression "NULL"]                                      "IS NOT"]
                  [:comparison "!" [:string column] "?" ]         [column [:expression "NULL"]                                      "IS"]
-                 [:assignment [:string column] [:string value]]  [column [:string value]                                           "="]
+                 [:assignment
+                  [:string column]
+                  [:quoted-string [:space-string value]]]        [column [:string value]                                           "="]
+                 [:assignment
+                  [:string column]
+                  [:quoted-string ]]                             [column [:string ""]                                              "="]
                  :else                                           (throw (Exception. (format "Can't index value: %s" v)))
                  )
           )

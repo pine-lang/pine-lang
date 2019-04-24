@@ -7,8 +7,12 @@ All notable changes to this project will be documented in this file. This change
 ```
 customers industry=""
 ```
+- Setting string values wasn't working e.g.
+```
+customers 1 | set! industry="Test"
+```
 
-## [0.1.0] - 2019-04-21
+## 0.1.0 - 2019-04-21
 ### Added
 - Check out the [features][features] document for a list of features
 

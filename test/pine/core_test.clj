@@ -171,7 +171,7 @@
        :query "UPDATE folders AS folders_0 SET folders_0.title = ? WHERE (folders_0.id = ?) LIMIT 50"
        :params [[:string "test"] [:number "1"]]
        }
-      (pine-prepare fixtures/schema "folders 1 | set! title=test")
+      (pine-prepare fixtures/schema "folders 1 | set! title='test'")
       ))))
 
 (deftest pine-prepare:one-operation-group-implicit-fn

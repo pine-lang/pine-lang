@@ -26,7 +26,7 @@ SET             := <#"set!"> <whitespace*> assignments
 
 id           := number
 assignments  := assignment (<whitespace*> assignment)*
-assignment   := string <whitespace*> <"="> <whitespace*> string
+assignment   := string <whitespace*> <"="> <whitespace*> (quoted-string|number)
 
 ids         := number (<whitespace*> <","> <whitespace*> number)*
 ors         := comparison (<whitespace*> <","> <whitespace*> comparison)*
