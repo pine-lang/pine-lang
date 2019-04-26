@@ -363,7 +363,7 @@
   "Removes unselected columns from results"
   [schema columns unselect-ops]
 
-  (let [expanded-columns (expand-columns-if-operated-on schema columns unselect-ops)
+  (let [expanded-columns (expand-columns-if-operated-on schema (vec columns) unselect-ops)
         excluded-columns (mapcat
              (fn [op] (map
                         (fn [column] (format "%s.%s" (:alias (:context op)) column))
