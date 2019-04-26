@@ -119,7 +119,7 @@
                  [:RESOURCE [:entity [:string table]] [:ors & values]]    {:type "condition" :entity (keyword table) :values (map parsed-value->indexed-value values) :or true}
                  ;; select
                  [:SELECT [:specific [:columns & columns]]]               {:type "select" :columns (parsed-cols->indexed-cols columns)}
-                 [:SELECT [:invert-specific [:columns & columns]]]        (throw (Exception. "Unselect key word is not supported yet."))
+                 [:SELECT [:invert-specific [:columns & columns]]]        {:type "unselect" :columns (parsed-cols->indexed-cols columns)}
                  ;; limit
                  [:LIMIT [:number number]]                                {:type "limit" :count (Integer. number)}
 
@@ -338,6 +338,40 @@
        )
   )
 
+(defn expand-signle-column
+  "Expands table.* selections if they match the operation"
+  [schema column op]
+  (if
+   (= column (format "%s.*" (:alias (:context op))))
+     (->>
+       (:entity (:context op))
+       (db/get-columns schema)
+       (map #(format "%s.%s" (:alias (:context op)) %)))
+     [column]))
+
+(defn expand-columns-if-operated-on
+  "Expands 'table.*' selections if they are related to operations"
+  [schema columns ops]
+  (match [columns ops]
+         [some-columns                       ([]  :seq)] some-columns
+         [[first-column & rest-of-columns]   ([first-op & rest-of-ops] :seq)]
+           (let [expanded       (expand-signle-column schema first-column first-op)
+                 columns-so-far (reduce conj (vec expanded) rest-of-columns)]
+             (expand-columns-if-operated-on schema columns-so-far rest-of-ops))))
+
+(defn operation->exclude-columns
+  "Removes unselected columns from results"
+  [schema columns unselect-ops]
+
+  (let [expanded-columns (expand-columns-if-operated-on schema columns unselect-ops)
+        excluded-columns (mapcat
+             (fn [op] (map
+                        (fn [column] (format "%s.%s" (:alias (:context op)) column))
+                        (:columns op)))
+             unselect-ops)
+        ]
+    (remove (set excluded-columns) expanded-columns))
+  )
 
 (defn operations->select-columns
   "Get the columns for the last 'condition' operation or the select operation"
@@ -376,13 +410,22 @@
     ;; | x                | ✓             | function            |
     ;; | x                | x             | all                 |
 
-    (cond (not-empty function-columns)                                 function-columns
-          (and (not-empty specific-columns) (not-empty group-columns)) (concat specific-columns group-columns)
-          (and (not-empty specific-columns) (empty? group-columns))    (concat specific-columns all-columns)
-          (and (empty? specific-columns)    (not-empty group-columns)) group-columns
-          (and (empty? specific-columns)    (empty? group-columns))    all-columns
-          :else                                                           ["?"]
+    (let [columns-before-exclusion (cond
+            (not-empty function-columns)                                 function-columns
+            (and (not-empty specific-columns) (not-empty group-columns)) (concat specific-columns group-columns)
+            (and (not-empty specific-columns) (empty? group-columns))    (concat specific-columns all-columns)
+            (and (empty? specific-columns)    (not-empty group-columns)) group-columns
+            (and (empty? specific-columns)    (empty? group-columns))    all-columns
+            :else                                                           ["?"]
           )
+          columns-after-exclusion (->> operations
+                                       (filter (operation-type? ["unselect"]))
+                                       (operation->exclude-columns schema columns-before-exclusion)
+                                       )
+        ]
+
+      columns-after-exclusion
+      )
     )
   )
 
