@@ -18,7 +18,7 @@
     - [[ ] Figure out relationships between entities](#--figure-out-relationships-between-entities)
     - [[x] Updates](#x-updates)
     - [[x] Deletes](#x-deletes)
-    - [[ ] Unselect specific columns](#--unselect-specific-columns)
+    - [[x] Unselect specific columns](#--unselect-specific-columns)
     - [[ ] Functions on values in a condition](#--functions-on-values-in-a-condition)
     - [[x] Self joins](#x-self-joins)
     - [[ ] Directionality / Specifying the relationship](#--directionality--specifying-the-relationship)
@@ -252,7 +252,7 @@ caseFiles 1 | set! title="new_title"
 caseFiles 1 | delete!
 ```
 
-## [ ] Unselect specific columns
+## [x] Unselect specific columns
 
 The following pine expression to select specific columns:
 ```

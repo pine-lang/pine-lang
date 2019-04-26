@@ -181,6 +181,14 @@
            )
       ))))
 
+(deftest operations->exclude-columns
+  (testing "Excluding columns"
+    (is
+      (=
+       ["users_0.fullName" "users_0.realEmail"]
+       (->> '({:type "unselect", :columns ["id"], :context {:entity :users, :alias "users_0"}})
+            (ast/operation->exclude-columns fixtures/schema ["users_0.*"])
+         )))))
 ;; (->> "customers 1 | test"
 ;;      ast/str->operations
 ;;      (ast/operations->set)
