@@ -1,3 +1,4 @@
+# TODO: update this file using `DEV.md`
 version: "2"
 services:
   app:
@@ -5,7 +6,7 @@ services:
     command: "lein trampoline ring server-headless"
     user: "${UID}:${GID}"
     ports:
-      - "3000:3000"
+      - "33333:33333"
     working_dir: ${PWD}
     volumes:
       - ./:/mnt
@@ -17,3 +18,5 @@ services:
     environment:
       TERM: xterm
       LEIN_FAST_TRAMPOLINE: y
+    extra_hosts:
+    - "host.docker.internal:host-gateway"

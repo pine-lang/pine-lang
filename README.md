@@ -21,6 +21,28 @@ SELECT u.id, u.email
 
 ## Run the pine server
 
+### Prereqs
+
+If mysql client doesnt' exist for the host machine:
+
+```
+yay -S mariadb-clients
+```
+
+Another cli tool helpful for debugging (has autocompletion):
+
+```
+yay -S mycli
+```
+
+### Config file
+
+```
+cp src/pine/config.sample src/pine/config.clj
+```
+
+### Run the server
+
 ```
 UID=${UID}  \
 GID=${UID}  \

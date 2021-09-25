@@ -3,7 +3,8 @@
             [pine.ast :as ast]
             [pine.fixtures :as fixtures]
             [pine.db :as db]
-            [clojure.string :as s])
+            [clojure.string :as s]
+            [pine.config :as c])
   )
 
 ;; Eval
@@ -34,14 +35,11 @@
 
 ;; Helpers
 
-;; Load the schema only once
-;; (def *schema* (db/schema c/db "INSERT_DB_NAME" ))
-
 (defn $
   "Evaluate Pine expressions:
-  ($ count \"users *\")
-  ($ first \"users *\")
-  ($ (partial map :fullName) \"users *\")
+  ($ count schema \"users *\")
+  ($ first schema \"users *\")
+  ($ (partial map :fullName) schema \"users *\")
   "
   ([fn schema expression]
    (->> expression
@@ -58,4 +56,8 @@
        (pine-prepare schema) ;; prepare the sql for executing using cached schema
        ))
 
-;; ($prepare (db/schema c/db) "penneo_com.caseFiles 1")
+;; Load the schema only once
+;; (def *schema* (db/schema c/db))
+
+;; Examples:
+;; ($ first *schema* "COLUMNS | l: 10 ")
