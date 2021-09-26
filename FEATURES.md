@@ -131,7 +131,7 @@ users | count: id
 evaluates to:
 
 ```
-  SELECT GROUP_CONCAT(c.id)
+  SELECT count(c.id)
     FROM customers AS c
 ```
 
