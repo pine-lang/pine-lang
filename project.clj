@@ -13,12 +13,28 @@
                  [ring/ring-json "0.4.0"]
                  [instaparse "1.4.9"]
                  [org.clojure/core.match "0.3.0-alpha5"]
+
                  ]
-  :plugins [[lein-ring "0.9.7"]]
+  :plugins [[lein-ring "0.9.7"]
+            ]
   :ring {:handler pine.handler/app}
   :profiles
-  {:dev {:dependencies [[javax.servlet/servlet-api "2.5"]
-                        [ring/ring-mock "0.3.0"]]}}
+  {
+   :dev {:dependencies [[javax.servlet/servlet-api "2.5"]
+                        [ring/ring-mock "0.3.0"]
+                        ]}
+   :repl {
+          :plugins [[cider/cider-nrepl "0.26.0"]
+                    [refactor-nrepl "2.5.1"] ]
+          :dependencies [[nrepl/nrepl "0.8.3"]]
+          }
+   }
   :aot :all
+  ;; https://github.com/technomancy/leiningen/blob/master/sample.project.clj
+  :repl-options {
+                 :welcome (println "\nRepl for pine :: warming up ... \n")
+                 :host "0.0.0.0"
+                 :port "33333"
+                 }
   )
 
