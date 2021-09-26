@@ -55,9 +55,3 @@
   (->> expression
        (pine-prepare schema) ;; prepare the sql for executing using cached schema
        ))
-
-;; Load the schema only once
-;; (def *schema* (db/schema c/db))
-
-;; Examples:
-;; ($ first *schema* "COLUMNS | l: 10 ")

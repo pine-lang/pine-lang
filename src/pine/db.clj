@@ -20,7 +20,7 @@
                )
         ]
     {:datasource cpds}))
-(def pooled-db (delay (pool c/db)))
+(def pooled-db (delay (pool c/config)))
 (defn connection [] @pooled-db)
 
 ;; Utils
@@ -74,60 +74,51 @@
 
 (defn table-definition
   "Create table definition"
-  [connection table]
+  [config table]
   (prn (format "Loading schema definition for table: %s." table))
   (->> table
        escape
        (format "show create table %s")
-       (exec connection)
+       (exec config)
        first
        ((keyword "create table"))
        ))
 
 ;; (defn change-db
 ;;   "Change the db being used"
-;;   [connection db-name]
+;;   [config db-name]
 ;;   (->> db-name
 ;;        (format "use %s")
-;;        (j/execute! connection)))
+;;        (j/execute! config)))
 
 (defn tables
   "Get all the tables for a schema"
-  [connection]
+  [config]
   (->> "show tables"
-       (exec connection)
+       (exec config)
        )
   )
 
-(defn schema-db
+(defn get-schema'
   "Get the schema for the database. This function gets the schema for every table
   and can be very slow. Should be called once and the schema should be passed
   around."
-  [connection]
-  (let [db-name (:name connection)
+  [config]
+  (let [db-name     (:name config)
         column-name (format "tables_in_%s" db-name)
         column      (keyword column-name)]
     (prn (format "Loading schema definition for db: %s." db-name))
     ;; { (keyword db-name)
      (->> "show tables"
-          (exec connection)
+          (exec config)
           (map column)
-          (map (fn [t] {(keyword t) (table-definition connection t)}))
+          (map (fn [t] {(keyword t) (table-definition config t)}))
           (apply merge)
           )
      ;; }
   ))
 
-;; (defn schema-dbs
-;;   "Get the schemas for all the databases."
-;;   [connection]
-;;   (->> "show databases"
-;;        (exec connection)
-;;        (map :database)
-;;        )
-;;   )
-
-(def schema (memoize schema-db))
+(def get-schema (memoize get-schema'))
 
 ;; Helpers
 

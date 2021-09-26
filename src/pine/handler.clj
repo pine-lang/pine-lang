@@ -44,7 +44,7 @@
              (POST "/" request
                    (->> (get-in request [:params "expression"])
                         ((fn [x] (prn x) x))
-                        (build-query (db/schema c/db)) ;; TODO: shouldn't need to specify db
+                        (build-query (db/get-schema c/config)) ;; TODO: shouldn't need to specify db
                         ;; ((fn [x] {:query x}))
                         response
                         )
