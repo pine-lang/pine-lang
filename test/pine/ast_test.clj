@@ -2,7 +2,7 @@
   (:require [pine.ast :as ast]
             [clojure.test :refer :all]
             [clojure.string :as s]
-            [pine.fixtures :as fixtures]
+            [pine.fixtures.mysql :as fixtures]
             ))
 
 ;; Parsing the Pine Expressions and Lexemes

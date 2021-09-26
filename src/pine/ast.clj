@@ -186,7 +186,7 @@
        )
   )
 
-(defn ast->sql-and-params-helper
+(defn ast->sql-and-params'
   "Create an sql query"
   [ast]
   (let [select-columns (s/join ", " (ast :select))
@@ -243,7 +243,7 @@
   [ast]
   (let [meta (:meta ast)]
     (cond meta [meta []]
-          :else (ast->sql-and-params-helper ast))))
+          :else (ast->sql-and-params' ast))))
 
 ;; -----------------
 ;; DB operations

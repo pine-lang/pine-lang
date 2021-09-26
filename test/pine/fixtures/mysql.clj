@@ -1,5 +1,4 @@
-(ns pine.fixtures
-  (:require  [clojure.test :as t]))
+(ns pine.fixtures.mysql)
 
 (def schema {
              :customers "CREATE TABLE `customers` (

@@ -1,7 +1,8 @@
-(ns pine.db-test
+(ns pine.db.mysql-test
   (:require [clojure.test :refer :all]
             [pine.db :as db]
-            [pine.fixtures :as fixtures]
+            [pine.db.mysql :as mysql]
+            [pine.fixtures.mysql :as fixtures]
             ))
 
 (deftest references:test-schema
@@ -11,7 +12,7 @@
       {:users "userId"
        :customers "customerId"
        }
-      (db/references fixtures/schema "caseFiles")
+      (mysql/references fixtures/schema "caseFiles")
       ))))
 
 

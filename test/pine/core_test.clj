@@ -2,7 +2,7 @@
   (:require [clojure.test :refer :all]
             [pine.core :refer :all]
             [pine.ast :as ast]
-            [pine.fixtures :as fixtures]
+            [pine.fixtures.mysql :as fixtures]
             ))
 
 (deftest pine-prepare:one-operation-no-filter

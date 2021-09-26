@@ -1,11 +1,7 @@
 (ns pine.core
   (:require [clojure.java.jdbc :as j]
             [pine.ast :as ast]
-            [pine.fixtures :as fixtures]
-            [pine.db :as db]
-            [clojure.string :as s]
-            [pine.config :as c])
-  )
+            [pine.db :as db]))
 
 ;; Eval
 
@@ -20,9 +16,9 @@
      :params params})
   )
 
-;; ($prepare (db/schema c/db) "caseFiles 1 | delete!")
+;; (pine-prepare (db/get-schema c/config) "caseFiles 1 | delete!")
+;; (pine-prepare (db/get-schema c/config) "caseFiles 1 | s: id")
 
-;; ($prepare (db/schema c/db) "caseFiles 1 | s: id")
 
 (defn pine-eval
   "Evalate a query"
@@ -49,9 +45,3 @@
   ([schema expression]
    ($ (fn[x] x) schema expression)))
 
-(defn $prepare
-  "Prepare query and the parameters"
-  [schema expression]
-  (->> expression
-       (pine-prepare schema) ;; prepare the sql for executing using cached schema
-       ))

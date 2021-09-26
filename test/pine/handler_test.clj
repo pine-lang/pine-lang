@@ -2,7 +2,7 @@
   (:require [clojure.test :refer :all]
             [pine.handler :refer :all]
             [clojure.test :as t]
-            [pine.fixtures :as fixtures]
+            [pine.fixtures.mysql :as fixtures]
             ))
 
 
