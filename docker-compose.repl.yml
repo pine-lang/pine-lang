@@ -1,21 +1,18 @@
 version: "2"
 services:
-  app:
+  repl:
+    tty: true
     image: "clojure:lein-2.8.3"
-    command: "lein trampoline ring server-headless"
+    command: "lein repl"
     user: "${UID}:${GID}"
     ports:
       - "33333:33333"
     working_dir: ${PWD}
     volumes:
-      - ./:/mnt
-      - /ssh-agent:/ssh-agent
-      - ~/.ssh:/root/.ssh
       - ~/.m2/repository:/root/.m2/repository
       - /etc/passwd:/etc/passwd
       - ~/:/home/${USR}
     environment:
       TERM: xterm
-      LEIN_FAST_TRAMPOLINE: y
     extra_hosts:
     - "host.docker.internal:host-gateway"
