@@ -3,27 +3,12 @@
             [pine.config :as c]
             [pine.db.mysql :as mysql]
             )
-  (:import com.mchange.v2.c3p0.ComboPooledDataSource))
+  )
 
-;; Connection Pooling
-(defn pool
-  [spec]
-  (let [cpds (doto (ComboPooledDataSource.)
-               (.setDriverClass (:classname spec))
-               (.setJdbcUrl (str "jdbc:" (:subprotocol spec) ":" (:subname spec)))
-               (.setUser (:user spec))
-               (.setPassword (:password spec))
-               ;; expire excess connections after 30 minutes of inactivity:
-               (.setMaxIdleTimeExcessConnections (* 30 60))
-               ;; expire connections after 3 hours of inactivity:
-               (.setMaxIdleTime (* 3 60 60))
-               )
-        ]
-    {:datasource cpds}))
-(def pooled-db (delay (pool c/config)))
-(defn connection [] @pooled-db)
+;; DB wrappers
 
-;; Multiplexers
+(def connection-delay (delay (mysql/pool c/config))) ;; mysql
+;; (def connection-delay (delay c/config))              ;; postgres
 
 (defn relation
   "Get the column that has the relationship between the tables:
@@ -37,7 +22,6 @@
     :else     nil)
   )
 
-
 (defn get-columns
   "Returns the list of columns a table has"
   [schema table-name]
@@ -49,6 +33,13 @@
   (mysql/get-schema config))
 
 (def get-schema (memoize get-schema'))
+
+;; DB connection
+
+(defn connection [] @connection-delay)
+
+;; (jdbc/query (connection) "show tables;") ;; mysql
+;; (jdbc/query (connection) "\d user;")     ;; postgres
 
 ;; Helpers
 

@@ -1,7 +1,26 @@
 (ns pine.db.mysql
-  (:require [pine.db.util :as u]))
+  (:require [pine.db.util :as u])
+  (:import com.mchange.v2.c3p0.ComboPooledDataSource)
+  )
 
-(defn table-definition
+;; Connection Pooling
+(defn pool
+  [spec]
+  (let [cpds (doto (ComboPooledDataSource.)
+               (.setDriverClass (:classname spec))
+               (.setJdbcUrl (str "jdbc:" (:dbtype spec) ":" (:subname spec)))
+               (.setUser (:user spec))
+               (.setPassword (:password spec))
+               ;; expire excess connections after 30 minutes of inactivity:
+               (.setMaxIdleTimeExcessConnections (* 30 60))
+               ;; expire connections after 3 hours of inactivity:
+               (.setMaxIdleTime (* 3 60 60))
+               )
+        ]
+    {:datasource cpds}))
+
+
+(defn- table-definition
   "Create table definition"
   [config table]
   (prn (format "Loading schema definition for table: %s." table))
