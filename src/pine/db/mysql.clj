@@ -20,26 +20,14 @@
     {:datasource cpds}))
 
 
-(defn- table-definition
-  "Create table definition"
-  [config table]
-  (prn (format "Loading schema definition for table: %s." table))
-  (->> table
-       u/escape
-       (format "show create table %s")
-       (u/exec config)
-       first
-       ((keyword "create table"))
-       ))
-
 (defn references
   "Get the tables used in the foreign keys"
   [schema table]
   (->> table
        ((keyword table) schema)
-       (re-seq #"FOREIGN KEY .`(.*)`. REFERENCES `(.*?)`")
+       (re-seq #"FOREIGN KEY .`(.*)`. REFERENCES `(.*?)`") ;; TODO: fix `nil` case
        (map (fn [[_ col t]] { (keyword t) col }))
-       (apply (partial merge-with (fn [a b] a)))
+       (apply (partial merge-with (fn [a b] a))) ;; TODO: fix `nil` case
        ))
 
 (defn get-columns
@@ -52,12 +40,24 @@
     (map #(second %))
   ))
 
+(defn- table-definition
+  "Create table definition"
+  [config table]
+  (prn (format "Loading schema definition for table: %s." table))
+  (->> table
+       u/escape
+       (format "show create table %s")
+       (u/exec config)
+       first
+       ((keyword "create table"))
+       ))
+
 (defn get-schema
   "Get the schema for the database. This function gets the schema for every table
   and can be very slow. Should be called once and the schema should be passed
   around."
   [config]
-  (let [db-name     (:name config)
+  (let [db-name     (:dbname config)
         column-name (format "tables_in_%s" db-name)
         column      (keyword column-name)]
     (prn (format "Loading schema definition for db: %s." db-name))
