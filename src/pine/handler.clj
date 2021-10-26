@@ -29,13 +29,15 @@
                               ]))
 
                       (map (fn [[t x]] (case t
-                                             :string (format "\"%s\"" x)
+                                             :string (db/quote-string x)
                                              (format "%s" x)
                                              )))
                       )
         ]
     (str
-     (reduce (fn [acc param] (s/replace-first acc "?" param)) (:query prepared) params) ";")
+     "\n"
+     (reduce (fn [acc param] (s/replace-first acc "?" param)) (:query prepared) params) ";"
+     "\n")
     ))
 
 (defroutes app-routes

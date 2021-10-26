@@ -56,7 +56,7 @@
   "Add aliases to the the operations"
   [ops]
   (map-indexed (fn [idx op]
-                 (cond (:entity op) (assoc op :alias (format "%s_%d" (name (:entity op)) idx))
+                 (cond (:entity op) (assoc op :alias (format "%s_%d" (s/lower-case (name (:entity op))) idx))
                        :else op))
                ops))
 
@@ -174,7 +174,7 @@
 (defn ast-join->sql
   "Convert a single join in the joins parts of the AST to an sql query"
   [entity alias [t1 t2]]
-  (format "JOIN %s AS %s ON (%s = %s)" (name entity) alias t1 t2) )
+  (format "JOIN %s AS %s ON (%s = %s)" (db/quote (name entity)) alias t1 t2) )
 
 (defn ast-joins->sql
   "Convert joins part of the AST to an sql query"
@@ -224,7 +224,7 @@
             (->> [(cond set-values   nil
                         delete-table nil
                         :else        select-columns)                   ;; update/delete/select
-                  (name table)                                         ;; table
+                  (db/quote (name table))                              ;; table
                   (cond set-values   alias
                         delete-table nil
                         :else        alias)                            ;; alias
@@ -264,7 +264,7 @@
 (defn qualify
   "Qualify a column with the alias: (qualify \"caseFileId\" :with \"d\") => \"d.caseFileId\""
   [column _ alias]
-  (format "%s.%s" alias column)
+  (format "%s.%s" alias (db/quote column))
   )
 
 
@@ -332,7 +332,7 @@
                                (operation-type? ["select"] b))))
        (map (fn [pair] (let [a       (table-alias (first pair))
                              columns (:columns (second pair))]
-                         (map (fn [c] (format "%s.%s" a c)) columns)
+                         (map (fn [c] (qualify c :with a)) columns)
                          )))
        (apply concat)
        )
@@ -486,7 +486,7 @@
   [qualify? operation]
   (let [vs (:values operation)
         or (:or operation)]
-    (cond (empty? vs) { :conditions "1" :params nil}
+    (cond (empty? vs) { :conditions "true" :params nil}
           :else       (->> vs
                            (map (partial filter->where-condition (:alias operation) qualify?))
                            ((fn [where-conditions] { :conditions (str "(" (->> where-conditions
@@ -500,7 +500,7 @@
                            ))))
 
 (defn operations->where
-  "Get the joins from the operations"
+  "Get the conditions from the operations"
   [qualify? ops]
   (let [
         wheres (map (partial operation->where qualify?) ops)

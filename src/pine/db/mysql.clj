@@ -70,3 +70,11 @@
           )
      ;; }
   ))
+
+
+(defn quote [x]
+  "Handle table names, columns names, etc."
+  (format "`%s`" x))
+
+(defn quote-string [x]
+  (format "\"%s\"" x))

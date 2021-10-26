@@ -6,42 +6,46 @@
             [clojure.spec.test.alpha :as stest]))
 
 ;; `instrument` or `unstrument`
-;; (stest/instrument [`references])
-
+(stest/instrument [`references])
 
 (defn- not-implemented [name]
   (throw (Exception. (str "Not implemented :: " name))))
 
-(s/def :db/schema map?)
+;; TODO: can the specs exist on a protocol level?
+;; https://groups.google.com/g/clojure/c/f068WTgakpk
+
+
+(s/def :db/columns vector?)
+(s/def :db/refs map?)
+(s/def :db/schema (s/keys :req [:db/columns :db/refs]))
 (s/def :db/table string?)
 (s/def :db/references (s/map-of keyword? string?))
 
 (defn references
   "Get the tables used in the foreign keys"
   [schema table]
-  ;; {:pre [(s/valid? map? schema) (s/valid? :db/table table)]
-  ;;  :post [(s/valid? :db/references %)]}
-
-  ;; TODO: implement the following
-  ;;       it should be all the keys in the schema map with a value
-  {:test (keyword table)}) ;; TODO: update this!
+  (->> table
+       keyword
+       schema
+       :db/refs))
 (s/fdef references
-  :args (s/cat :schema :db/schema :table :db/table)
-  ;; :ret :db/references
-  )
-;; (references "a" "b") ;; local test
+  :args (s/cat :schema :db/schema :table :db/table))
+;; (references {:x {:db/columns ["user_id" "something_else"] :db/refs {"user" "user_id"}}} "x") ;; local test
 
 
 (defn get-columns
   "Returns the list of columns a table has"
   [schema table-name]
-  ;; TODO: this should be all the keys in the schema map
-  (not-implemented "get-columns"))
+  (schema (keyword table-name) :db/columns))
+(s/fdef get-columns
+  :args (s/cat :schema :db/schema :table :db/table)
+  ;; :ret :db/references
+  )
 
 (defn- columns
   "Find the column names using the db connection"
   [config table]
-  (->> "user_tenant_role"
+  (->> table
        u/escape
        (format "
 SELECT *
@@ -50,10 +54,10 @@ SELECT *
  -- AND table_schema = 'schema_name?'
 ")
        (u/exec config)
-       (map :column_name)
-       ))
+       (map :column_name)))
+;; (columns c/config "user") ;; local test
 
-(defn- foreign-keys
+(defn- refs
   "Find the foreign keys using the db connection"
   [config table]
   (->> table
@@ -71,24 +75,23 @@ SELECT *
     AND tc.constraint_type = 'FOREIGN KEY'
 ")
        (u/exec config)
-       (map (juxt :column_name :foreign_table_name :foreign_column_name))))
-
+       (map (juxt :foreign_table_name
+                  :column_name
+                  ;; :foreign_column_name
+))                                                            ;; (["user_id" "user"])
+       ;; TODO: there can be multiple references to the foreign table
+       (reduce (fn [acc [ft c]] (assoc acc (keyword ft) c )) {}) ;; { :user "user_id" }
+       ))
+;; (refs c/config "document")
 
 (defn- table-definition
   "Create table definition using the db connection"
   ;; TODO: use the db name or schema name (mysql or postgres respectively)
   [config table]
   (prn (format "Loading schema definition for table: %s." table))
-  (let [cs (columns config table)
-        fks (foreign-keys config table)]
-    [cs fks]) ;; TODO: merge these into one!
-  )
-
-;; (table-definition c/config "user_tenant_role")
-
-;; (->>
-;;  (table-definition c/config "user_tenant_role")
-;;  (map (fn [[x y z]] [x (format "\"%s\".\"%s\"" y z)])))
+  {:db/columns (columns config table)
+   :db/refs (refs config table)})
+;; (table-definition c/config "user_tenant_role") ;; local test
 
 (defn get-tables [config table-catalog]
   (->> (u/exec config (format "SELECT * FROM information_schema.tables WHERE table_schema = 'public' AND table_catalog = '%s'" table-catalog))
@@ -105,15 +108,17 @@ SELECT *
   (let [db-name     (:dbname config)
         column-name (format "tables_in_%s" db-name)
         column      (keyword column-name)]
-    (prn (format "Loading schema definition for db: %s." db-name))
-    ;; { (keyword db-name)
+    (prn (format "Loading schema definition for db: %s" db-name))
     (->>
      db-name
      (get-tables c/config)
-          ;; TODO: this is in progress... maybe use a reduce here?
-     (reduce (fn [acc v] (assoc acc (keyword v) "this is a test")) {})
-     ;; (map (fn [t] {(keyword t) (table-definition config t)})) ;; TODO: implement
-     ;; (apply merge)
-     )
-     ;; }
-    ))
+     (reduce (fn [acc v] (assoc acc (keyword v) (table-definition config v))) {}))))
+
+;; TODO: rename to quote-name
+(defn quote [x]
+  "Handle table names, columns names, etc. In postgres, we need double quotes
+  for camel case names."
+  (format "\"%s\"" x))
+
+(defn quote-string [x]
+  (format "'%s'" x))
