@@ -540,20 +540,14 @@
                                      (filter (operation-type? ["condition", "order"]))
                                      (partition 2 1)
                                      (filter (fn [ops] (and (operation-type? ["condition"] (first ops))
-                                                            (operation-type? ["order"] (second ops))
-                                                          )))
-                                     (last)
-                                     )
-        ]
+                                                            (operation-type? ["order"] (second ops)))))
+                                     (last))]
+
     (cond (and condition-op order-op) (let [direction (order-op :direction)
                                             column (order-op :column)
-                                            a      (table-alias condition-op)
-                                         ]
-                                     (format "ORDER BY %s.%s %s" a column (cond (= direction "ascending") "ASC" :else "DESC"))
-                                     )
-          :else nil
-          )
-    ))
+                                            a      (table-alias condition-op)]
+                                        (format "ORDER BY %s.%s %s" a (db/quote column) (cond (= direction "ascending") "ASC" :else "DESC")))
+          :else nil)))
 
 (defn operations->group
   "Create the GROUP BY SQL statement"
