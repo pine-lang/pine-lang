@@ -122,3 +122,5 @@ SELECT *
 
 (defn quote-string [x]
   (format "'%s'" x))
+
+(defn connection[] (delay c/config))

@@ -1,10 +1,12 @@
 (ns pine.db.mysql
-  (:require [pine.db.util :as u])
+  (:require [pine.db.util :as u]
+            [pine.config :as c]
+            )
   (:import com.mchange.v2.c3p0.ComboPooledDataSource)
   )
 
 ;; Connection Pooling
-(defn pool
+(defn- pool
   [spec]
   (let [cpds (doto (ComboPooledDataSource.)
                (.setDriverClass (:classname spec))
@@ -78,3 +80,5 @@
 
 (defn quote-string [x]
   (format "\"%s\"" x))
+
+(defn connection[] (delay (pool c/config)))

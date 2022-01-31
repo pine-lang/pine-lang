@@ -10,11 +10,6 @@
 
 
 ;; DB wrappers
-
-;; TODO: move to the adapter
-;; (def connection-delay (delay (dbadapter/pool c/config))) ;; mysql
-(def connection-delay (delay c/config))              ;; postgres
-
 (defn quote [x]
   (dbadapter/quote x))
 
@@ -48,7 +43,7 @@
 
 ;; DB connection
 
-(defn connection [] @connection-delay)
+(defn connection [] @(dbadapter/connection))
 
 ;; (jdbc/query (connection) "show tables;") ;; mysql
 ;; (jdbc/query (connection) "\d user;")     ;; postgres
