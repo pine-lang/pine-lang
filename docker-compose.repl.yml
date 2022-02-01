@@ -3,9 +3,10 @@ services:
   repl:
     tty: true
     image: "clojure:lein-2.8.3"
-    command: "lein repl"
+    command: "lein repl :start :port 30000"
     user: "${UID}:${GID}"
     ports:
+      - "30000:30000"
       - "33333:33333"
     working_dir: ${PWD}
     volumes:
