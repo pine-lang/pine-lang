@@ -101,8 +101,8 @@
         (parsed-cols->indexed-cols [cs]
           (reduce (fn [acc c]
                     (match c
-                           [:column [:string column-name]]                           (conj acc column-name)
-                           [:column [:string column-name] [:alias [:string a]]]      (conj acc (format "%s AS %s" column-name a))
+                           [:column [:string column-name]]                           (conj acc (db/quote column-name))
+                           [:column [:string column-name] [:alias [:string a]]]      (conj acc (format "%s AS %s" (db/quote column-name) a))
                            :else (throw (Exception. (format "Can't index column: %s" c)))
                            )) [] cs)
           )
@@ -168,7 +168,7 @@
 (defn table->sql
   "Table to sql"
   [table]
-  (str "SELECT * FROM " (name table)))
+  (str "SELECT * FROM " (db/quote (name table))))
 
 
 (defn ast-join->sql
@@ -263,8 +263,8 @@
 
 (defn qualify
   "Qualify a column with the alias: (qualify \"caseFileId\" :with \"d\") => \"d.caseFileId\""
-  [column _ alias]
-  (format "%s.%s" alias (db/quote column))
+  [quoted-column _ alias]
+  (format "%s.%s" alias quoted-column)
   )
 
 
@@ -272,7 +272,7 @@
   "Get the qualified primary key for the table. This is a naive function that
   assumes that the primary key is always Id."
   [op]
-  (format "%s.%s" (op :alias) "id"))
+  (format "%s.%s" (op :alias) (db/quote "id")))
 
 ;; -----------------
 ;; Operations to AST
@@ -424,7 +424,10 @@
                                        )
         ]
 
-      columns-after-exclusion
+      ;; todo: Disabling column exclusinon feature
+      ;;       I'll re-write it later
+      ;; columns-after-exclusion
+      columns-before-exclusion
       )
     )
   )
@@ -439,8 +442,8 @@
         a2 (table-alias o2)
         e1-foreign-key (db/relation schema e2 :owns e1)
         e2-foreign-key (db/relation schema e1 :owns e2)
-        join-on (cond e1-foreign-key [(primary-key o2) (qualify e1-foreign-key :with a1)]
-                      e2-foreign-key [(qualify e2-foreign-key :with a2) (primary-key o1)]
+        join-on (cond e1-foreign-key [(primary-key o2) (qualify (db/quote e1-foreign-key) :with a1)]
+                      e2-foreign-key [(qualify (db/quote e2-foreign-key) :with a2) (primary-key o1)]
                       :else ["1" "2 /* No relationship exists */"])
         ]
     [e2 a2 join-on]
@@ -466,7 +469,7 @@
 (defn filter->where-condition
   "Convert the filter part of an operation to a where sql"
   [entity qualify? [column [type value] op]]
-  (let [col (cond qualify? (qualify column :with (name entity)) :else column)
+  (let [col (cond qualify? (qualify (db/quote column) :with (name entity)) :else column)
         operator (cond (= :null value) op
                        (re-find #"\*" value) "LIKE"
                        :else op)
@@ -631,7 +634,7 @@
      :values (->> values
                   (map first)
                   (map (fn [column]
-                         (str (qualify column :with alias) " = ?"))))
+                         (str (qualify (db/quote column) :with alias) " = ?"))))
      :params (->> values
                   (map second)
                   vec)

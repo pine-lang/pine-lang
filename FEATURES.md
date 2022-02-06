@@ -252,7 +252,7 @@ caseFiles 1 | set! title="new_title"
 caseFiles 1 | delete!
 ```
 
-## [x] Unselect specific columns
+## [ ] Unselect specific columns
 
 The following pine expression to select specific columns:
 ```

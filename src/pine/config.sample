@@ -1,9 +1,16 @@
 (ns pine.config)
 
-(let [name "information_schema"]
-  (def config {:classname "com.mysql.jdbc.Driver"
-               :subprotocol "mysql"
-               :subname (str "//host.docker.internal:3306/" name)
+(let [name "information_schema"] ;; if using the test bench, use `tmp`
+  (def config {
+               :host "host.docker.internal"
+               :dbtype "mysql"
+               :dbname name
                :user "?"
                :password "?"
-               :name name}))
+
+               ;; only for mysql connnection pooling
+               :classname "com.mysql.jdbc.Driver"
+               :subprotocol "mysql"
+               :subname (str "//host.docker.internal:3306/" name)
+
+               }))

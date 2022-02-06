@@ -4,12 +4,12 @@
              :customers "CREATE TABLE `customers` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `name` longtext COLLATE utf8_unicode_ci NOT NULL,
-  PRIMARY KEY (`id`)"
+  PRIMARY KEY (`id`))"
              :users "CREATE TABLE `users` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `fullName` longtext COLLATE utf8_unicode_ci NOT NULL,
   `realEmail` longtext COLLATE utf8_unicode_ci,
-  PRIMARY KEY (`id`)"
+  PRIMARY KEY (`id`))"
              :caseFiles "CREATE TABLE `caseFiles` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `title` longtext COLLATE utf8_unicode_ci NOT NULL,
