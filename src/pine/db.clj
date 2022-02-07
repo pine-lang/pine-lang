@@ -1,18 +1,20 @@
 (ns pine.db
   (:require [clojure.java.jdbc :as jdbc]
             [pine.config :as c]
-            [pine.db.mysql :as dbadapter]
-            ;; [pine.db.postgres :as dbadapter] ;; TODO replace with protocol implementation
-            ;; [pine.db.protocol :refer [DbAdapter]]
+            [pine.db.mysql :as mysql ]
+            [pine.db.postgres :as postgres]
             [pine.db.protocol :as protocol]
             )
   (:import pine.db.mysql.MysqlAdapter)
+  (:import pine.db.postgres.PostgresAdapter)
   )
-
 
 ;; (ns-unalias 'pine.db 'dbadapter)
 
-(def dbadapter (MysqlAdapter.))
+(def dbadapter (let [type (c/config :dbtype)]
+                 (cond (= type "mysql" ) (MysqlAdapter.)
+                       (= type "postgres") (PostgresAdapter.)
+                       :else (throw (Exception. (format "Db not supported: %s" type))))))
 
 ;; DB wrappers
 (defn quote [x]
