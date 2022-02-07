@@ -1,6 +1,7 @@
 (ns pine.db.mysql
   (:require [pine.db.util :as u]
             [pine.config :as c]
+            [pine.db.protocol :refer [DbAdapter]]
             )
   (:import com.mchange.v2.c3p0.ComboPooledDataSource)
   )
@@ -22,26 +23,6 @@
     {:datasource cpds}))
 
 
-(defn references
-  "Get the tables used in the foreign keys"
-  [schema table]
-  (->> table
-       ((keyword table) schema)
-       (re-seq #"FOREIGN KEY .`(.*)`. REFERENCES `(.*?)`") ;; TODO: fix `nil` case
-       (map (fn [[_ col t]] { (keyword t) col }))
-       (apply (partial merge-with (fn [a b] a))) ;; TODO: fix `nil` case
-       ))
-
-(defn get-columns
-  "Returns the list of columns a table has"
-  [schema table-name]
-  (->>
-    schema
-    ((keyword table-name))
-    (re-seq #"(?m)^  `(\S+)`")
-    (map #(second %))
-  ))
-
 (defn- table-definition
   "Create table definition"
   [config table]
@@ -54,31 +35,47 @@
        ((keyword "create table"))
        ))
 
-(defn get-schema
-  "Get the schema for the database. This function gets the schema for every table
-  and can be very slow. Should be called once and the schema should be passed
-  around."
-  [config]
-  (let [db-name     (:dbname config)
-        column-name (format "tables_in_%s" db-name)
-        column      (keyword column-name)]
-    (prn (format "Loading schema definition for db: %s." db-name))
-    ;; { (keyword db-name)
-     (->> "show tables"
-          (u/exec config)
-          (map column)
-          (map (fn [t] {(keyword t) (table-definition config t)}))
-          (apply merge)
-          )
-     ;; }
-  ))
+(deftype MysqlAdapter [] ;; schema as an arg?
+  DbAdapter
+  (connection [this] (delay (pool c/config)))
+
+  (get-schema [this config]
+    (let [db-name     (:dbname config)
+          column-name (format "tables_in_%s" db-name)
+          column      (keyword column-name)]
+      (prn (format "Loading schema definition for db: %s." db-name))
+      ;; { (keyword db-name)
+      (->> "show tables"
+           (u/exec config)
+           (map column)
+           (map (fn [t] {(keyword t) (table-definition config t)}))
+           (apply merge)
+           )
+      ;; }
+      ))
+
+  (get-columns [this schema table-name]
+    (->>
+     schema
+     ((keyword table-name))
+     (re-seq #"(?m)^  `(\S+)`")
+     (map #(second %))
+     )
+    )
 
 
-(defn quote [x]
-  "Handle table names, columns names, etc."
-  (format "`%s`" x))
+  (references [this schema table]
+    (->> table
+         ((keyword table) schema)
+         (re-seq #"FOREIGN KEY .`(.*)`. REFERENCES `(.*?)`") ;; TODO: fix `nil` case
+         (map (fn [[_ col t]] { (keyword t) col }))
+         (apply (partial merge-with (fn [a b] a))) ;; TODO: fix `nil` case
+         )
+    )
 
-(defn quote-string [x]
-  (format "\"%s\"" x))
+  (quote [this x]
+    (format "`%s`" x))
 
-(defn connection[] (delay (pool c/config)))
+  (quote-string [this x]
+    (format "\"%s\"" x))
+  )

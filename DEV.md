@@ -16,6 +16,33 @@ Cider will detect the repl running on localhost. Select it and you are good to g
 
 ## FAQ
 
+### How to setup a test mysql db for testing?
+
+```
+docker run --rm --name=mysql-test-pine -p 3306:3306 -e MYSQL_ROOT_PASSWORD=secret -d mysql:5
+```
+
+Now, we can connect with the following configuration, using the password `secret`:
+
+```
+(setq sql-connection-alist
+      '(
+        (mysql-test
+         (sql-product 'mysql)
+         (sql-user "root")
+         (sql-server "localhost")
+         (sql-database "information_schema")
+         )
+        ))
+```
+
+
+Stop the container:
+
+```
+docker stop mysql-test-pine
+```
+
 ### How to run the http server while the repl is running?
 
 I could make it work by explicitly running a jetty server but as soon as I did

@@ -1,20 +1,28 @@
 (ns pine.db
   (:require [clojure.java.jdbc :as jdbc]
             [pine.config :as c]
-            ;; [pine.db.mysql :as dbadapter]
-            [pine.db.postgres :as dbadapter]
+            [pine.db.mysql :as dbadapter]
+            ;; [pine.db.postgres :as dbadapter] ;; TODO replace with protocol implementation
+            ;; [pine.db.protocol :refer [DbAdapter]]
+            [pine.db.protocol :as protocol]
             )
+  (:import pine.db.mysql.MysqlAdapter)
   )
+
 
 ;; (ns-unalias 'pine.db 'dbadapter)
 
+(def dbadapter (MysqlAdapter.))
 
 ;; DB wrappers
 (defn quote [x]
-  (dbadapter/quote x))
+  (protocol/quote dbadapter x))
 
 (defn quote-string [x]
-  (dbadapter/quote-string x))
+  (protocol/quote-string dbadapter x))
+
+(defn references [schema table]
+  (protocol/references dbadapter schema table))
 
 (defn relation
   "Get the column that has the relationship between the tables:
@@ -24,26 +32,26 @@
   [schema t1 relationship t2]
   (prn t1)
   (case relationship
-    :owns     (t1 (dbadapter/references schema t2))
-    :owned-by (t2 (dbadapter/references schema t1))
+    :owns     (t1 (protocol/references dbadapter schema t2))
+    :owned-by (t2 (protocol/references dbadapter schema t1))
     :else     nil)
   )
 
 (defn get-columns
   "Returns the list of columns a table has"
   [schema table-name]
-  (dbadapter/get-columns schema table-name))
+  (protocol/get-columns dbadapter schema table-name))
 
 
 (defn get-schema'
   [config]
-  (dbadapter/get-schema config))
+  (protocol/get-schema dbadapter config))
 
 (def get-schema (memoize get-schema'))
 
 ;; DB connection
 
-(defn connection [] @(dbadapter/connection))
+(defn connection [] @(protocol/connection dbadapter))
 
 ;; (jdbc/query (connection) "show tables;") ;; mysql
 ;; (jdbc/query (connection) "\d user;")     ;; postgres
