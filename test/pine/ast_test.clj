@@ -132,7 +132,7 @@
   (testing "Create a where condition from an operation"
     (is
      (=
-      { :conditions "(customers_0.id = ?)" :params [[:number "1"]] }
+      { :conditions "(customers_0.`id` = ?)" :params [[:number "1"]] }
       (->> (ast/str->operations "customers 1")
            first
            (ast/operation->where true)
@@ -150,7 +150,7 @@
   (testing "Create a where condition from an operation"
     (is
      (=
-      { :conditions "(customers_0.name = ?)" :params [[:string "acme"]] }
+      { :conditions "(customers_0.`name` = ?)" :params [[:string "acme"]] }
       (->> (ast/str->operations "customers name='acme'")
            first
            (ast/operation->where true))
@@ -160,7 +160,7 @@
   (testing "Create a where condition from an operation"
     (is
      (=
-      { :conditions "(customers_0.name LIKE ?)" :params [[:string "acme%"]] }
+      { :conditions "(customers_0.`name` LIKE ?)" :params [[:string "acme%"]] }
       (->> (ast/str->operations "customers name='acme*'")
            first
            (ast/operation->where true))
@@ -171,8 +171,8 @@
     (is
      (=
       {
-       :conditions ["(customers_0.name = ?)"
-                    "(users_1.id = ?)"]
+       :conditions ["(customers_0.`name` = ?)"
+                    "(users_1.`id` = ?)"]
        :params [[:string "acme"] [:number "1"]]
        }
       (->> "customers name='acme' | users 1"
@@ -181,24 +181,20 @@
            )
       ))))
 
-(deftest operations->exclude-columns
-  (testing "Excluding columns"
-    (is
-      (=
-       ["users_0.fullName" "users_0.realEmail"]
-       (->> '({:type "unselect", :columns ["id"], :context {:entity :users, :alias "users_0"}})
-            (ast/operation->exclude-columns fixtures/schema ["users_0.*"])
-         )))))
-;; (->> "customers 1 | test"
-;;      ast/str->operations
-;;      (ast/operations->set)
-;;      )
+;; (deftest operations->exclude-columns
+;;   (testing "Excluding columns"
+;;     (is
+;;       (=
+;;        ["users_0.fullName" "users_0.realEmail"]
+;;        (->> '({:type "unselect", :columns ["id"], :context {:entity :users, :alias "users_0"}})
+;;             (ast/operation->exclude-columns fixtures/schema ["users_0.*"])
+;;          )))))
 
 (deftest operations->join:entity-owns-another-entity
   (testing "Create operations for a query"
     (is
      (=
-      [:documents "d" ["d.caseFileId" "cf.id"]]
+      [:documents "d" ["d.`caseFileId`" "cf.`id`"]]
       (ast/operations->join
        fixtures/schema
        {:entity :caseFiles :values [[ "id" "1" ]], :alias "cf"}
@@ -209,7 +205,7 @@
   (testing "Create operations for a query"
     (is
      (=
-      [:caseFiles "cf" ["cf.id" "d.caseFileId"]]
+      [:caseFiles "cf" ["cf.`id`" "d.`caseFileId`"]]
       (ast/operations->join
        fixtures/schema
        {:entity :documents :values [[ "id" "2" ]] :alias "d"}
@@ -227,15 +223,15 @@
         {:entity :caseFiles :values [[ "id" "2" ]]      :alias "cf"}
         {:entity :documents :values [[ "name" "test" ]] :alias "d"}
         ])
-      [:caseFiles "cf" ["cf.customerId" "c.id"]
-       :documents "d" ["d.caseFileId" "cf.id"]]
+      [:caseFiles "cf" ["cf.`customerId`" "c.`id`"]
+       :documents "d" ["d.`caseFileId`" "cf.`id`"]]
       ))))
 
 (deftest operations->joins:no-filter
   (testing "Create operations for a query"
     (is
      (=
-      [:caseFiles "cf" ["cf.customerId" "c.id"]]
+      [:caseFiles "cf" ["cf.`customerId`" "c.`id`"]]
       (ast/operations->joins
        fixtures/schema
        [{:type "condition" :entity :customers :values [] :alias "c"}
@@ -260,18 +256,18 @@
       {
        :select ["documents_2.*"]
        :from [:customers "customers_0"]
-       :joins [:caseFiles "caseFiles_1" ["caseFiles_1.customerId" "customers_0.id"]
-               :documents "documents_2" ["documents_2.caseFileId" "caseFiles_1.id"]]
+       :joins [:caseFiles "casefiles_1" ["casefiles_1.`customerId`" "customers_0.`id`"]
+               :documents "documents_2" ["documents_2.`caseFileId`" "casefiles_1.`id`"]]
        :where {
-               :conditions ["(customers_0.id = ?)"
-                            "(caseFiles_1.name = ?)"
-                            "(documents_2.name = ?)"
+               :conditions ["(customers_0.`id` = ?)"
+                            "(casefiles_1.`name` = ?)"
+                            "(documents_2.`name` = ?)"
                             ]
                :params     [[:number "1"] [:string "john"] [:string "test"]]
                }
        :order nil
        :group nil
-       :limit "LIMIT 50"
+       :limit nil
        :meta nil
        :delete nil
        :set nil
@@ -280,12 +276,6 @@
       ast/str->operations
       (ast/operations->ast fixtures/schema))
       ))))
-
-
-;; (->> "customers 1 | caseFiles name=john | documents name=test"
-;;      ast/str->operations
-;;      (ast/operations->ast fixtures/schema)
-;;      )
 
 ;; AST to SQL
 
@@ -302,7 +292,7 @@
                              :params     ["1"]
                              }
                      })
-      ["SELECT c.* FROM customers AS c WHERE c.id = ?" ["1"]]
+      ["SELECT c.* FROM `customers` AS c WHERE c.id = ?" ["1"]]
       ))))
 
 (deftest ast-join->sql
@@ -310,7 +300,7 @@
     (is
      (=
       (ast/ast-join->sql :users "u" ["u.customerId" "c.id"])
-      "JOIN users AS u ON (u.customerId = c.id)"
+      "JOIN `users` AS u ON (u.customerId = c.id)"
       ))))
 
 (deftest ast-joins->sql:no-join
@@ -327,7 +317,7 @@
      (=
       (ast/ast-joins->sql [:users "u" ["u.customerId" "c.id"]
                           :address "a" ["a.userId" "u.id"]])
-      "JOIN users AS u ON (u.customerId = c.id) JOIN address AS a ON (a.userId = u.id)"
+      "JOIN `users` AS u ON (u.customerId = c.id) JOIN `address` AS a ON (a.userId = u.id)"
       ))))
 
 (deftest ast->sql-and-params:two-operation
@@ -345,7 +335,7 @@
                                         :params     ["1" "john"]
                                         }
                      })
-      ["SELECT u.* FROM customers AS c JOIN users AS u ON (u.customerId = c.id) WHERE c.id = ? AND u.name = ?" ["1" "john"]]
+      ["SELECT u.* FROM `customers` AS c JOIN `users` AS u ON (u.customerId = c.id) WHERE c.id = ? AND u.name = ?" ["1" "john"]]
       ))))
 
 (deftest str->operations:one-operation-comparison-less-than

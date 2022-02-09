@@ -56,7 +56,7 @@
   "Add aliases to the the operations"
   [ops]
   (map-indexed (fn [idx op]
-                 (cond (:entity op) (assoc op :alias (format "%s_%d" (name (:entity op)) idx))
+                 (cond (:entity op) (assoc op :alias (format "%s_%d" (s/lower-case (name (:entity op))) idx))
                        :else op))
                ops))
 
@@ -101,8 +101,8 @@
         (parsed-cols->indexed-cols [cs]
           (reduce (fn [acc c]
                     (match c
-                           [:column [:string column-name]]                           (conj acc column-name)
-                           [:column [:string column-name] [:alias [:string a]]]      (conj acc (format "%s AS %s" column-name a))
+                           [:column [:string column-name]]                           (conj acc (db/quote column-name))
+                           [:column [:string column-name] [:alias [:string a]]]      (conj acc (format "%s AS %s" (db/quote column-name) a))
                            :else (throw (Exception. (format "Can't index column: %s" c)))
                            )) [] cs)
           )
@@ -168,13 +168,13 @@
 (defn table->sql
   "Table to sql"
   [table]
-  (str "SELECT * FROM " (name table)))
+  (str "SELECT * FROM " (db/quote (name table))))
 
 
 (defn ast-join->sql
   "Convert a single join in the joins parts of the AST to an sql query"
   [entity alias [t1 t2]]
-  (format "JOIN %s AS %s ON (%s = %s)" (name entity) alias t1 t2) )
+  (format "JOIN %s AS %s ON (%s = %s)" (db/quote (name entity)) alias t1 t2) )
 
 (defn ast-joins->sql
   "Convert joins part of the AST to an sql query"
@@ -224,7 +224,7 @@
             (->> [(cond set-values   nil
                         delete-table nil
                         :else        select-columns)                   ;; update/delete/select
-                  (name table)                                         ;; table
+                  (db/quote (name table))                              ;; table
                   (cond set-values   alias
                         delete-table nil
                         :else        alias)                            ;; alias
@@ -263,8 +263,8 @@
 
 (defn qualify
   "Qualify a column with the alias: (qualify \"caseFileId\" :with \"d\") => \"d.caseFileId\""
-  [column _ alias]
-  (format "%s.%s" alias column)
+  [quoted-column _ alias]
+  (format "%s.%s" alias quoted-column)
   )
 
 
@@ -272,7 +272,7 @@
   "Get the qualified primary key for the table. This is a naive function that
   assumes that the primary key is always Id."
   [op]
-  (format "%s.%s" (op :alias) "id"))
+  (format "%s.%s" (op :alias) (db/quote "id")))
 
 ;; -----------------
 ;; Operations to AST
@@ -332,7 +332,7 @@
                                (operation-type? ["select"] b))))
        (map (fn [pair] (let [a       (table-alias (first pair))
                              columns (:columns (second pair))]
-                         (map (fn [c] (format "%s.%s" a c)) columns)
+                         (map (fn [c] (qualify c :with a)) columns)
                          )))
        (apply concat)
        )
@@ -424,7 +424,10 @@
                                        )
         ]
 
-      columns-after-exclusion
+      ;; todo: Disabling column exclusinon feature
+      ;;       I'll re-write it later
+      ;; columns-after-exclusion
+      columns-before-exclusion
       )
     )
   )
@@ -439,8 +442,8 @@
         a2 (table-alias o2)
         e1-foreign-key (db/relation schema e2 :owns e1)
         e2-foreign-key (db/relation schema e1 :owns e2)
-        join-on (cond e1-foreign-key [(primary-key o2) (qualify e1-foreign-key :with a1)]
-                      e2-foreign-key [(qualify e2-foreign-key :with a2) (primary-key o1)]
+        join-on (cond e1-foreign-key [(primary-key o2) (qualify (db/quote e1-foreign-key) :with a1)]
+                      e2-foreign-key [(qualify (db/quote e2-foreign-key) :with a2) (primary-key o1)]
                       :else ["1" "2 /* No relationship exists */"])
         ]
     [e2 a2 join-on]
@@ -466,7 +469,7 @@
 (defn filter->where-condition
   "Convert the filter part of an operation to a where sql"
   [entity qualify? [column [type value] op]]
-  (let [col (cond qualify? (qualify column :with (name entity)) :else column)
+  (let [col (cond qualify? (qualify (db/quote column) :with (name entity)) :else column)
         operator (cond (= :null value) op
                        (re-find #"\*" value) "LIKE"
                        :else op)
@@ -486,7 +489,7 @@
   [qualify? operation]
   (let [vs (:values operation)
         or (:or operation)]
-    (cond (empty? vs) { :conditions "1" :params nil}
+    (cond (empty? vs) { :conditions "true" :params nil}
           :else       (->> vs
                            (map (partial filter->where-condition (:alias operation) qualify?))
                            ((fn [where-conditions] { :conditions (str "(" (->> where-conditions
@@ -500,7 +503,7 @@
                            ))))
 
 (defn operations->where
-  "Get the joins from the operations"
+  "Get the conditions from the operations"
   [qualify? ops]
   (let [
         wheres (map (partial operation->where qualify?) ops)
@@ -529,7 +532,9 @@
     (->> ops
          (filter (operation-type? ["limit"]))
          last
-         ((fn [op] (format "LIMIT %s" (or (:count op) (cond delete? 1 :else 50)))))
+         ((fn [op]
+            (cond (:count op) (format "LIMIT %s" (:count op)))
+            ))
          ))
   )
 
@@ -540,20 +545,14 @@
                                      (filter (operation-type? ["condition", "order"]))
                                      (partition 2 1)
                                      (filter (fn [ops] (and (operation-type? ["condition"] (first ops))
-                                                            (operation-type? ["order"] (second ops))
-                                                          )))
-                                     (last)
-                                     )
-        ]
+                                                            (operation-type? ["order"] (second ops)))))
+                                     (last))]
+
     (cond (and condition-op order-op) (let [direction (order-op :direction)
                                             column (order-op :column)
-                                            a      (table-alias condition-op)
-                                         ]
-                                     (format "ORDER BY %s.%s %s" a column (cond (= direction "ascending") "ASC" :else "DESC"))
-                                     )
-          :else nil
-          )
-    ))
+                                            a      (table-alias condition-op)]
+                                        (format "ORDER BY %s.%s %s" a (db/quote column) (cond (= direction "ascending") "ASC" :else "DESC")))
+          :else nil)))
 
 (defn operations->group
   "Create the GROUP BY SQL statement"
@@ -637,7 +636,7 @@
      :values (->> values
                   (map first)
                   (map (fn [column]
-                         (str (qualify column :with alias) " = ?"))))
+                         (str (db/quote column) " = ?"))))
      :params (->> values
                   (map second)
                   vec)

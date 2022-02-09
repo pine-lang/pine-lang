@@ -6,12 +6,16 @@
   :dependencies [[com.mchange/c3p0 "0.9.5.2"] ;; connection pooling
                  [compojure "1.5.1"]
                  [instaparse "1.4.9"]
-                 [mysql/mysql-connector-java "5.1.18"]
-                 [org.clojure/clojure "1.8.0"]
+                 [org.clojure/clojure "1.10.3"]
                  [org.clojure/core.match "0.3.0-alpha5"]
-                 [org.clojure/java.jdbc "0.7.3"]
                  [ring/ring-defaults "0.2.1"]
-                 [ring/ring-json "0.4.0"]]
+                 [ring/ring-json "0.4.0"]
+
+                 ;; database
+                 [org.clojure/java.jdbc "0.7.3"]
+                 [mysql/mysql-connector-java "5.1.18"]
+                 [org.postgresql/postgresql "42.2.24.jre7"]
+                 ]
   :plugins [[lein-ring "0.9.7"]
             ]
   :ring {:handler pine.handler/app}

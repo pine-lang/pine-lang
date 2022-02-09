@@ -29,13 +29,15 @@
                               ]))
 
                       (map (fn [[t x]] (case t
-                                             :string (format "\"%s\"" x)
+                                             :string (db/quote-string x)
                                              (format "%s" x)
                                              )))
                       )
         ]
     (str
-     (reduce (fn [acc param] (s/replace-first acc "?" param)) (:query prepared) params) ";")
+     "\n"
+     (reduce (fn [acc param] (s/replace-first acc "?" param)) (:query prepared) params) ";"
+     "\n")
     ))
 
 (defroutes app-routes
@@ -44,7 +46,7 @@
              (POST "/" request
                    (->> (get-in request [:params "expression"])
                         ((fn [x] (prn x) x))
-                        (build-query (db/get-schema c/config)) ;; TODO: shouldn't need to specify db
+                        (build-query (db/get-schema)) ;; TODO: shouldn't need to specify db
                         ;; ((fn [x] {:query x}))
                         response
                         )

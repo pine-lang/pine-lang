@@ -10,7 +10,7 @@
   (testing "Build a query using a single resource"
     (is
      (=
-      "SELECT customers_0.* FROM customers AS customers_0 WHERE (customers_0.id = 1) LIMIT 50;"
+      "\nSELECT customers_0.* FROM `customers` AS customers_0 WHERE (customers_0.`id` = 1);\n"
       (build-query fixtures/schema "customers 1")
       ))))
 
@@ -18,6 +18,6 @@
   (testing "Build a query using a single resource"
     (is
      (=
-      "SELECT customers_0.* FROM customers AS customers_0 WHERE (customers_0.name = \"Acme Inc\") LIMIT 50;"
+      "\nSELECT customers_0.* FROM `customers` AS customers_0 WHERE (customers_0.`name` = \"Acme Inc\");\n"
       (build-query fixtures/schema "customers name='Acme Inc'")
       ))))

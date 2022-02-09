@@ -1,54 +1,63 @@
 (ns pine.db
   (:require [clojure.java.jdbc :as jdbc]
             [pine.config :as c]
-            [pine.db.mysql :as mysql]
+            [pine.db.mysql :as mysql ]
+            [pine.db.postgres :as postgres]
+            [pine.db.protocol :as protocol]
             )
-  (:import com.mchange.v2.c3p0.ComboPooledDataSource))
+  (:import pine.db.mysql.MysqlAdapter)
+  (:import pine.db.postgres.PostgresAdapter)
+  )
 
-;; Connection Pooling
-(defn pool
-  [spec]
-  (let [cpds (doto (ComboPooledDataSource.)
-               (.setDriverClass (:classname spec))
-               (.setJdbcUrl (str "jdbc:" (:subprotocol spec) ":" (:subname spec)))
-               (.setUser (:user spec))
-               (.setPassword (:password spec))
-               ;; expire excess connections after 30 minutes of inactivity:
-               (.setMaxIdleTimeExcessConnections (* 30 60))
-               ;; expire connections after 3 hours of inactivity:
-               (.setMaxIdleTime (* 3 60 60))
-               )
-        ]
-    {:datasource cpds}))
-(def pooled-db (delay (pool c/config)))
-(defn connection [] @pooled-db)
+(def adapter (let [id (c/config :connection-id)
+                   config ((c/config :connections) id)
+                   type (config :dbtype)]
+                 (cond (= type "mysql" ) (MysqlAdapter. config)
+                       (= type "postgres") (PostgresAdapter. config)
+                       :else (throw (Exception. (format "Db not supported: %s" type))))
+                 ))
 
-;; Multiplexers
+;; DB wrappers
+(defn quote [x]
+  (protocol/quote adapter x))
+
+(defn quote-string [x]
+  (protocol/quote-string adapter x))
+
+(defn references [schema table]
+  (protocol/references adapter schema table))
 
 (defn relation
   "Get the column that has the relationship between the tables:
-  (relation \"caseFiles\" :owns \"documents\") => \"caseFileId\"
-  (relation \"documents\" :owned-by \"caseFile\") => \"caseFileId\"
+  (relation :caseFiles: :owns :documents:) => \"caseFileId\"
+  (relation :documents: :owned-by :caseFile:) => \"caseFileId\"
   "
   [schema t1 relationship t2]
   (case relationship
-    :owns     (t1 (mysql/references schema t2))
-    :owned-by (t2 (mysql/references schema t1))
+    :owns     (t1 (protocol/references adapter schema t2))
+    :owned-by (t2 (protocol/references adapter schema t1))
     :else     nil)
   )
-
 
 (defn get-columns
   "Returns the list of columns a table has"
   [schema table-name]
-  (mysql/get-columns schema table-name))
+  (protocol/get-columns adapter schema table-name))
 
 
 (defn get-schema'
-  [config]
-  (mysql/get-schema config))
+  [] ;; TODO: this function is memoized. Either we should move it to the
+     ;; protocol implementation or pass a param for the connection id
+  (protocol/get-schema adapter))
 
 (def get-schema (memoize get-schema'))
+
+;; DB connection
+
+(defn connection [] @(protocol/connection adapter))
+
+;; (jdbc/query (connection) "show tables;") ;; mysql
+;; (jdbc/query (connection) "\d user;")     ;; postgres
 
 ;; Helpers
 

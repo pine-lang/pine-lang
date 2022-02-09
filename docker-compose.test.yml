@@ -1,13 +1,9 @@
 version: "2"
 services:
   repl:
-    tty: true
     image: "clojure:lein-2.8.3"
-    command: "lein repl :start :port 30000"
+    command: "lein test"
     user: "${UID}:${GID}"
-    ports:
-      - "30000:30000"
-      - "33333:33333"
     working_dir: ${PWD}
     volumes:
       - ~/.m2/repository:/root/.m2/repository
@@ -15,5 +11,3 @@ services:
       - ~/:/home/${USR}
     environment:
       TERM: xterm
-    extra_hosts:
-    - "host.docker.internal:host-gateway"
