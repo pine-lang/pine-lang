@@ -168,7 +168,7 @@
     (is
      (=
       {
-       :query "UPDATE `folders` AS folders_0 SET folders_0.`title` = ? WHERE (folders_0.`id` = ?)"
+       :query "UPDATE `folders` AS folders_0 SET `title` = ? WHERE (folders_0.`id` = ?)"
        :params [[:string "test"] [:number "1"]]
        }
       (pine-prepare fixtures/schema "folders 1 | set! title='test'")
@@ -179,10 +179,21 @@
     (is
      (=
       {
-       :query "UPDATE `folders` AS folders_0 SET folders_0.`title` = ? WHERE (folders_0.`id` = ?)"
+       :query "UPDATE `folders` AS folders_0 SET `title` = ? WHERE (folders_0.`id` = ?)"
        :params [[:number "123"] [:number "1"]]
        }
       (pine-prepare fixtures/schema "folders 1 | set! title=123")
+      ))))
+
+(deftest pine-prepare:set-values
+  (testing "Set string values"
+    (is
+     (=
+      {
+       :query "UPDATE `folders` AS folders_0 SET `title` = ?, `order` = ? WHERE (folders_0.`id` = ?)"
+       :params [[:string "test"] [:number "10"] [:number "1"]]
+       }
+      (pine-prepare fixtures/schema "folders 1 | set! title='test' order=10")
       ))))
 
 (deftest pine-prepare:one-operation-group-implicit-fn

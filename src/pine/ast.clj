@@ -636,7 +636,7 @@
      :values (->> values
                   (map first)
                   (map (fn [column]
-                         (str (qualify (db/quote column) :with alias) " = ?"))))
+                         (str (db/quote column) " = ?"))))
      :params (->> values
                   (map second)
                   vec)
