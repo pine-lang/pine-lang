@@ -2,6 +2,9 @@
 All notable changes to this project will be documented in this file. This change log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 
 ## [Unreleased]
+### Added
+- Support for Postgres
+
 ### Fixed
 - It wasn't possible to use empty strings in conditions e.g. the following wasn't working:
 ```
@@ -12,6 +15,14 @@ customers industry=""
 customers 1 | set! industry="Test"
 customers 1 | set! industry=123
 ```
+
+### Breaking changes
+- Default limit of `50` is removed for updates and `1` for deletes
+- Unselecting of columns is disabled. This will be enabled again in a future release.
+```
+customers | unselect: id
+```
+- Format of the config file is changed. This was done to support multiple connection configurations. The `:connection-id` property can be set to select the default connection.
 
 ## 0.1.0 - 2019-04-21
 ### Added

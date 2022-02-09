@@ -78,19 +78,19 @@ SELECT *
 (s/def :db/table string?)
 (s/def :db/references (s/map-of keyword? string?))
 
-(deftype PostgresAdapter [] ;; schema as an arg?
+(deftype PostgresAdapter [config] ;; schema as an arg?
   DbAdapter
-  (connection [this] (delay c/config))
+  (connection [this] (delay config))
 
   (get-schema
-    [this config]
+    [this]
     (let [db-name     (:dbname config)
           column-name (format "tables_in_%s" db-name)
           column      (keyword column-name)]
       (prn (format "Loading schema definition for db: %s" db-name))
       (->>
        db-name
-       (get-tables c/config)
+       (get-tables config)
        (reduce (fn [acc v] (assoc acc (keyword v) (table-definition config v))) {}))))
 
   (get-columns

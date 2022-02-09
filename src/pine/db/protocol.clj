@@ -5,7 +5,7 @@
 
   (connection [this] "Get the connection")
 
-  (get-schema [this config] "Get the schema for the database. This function gets
+  (get-schema [this] "Get the schema for the database. This function gets
   the schema for every table and can be very slow. Should be called once and the
   schema should be passed around.")
 

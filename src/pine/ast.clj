@@ -532,7 +532,9 @@
     (->> ops
          (filter (operation-type? ["limit"]))
          last
-         ((fn [op] (format "LIMIT %s" (or (:count op) (cond delete? 1 :else 50)))))
+         ((fn [op]
+            (cond (:count op) (format "LIMIT %s" (:count op)))
+            ))
          ))
   )
 

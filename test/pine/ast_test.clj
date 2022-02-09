@@ -267,7 +267,7 @@
                }
        :order nil
        :group nil
-       :limit "LIMIT 50"
+       :limit nil
        :meta nil
        :delete nil
        :set nil

@@ -1,6 +1,5 @@
 (ns pine.db.mysql
   (:require [pine.db.util :as u]
-            [pine.config :as c]
             [pine.db.protocol :refer [DbAdapter]]
             )
   (:import com.mchange.v2.c3p0.ComboPooledDataSource)
@@ -35,11 +34,11 @@
        ((keyword "create table"))
        ))
 
-(deftype MysqlAdapter [] ;; schema as an arg?
+(deftype MysqlAdapter [config] ;; schema as an arg?
   DbAdapter
-  (connection [this] (delay (pool c/config)))
+  (connection [this] (delay (pool config)))
 
-  (get-schema [this config]
+  (get-schema [this]
     (let [db-name     (:dbname config)
           column-name (format "tables_in_%s" db-name)
           column      (keyword column-name)]

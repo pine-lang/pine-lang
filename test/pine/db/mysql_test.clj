@@ -3,7 +3,10 @@
             [pine.db :as db]
             [pine.db.mysql :as mysql]
             [pine.fixtures.mysql :as fixtures]
-            ))
+            [pine.db.protocol :as protocol]
+            )
+  (:import pine.db.mysql.MysqlAdapter)
+  )
 
 (deftest references:test-schema
   (testing "Get the references of a table"
@@ -12,7 +15,7 @@
       {:users "userId"
        :customers "customerId"
        }
-      (mysql/references fixtures/schema "caseFiles")
+      (protocol/references (MysqlAdapter. nil) fixtures/schema "caseFiles")
       ))))
 
 

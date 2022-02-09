@@ -1,16 +1,27 @@
 (ns pine.config)
 
-(let [name "information_schema"] ;; if using the test bench, use `tmp`
-  (def config {
-               :host "host.docker.internal"
-               :dbtype "mysql"
-               :dbname name
-               :user "?"
-               :password "?"
+(def config
+  {
+   :connection-id :default
+   :connections {
+                 :default
+                 {:host "host.docker.internal"
+                  :dbtype "mysql"
+                  :dbname "information_schema"
+                  :user "root"
+                  :password "secret"
+                  ;; required for mysql pooling
+                  :classname "com.mysql.jdbc.Driver"
+                  :subname  "//host.docker.internal:3306/information_schema"}
 
-               ;; only for mysql connnection pooling
-               :classname "com.mysql.jdbc.Driver"
-               :subprotocol "mysql"
-               :subname (str "//host.docker.internal:3306/" name)
+                 :mysql-test
+                 {:host "host.docker.internal"
+                  :dbtype "mysql"
+                  :dbname "tmp"
+                  :user "root"
+                  :password "secret"
+                  ;; required for mysql pooling
+                  :classname "com.mysql.jdbc.Driver"
+                  :subname  "//host.docker.internal:3306/tmp"}
 
-               }))
+                  }})

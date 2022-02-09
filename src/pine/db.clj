@@ -9,22 +9,23 @@
   (:import pine.db.postgres.PostgresAdapter)
   )
 
-;; (ns-unalias 'pine.db 'dbadapter)
-
-(def dbadapter (let [type (c/config :dbtype)]
-                 (cond (= type "mysql" ) (MysqlAdapter.)
-                       (= type "postgres") (PostgresAdapter.)
-                       :else (throw (Exception. (format "Db not supported: %s" type))))))
+(def adapter (let [id (c/config :connection-id)
+                   config ((c/config :connections) id)
+                   type (config :dbtype)]
+                 (cond (= type "mysql" ) (MysqlAdapter. config)
+                       (= type "postgres") (PostgresAdapter. config)
+                       :else (throw (Exception. (format "Db not supported: %s" type))))
+                 ))
 
 ;; DB wrappers
 (defn quote [x]
-  (protocol/quote dbadapter x))
+  (protocol/quote adapter x))
 
 (defn quote-string [x]
-  (protocol/quote-string dbadapter x))
+  (protocol/quote-string adapter x))
 
 (defn references [schema table]
-  (protocol/references dbadapter schema table))
+  (protocol/references adapter schema table))
 
 (defn relation
   "Get the column that has the relationship between the tables:
@@ -34,26 +35,27 @@
   [schema t1 relationship t2]
   (prn t1)
   (case relationship
-    :owns     (t1 (protocol/references dbadapter schema t2))
-    :owned-by (t2 (protocol/references dbadapter schema t1))
+    :owns     (t1 (protocol/references adapter schema t2))
+    :owned-by (t2 (protocol/references adapter schema t1))
     :else     nil)
   )
 
 (defn get-columns
   "Returns the list of columns a table has"
   [schema table-name]
-  (protocol/get-columns dbadapter schema table-name))
+  (protocol/get-columns adapter schema table-name))
 
 
 (defn get-schema'
-  [config]
-  (protocol/get-schema dbadapter config))
+  [] ;; TODO: this function is memoized. Either we should move it to the
+     ;; protocol implementation or pass a param for the connection id
+  (protocol/get-schema adapter))
 
 (def get-schema (memoize get-schema'))
 
 ;; DB connection
 
-(defn connection [] @(protocol/connection dbadapter))
+(defn connection [] @(protocol/connection adapter))
 
 ;; (jdbc/query (connection) "show tables;") ;; mysql
 ;; (jdbc/query (connection) "\d user;")     ;; postgres
