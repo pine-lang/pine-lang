@@ -33,7 +33,6 @@
   (relation :documents: :owned-by :caseFile:) => \"caseFileId\"
   "
   [schema t1 relationship t2]
-  (prn t1)
   (case relationship
     :owns     (t1 (protocol/references adapter schema t2))
     :owned-by (t2 (protocol/references adapter schema t1))
