@@ -73,3 +73,18 @@ Now, the server can be run explicitly once the `repl` is running (using `./repl.
 
 (ring/run-jetty (handler/site h/app) {:port 33333})
 ```
+
+<!-- # Issue with Mysql 8 -->
+
+<!-- ## Client does not support authentication protocol -->
+<!-- ``` -->
+<!-- com.mysql.jdbc.exceptions.jdbc4.MySQLNonTransientConnectionException: Client does not support authentication protocol requested by server; consider upgrading MySQL client -->
+<!-- ``` -->
+
+<!-- Naive fix: -->
+
+<!-- ``` -->
+<!-- ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'secret'; -->
+<!-- FLUSH PRIVILEGES; -->
+
+<!-- ``` -->
