@@ -1,9 +1,27 @@
 # Change Log
-All notable changes to this project will be documented in this file. This change log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
+All notable changes to this project will be documented in this file. This change
+log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 
-## [Unreleased]
+## [0.3.0] - 2022-10-02
 ### Added
 - Support for Postgres
+
+### Breaking changes
+- Default limit of `50` is removed for updates and `1` for deletes
+- Unselecting of columns is disabled. This will be enabled again in a future release.
+```
+customers | unselect: id
+```
+- Format of the config file is changed. This was done to support multiple
+  connection configurations. The `:connection-id` property can be set to select
+  the default connection.
+
+## [0.2.0] - 2019-04-26
+### Added
+- Unselecting of columns
+```
+customers | unselect: id
+```
 
 ### Fixed
 - It wasn't possible to use empty strings in conditions e.g. the following wasn't working:
@@ -16,18 +34,11 @@ customers 1 | set! industry="Test"
 customers 1 | set! industry=123
 ```
 
-### Breaking changes
-- Default limit of `50` is removed for updates and `1` for deletes
-- Unselecting of columns is disabled. This will be enabled again in a future release.
-```
-customers | unselect: id
-```
-- Format of the config file is changed. This was done to support multiple connection configurations. The `:connection-id` property can be set to select the default connection.
-
 ## 0.1.0 - 2019-04-21
 ### Added
 - Check out the [features][features] document for a list of features
 
-[Unreleased]: https://github.com/ahmadnazir/pine/compare/0.1.0...HEAD
-<!-- [0.1.1]: https://github.com/ahmadnazri/pine/compare/0.1.0...0.1.1 -->
+[Unreleased]: https://github.com/ahmadnazir/pine/compare/0.3.0...HEAD
+[0.3.0]: https://github.com/ahmadnazir/pine/compare/0.2.0...0.3.0
+[0.2.0]: https://github.com/ahmadnazir/pine/compare/0.1.0...0.2.0
 [features]: FEATURES.md
