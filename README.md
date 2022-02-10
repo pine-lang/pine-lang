@@ -1,6 +1,6 @@
 # Pine
 
-[![Build Status](https://travis-ci.org/ahmadnazir/pine.svg?branch=master)](https://travis-ci.org/ahmadnazir/pine)
+[![Build Status](https://app.travis-ci.com/ahmadnazir/pine.svg?branch=master)](https://app.travis-ci.com/ahmadnazir/pine)
 
 Pine uses pipes to query a database. When you evaluate the following pine expression:
 
