@@ -41,8 +41,8 @@ cp src/pine/config.sample src/pine/config.clj
 
 ## Philosophy
 
-- **Compositional**                  : operations are composed together to perform a bigger task
-- **Incremental calculations**       : keep adding operations instead of going back and modify them
-- **Hide the plumbing**              : let the machine figure out what it can
-- **Concise**                        : less to type
-- **Doesn't replace existing tools** : it reduces the surface area of the underlying platform
+- **Compositional:** operations are composed together to perform a bigger task
+- **Incremental:** keep adding operations instead of going back and modify them
+- **Hide the plumbing:** let the machine figure out what it can - separate the _what_ from the _how_
+- **Concise:** less to type
+- **Doesn't replace existing tools:** it reduces the surface area of the underlying platform
