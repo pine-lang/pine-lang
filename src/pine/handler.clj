@@ -11,7 +11,7 @@
 
             [pine.db.protocol :as protocol]))
 
-(reset! db/connection (db/get-connection :avallone))
+;; (reset! db/connection (db/get-connection :mysql-test))
 
 (defn prepare [connection expression]
   (pine/pine-prepare (protocol/get-schema connection) expression))

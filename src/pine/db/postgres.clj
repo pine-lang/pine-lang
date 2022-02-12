@@ -4,7 +4,7 @@
             ;;  temp imports
             [pine.config :as c]
             [clojure.spec.alpha :as s]
-            [pine.db.protocol :refer [DbAdapter]]
+            [pine.db.protocol :refer [Connection]]
             [clojure.spec.test.alpha :as stest]))
 
 ;; `instrument` or `unstrument`
@@ -67,8 +67,6 @@ SELECT *
   (->> (u/exec config (format "SELECT * FROM information_schema.tables WHERE table_schema = 'public' AND table_catalog = '%s'" table-catalog))
        (map :table_name)))
 
-;; (get-tables c/config "avallone") ;; local test
-
 ;; TODO: can the specs exist on a protocol level?
 ;; https://groups.google.com/g/clojure/c/f068WTgakpk
 
@@ -89,8 +87,8 @@ SELECT *
      (reduce (fn [acc v] (assoc acc (keyword v) (table-definition config v))) {}))))
 (def get-schema-memoized (memoize get-schema'))
 
-(deftype PostgresAdapter [config] ;; schema as an arg?
-  DbAdapter
+(deftype PostgresConnection [config]
+  Connection
   (get-schema
     [this]
     (get-schema-memoized config))

@@ -1,7 +1,7 @@
 (ns pine.db.mysql
   (:require [clojure.java.jdbc :as jdbc]
             [pine.db.util :as u]
-            [pine.db.protocol :refer [DbAdapter]]
+            [pine.db.protocol :refer [Connection]]
             )
   (:import com.mchange.v2.c3p0.ComboPooledDataSource)
   )
@@ -52,8 +52,8 @@
 
 (def get-schema-memoized (memoize get-schema'))
 
-(deftype MysqlAdapter [config] ;; schema as an arg?
-  DbAdapter
+(deftype MysqlConnection [config]
+  Connection
   (get-schema [this]
     (get-schema-memoized config))
 

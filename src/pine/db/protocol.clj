@@ -1,6 +1,6 @@
 (ns pine.db.protocol)
 
-(defprotocol DbAdapter
+(defprotocol Connection
   "Abstractions for db engines e.g. mysql, postgres, etc"
 
   (get-schema [this] "Get the schema for the database. This function gets

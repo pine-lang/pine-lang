@@ -4,14 +4,14 @@
             [pine.db.postgres :as postgres]
             [pine.db.protocol :as protocol]
             )
-  (:import pine.db.mysql.MysqlAdapter)
-  (:import pine.db.postgres.PostgresAdapter)
+  (:import pine.db.mysql.MysqlConnection)
+  (:import pine.db.postgres.PostgresConnection)
   )
 
 (defn get-connection [id] (let [config ((c/config :connections) id)
                                 type (config :dbtype)]
-                            (cond (= type "mysql") (MysqlAdapter. config)
-                                  (= type "postgres") (PostgresAdapter. config)
+                            (cond (= type "mysql") (MysqlConnection. config)
+                                  (= type "postgres") (PostgresConnection. config)
                                   :else (throw (Exception. (format "Db not supported: %s" type))))))
 
 (def connection (->> :connection-id
@@ -45,14 +45,6 @@
   "Returns the list of columns a table has"
   [schema table-name]
   (protocol/get-columns @connection schema table-name))
-
-;; ;; TODO: move to adapter
-;; (defn get-schema' []
-;;   (protocol/get-schema adapter))
-;; (def get-schema (memoize get-schema'))
-
-;; (protocol/query adapter "show tables;") ;; mysql
-;; (protocol/query adapter "\d user;")     ;; postgres doesn't work: unsupported escape character \d
 
 ;; Helpers
 
