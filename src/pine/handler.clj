@@ -8,13 +8,18 @@
             [ring.util.response :refer [response]]
             [ring.middleware.json :refer [wrap-json-params wrap-json-response]]
             [clojure.string :as s]
-            ))
 
-(defn build-query
-  "Build the "
-  [schema expression]
-  (let [prepared (pine/pine-prepare schema expression)
-        query    (:query prepared)
+            [pine.db.protocol :as protocol]))
+
+(reset! db/connection (db/get-connection :avallone))
+
+(defn prepare [connection expression]
+  (pine/pine-prepare (protocol/get-schema connection) expression))
+
+(defn build
+  "Build the query with with the params filled in"
+  [prepared]
+  (let [query    (:query prepared)
         params   (->> (:params prepared)
 
                       ;; Quotes are not supported by the language
@@ -29,7 +34,7 @@
                               ]))
 
                       (map (fn [[t x]] (case t
-                                             :string (db/quote-string x)
+                                             :string (db/quote-string x) ;; TODO: qouting shouldn't happen here
                                              (format "%s" x)
                                              )))
                       )
@@ -46,7 +51,8 @@
              (POST "/" request
                    (->> (get-in request [:params "expression"])
                         ((fn [x] (prn x) x))
-                        (build-query (db/get-schema)) ;; TODO: shouldn't need to specify db
+                        (prepare @db/connection)
+                        build
                         ;; ((fn [x] {:query x}))
                         response
                         )

@@ -11,7 +11,8 @@
     (is
      (=
       "\nSELECT customers_0.* FROM `customers` AS customers_0 WHERE (customers_0.`id` = 1);\n"
-      (build-query fixtures/schema "customers 1")
+      (build {:query "SELECT customers_0.* FROM `customers` AS customers_0 WHERE (customers_0.`id` = ?)"
+              :params [[:number 1]]})
       ))))
 
 (deftest build-query:single-resource-with-condition
@@ -19,5 +20,6 @@
     (is
      (=
       "\nSELECT customers_0.* FROM `customers` AS customers_0 WHERE (customers_0.`name` = \"Acme Inc\");\n"
-      (build-query fixtures/schema "customers name='Acme Inc'")
+      (build {:query "SELECT customers_0.* FROM `customers` AS customers_0 WHERE (customers_0.`name` = ?)"
+              :params [[:string "Acme Inc"]]})
       ))))

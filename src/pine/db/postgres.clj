@@ -1,13 +1,15 @@
 (ns pine.db.postgres
-  (:require [pine.db.util :as u]
+  (:require [clojure.java.jdbc :as jdbc]
+            [pine.db.util :as u]
             ;;  temp imports
             [pine.config :as c]
             [clojure.spec.alpha :as s]
             [pine.db.protocol :refer [DbAdapter]]
-            [clojure.spec.test.alpha :as stest]
-            ))
+            [clojure.spec.test.alpha :as stest]))
 
 ;; `instrument` or `unstrument`
+
+
 (stest/instrument [`references])
 
 (defn- columns
@@ -44,9 +46,7 @@ SELECT *
 ")
        (u/exec config)
        (map (juxt :foreign_table_name
-                  :column_name
-                  ;; :foreign_column_name
-                  ))                                            ;; (["user_id" "user"])
+                  :column_name))                                ;; (["user_id" "user"])
 
        ;; TODO: there can be multiple references to the foreign table
        (reduce (fn [acc [ft c]] (assoc acc (keyword ft) c)) {}) ;; { :user "user_id" }
@@ -78,20 +78,22 @@ SELECT *
 (s/def :db/table string?)
 (s/def :db/references (s/map-of keyword? string?))
 
+(defn get-schema' [config]
+  (let [db-name     (:dbname config)
+        column-name (format "tables_in_%s" db-name)
+        column      (keyword column-name)]
+    (prn (format "Loading schema definition for db: %s" db-name))
+    (->>
+     db-name
+     (get-tables config)
+     (reduce (fn [acc v] (assoc acc (keyword v) (table-definition config v))) {}))))
+(def get-schema-memoized (memoize get-schema'))
+
 (deftype PostgresAdapter [config] ;; schema as an arg?
   DbAdapter
-  (connection [this] (delay config))
-
   (get-schema
     [this]
-    (let [db-name     (:dbname config)
-          column-name (format "tables_in_%s" db-name)
-          column      (keyword column-name)]
-      (prn (format "Loading schema definition for db: %s" db-name))
-      (->>
-       db-name
-       (get-tables config)
-       (reduce (fn [acc v] (assoc acc (keyword v) (table-definition config v))) {}))))
+    (get-schema-memoized config))
 
   (get-columns
     [this schema table-name]
@@ -109,9 +111,12 @@ SELECT *
 
   (quote-string [this x]
     (format "'%s'" x))
-  )
 
+  (query [this statement]
+    (jdbc/query config statement))
 
+  (execute! [this statement]
+    (jdbc/execute! config statement)))
 
 (s/fdef get-columns
   :args (s/cat :schema :db/schema :table :db/table)

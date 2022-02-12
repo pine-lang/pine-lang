@@ -7,8 +7,9 @@
   [s]
   (s/replace s #"[^A-Za-z0-9_-]*" ""))
 
+;; TODO: use the protocol function `query` instead of this one
 (defn exec
   "Execute raw sql queries"
-  [connection query]
+  [config query]
   (->> query
-       (jdbc/query connection)))
+       (jdbc/query config)))
