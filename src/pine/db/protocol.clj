@@ -1,9 +1,7 @@
 (ns pine.db.protocol)
 
-(defprotocol DbAdapter
+(defprotocol Connection
   "Abstractions for db engines e.g. mysql, postgres, etc"
-
-  (connection [this] "Get the connection")
 
   (get-schema [this] "Get the schema for the database. This function gets
   the schema for every table and can be very slow. Should be called once and the
@@ -15,6 +13,11 @@
 
   (quote [this x] "Quote table names, columns names, etc.")
 
-  (quote-string [this x] "Quote values"))
+  (quote-string [this x] "Quote values")
+
+  (query [this statement] "Execute select statements")
+
+  (execute! [this statement] "Execute non-select statements")
+  )
 
 

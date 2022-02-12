@@ -1,12 +1,16 @@
 (ns pine.core
   (:require [clojure.java.jdbc :as j]
             [pine.ast :as ast]
-            [pine.db :as db]))
+            [pine.db :as db]
+            [pine.db.protocol :as protocol]
+            ))
 
 ;; Eval
 
+;; TODO: this shouldn't take the schema. Schema is embedded in the adapter (i.e
+;; connection)
 (defn pine-prepare
-  "Prepare a pine expression i.e. get the sql query and params"
+  "Using a pine expression, prepare and SQL statements and params"
   [schema expression]
   (let [[sql params] (->> expression
                          ast/str->operations
@@ -19,29 +23,11 @@
 ;; (pine-prepare (db/get-schema c/config) "caseFiles 1 | delete!")
 ;; (pine-prepare (db/get-schema c/config) "caseFiles 1 | s: id")
 
-
 (defn pine-eval
-  "Evalate a query"
-  [connection prepared]
+  "Evalate an SQL query"
+  [adapter prepared]
   (let [query (prepared :query)
         params (prepared :params)
         args   (cons query params)]
-    (j/query connection args)
+    (protocol/query adapter args)
     ))
-
-;; Helpers
-
-(defn $
-  "Evaluate Pine expressions:
-  ($ count schema \"users *\")
-  ($ first schema \"users *\")
-  ($ (partial map :fullName) schema \"users *\")
-  "
-  ([fn schema expression]
-   (->> expression
-        (pine-prepare schema)       ;; prepare the sql for executing using cached schema
-        (pine-eval (db/connection)) ;; execute
-        fn))
-  ([schema expression]
-   ($ (fn[x] x) schema expression)))
-

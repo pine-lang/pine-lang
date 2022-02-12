@@ -1,6 +1,7 @@
 (ns pine.db.mysql
-  (:require [pine.db.util :as u]
-            [pine.db.protocol :refer [DbAdapter]]
+  (:require [clojure.java.jdbc :as jdbc]
+            [pine.db.util :as u]
+            [pine.db.protocol :refer [Connection]]
             )
   (:import com.mchange.v2.c3p0.ComboPooledDataSource)
   )
@@ -34,47 +35,51 @@
        ((keyword "create table"))
        ))
 
-(deftype MysqlAdapter [config] ;; schema as an arg?
-  DbAdapter
-  (connection [this] (delay (pool config)))
+(defn get-schema' [config]
+  (let [db-name     (:dbname config)
+        column-name (format "tables_in_%s" db-name)
+        column      (keyword column-name)]
+    (prn (format "Loading schema definition for db: %s." db-name))
+    ;; { (keyword db-name)
+    (->> "show tables"
+         (u/exec config) ;; use query function on the adapter
+         (map column)
+         (map (fn [t] {(keyword t) (table-definition config t)}))
+         (apply merge))
+    ;; }
+    )
+  )
 
+(def get-schema-memoized (memoize get-schema'))
+
+(deftype MysqlConnection [config]
+  Connection
   (get-schema [this]
-    (let [db-name     (:dbname config)
-          column-name (format "tables_in_%s" db-name)
-          column      (keyword column-name)]
-      (prn (format "Loading schema definition for db: %s." db-name))
-      ;; { (keyword db-name)
-      (->> "show tables"
-           (u/exec config)
-           (map column)
-           (map (fn [t] {(keyword t) (table-definition config t)}))
-           (apply merge)
-           )
-      ;; }
-      ))
+    (get-schema-memoized config))
 
   (get-columns [this schema table-name]
     (->>
      schema
      ((keyword table-name))
      (re-seq #"(?m)^  `(\S+)`")
-     (map #(second %))
-     )
-    )
-
+     (map #(second %))))
 
   (references [this schema table]
     (->> table
          ((keyword table) schema)
          (re-seq #"FOREIGN KEY .`(.*)`. REFERENCES `(.*?)`") ;; TODO: fix `nil` case
-         (map (fn [[_ col t]] { (keyword t) col }))
+         (map (fn [[_ col t]] {(keyword t) col}))
          (apply (partial merge-with (fn [a b] a))) ;; TODO: fix `nil` case
-         )
-    )
+         ))
 
   (quote [this x]
     (format "`%s`" x))
 
   (quote-string [this x]
     (format "\"%s\"" x))
-  )
+
+  (query [this statement]
+    (jdbc/query config statement))
+
+  (execute! [this statement]
+    (jdbc/execute! config statement)))

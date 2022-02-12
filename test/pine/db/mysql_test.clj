@@ -5,7 +5,7 @@
             [pine.fixtures.mysql :as fixtures]
             [pine.db.protocol :as protocol]
             )
-  (:import pine.db.mysql.MysqlAdapter)
+  (:import pine.db.mysql.MysqlConnection)
   )
 
 (deftest references:test-schema
@@ -15,7 +15,7 @@
       {:users "userId"
        :customers "customerId"
        }
-      (protocol/references (MysqlAdapter. nil) fixtures/schema "caseFiles")
+      (protocol/references (MysqlConnection. nil) fixtures/schema "caseFiles")
       ))))
 
 
