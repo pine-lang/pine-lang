@@ -15,7 +15,7 @@
       {:users "userId"
        :customers "customerId"
        }
-      (protocol/references (MysqlConnection. nil) fixtures/schema "caseFiles")
+      (protocol/references (MysqlConnection. "dummy" nil) fixtures/schema "caseFiles")
       ))))
 
 

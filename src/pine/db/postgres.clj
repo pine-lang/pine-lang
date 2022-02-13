@@ -87,8 +87,12 @@ SELECT *
      (reduce (fn [acc v] (assoc acc (keyword v) (table-definition config v))) {}))))
 (def get-schema-memoized (memoize get-schema'))
 
-(deftype PostgresConnection [config]
+(deftype PostgresConnection [id config]
   Connection
+
+  (get-connection-id [this]
+    id)
+
   (get-schema
     [this]
     (get-schema-memoized config))

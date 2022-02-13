@@ -6,18 +6,27 @@ log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 ### Added
 - API endpoint for building expressions:
 ```
-POST /build?expression=user
+POST /build
+{
+  "expression": "user"
+}
+
 
 {
+  ...
   "query": "\nSELECT user_0.* FROM \"user\" AS user_0 WHERE true;\n"
 }
 ```
 
 - API endpoint for evaluating expressions:
 ```
-POST /eval?expression=user
+POST /eval
+{
+  "expression": "user"
+}
 
 {
+  ...
   "result": [
     {
       "email": "john@acme.com",
@@ -26,6 +35,17 @@ POST /eval?expression=user
     },
     ...
   ]
+}
+```
+- API endpoint for setting the connection:
+```
+PUT /connection
+{
+  "connection-id": "default"
+}
+
+{
+  "connection-id": "default"
 }
 ```
 
