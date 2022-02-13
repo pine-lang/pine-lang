@@ -4,11 +4,11 @@ log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 
 ## [Unreleased] - 2022-02-13
 ### Added
-- API endpoint for building expressions: `/build`
-- API endpoint for evaluating expressions: `/eval`
+- API endpoint for building expressions: `POST /build`
+- API endpoint for evaluating expressions: `POST /eval`
 
 ### Deprecated
-- API endpoint for building sql expressions `/pine/build`. Use the new endpoint: `/build`.
+- API endpoint for building sql expressions `POST /pine/build`. Use the new endpoint: `POST /build`.
 
 ## [0.3.0] - 2022-02-10
 ### Added
