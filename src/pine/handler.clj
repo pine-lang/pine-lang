@@ -46,25 +46,25 @@
      "\n")
     ))
 
-(defn- api-build [request]
-  (->> (get-in request [:params "expression"])
+(defn- api-build [expression]
+  (->> expression
        ((fn [x] (prn x) x))
        prepare
        build
-       response
        ))
 
-(defn- api-eval [request]
-  (->> (get-in request [:params "expression"])
+(defn- api-eval [expression]
+  (->> expression
        prepare
        pine/pine-eval
+       (assoc {} :result)
        response
        ))
 
 (defroutes app-routes
-  (POST "/pine/build" request api-build) ;; backwads compat
-  (POST "/build" request api-build)
-  (POST "/eval" request api-eval)
+  (POST "/pine/build" [expression] (->> expression api-build response)) ;; backwads compat
+  (POST "/build" [expression] (->> expression api-build (assoc {} :query) response))
+  (POST "/eval" [expression] (api-eval expression))
   (route/not-found "Not Found"))
 
 (def app
