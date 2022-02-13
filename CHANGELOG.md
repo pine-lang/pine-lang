@@ -2,7 +2,15 @@
 All notable changes to this project will be documented in this file. This change
 log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 
-## [0.3.0] - 2022-10-02
+## [Unreleased] - 2022-02-13
+### Added
+- API endpoint for building expressions: `/build`
+- API endpoint for evaluating expressions: `/eval`
+
+### Deprecated
+- API endpoint for building sql expressions `/pine/build`. Use the new endpoint: `/build`.
+
+## [0.3.0] - 2022-02-10
 ### Added
 - Support for Postgres
 

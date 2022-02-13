@@ -25,9 +25,9 @@
 
 (defn pine-eval
   "Evalate an SQL query"
-  [adapter prepared]
+  [prepared]
   (let [query (prepared :query)
         params (prepared :params)
         args   (cons query params)]
-    (protocol/query adapter args)
+    (protocol/query @db/connection args)
     ))
