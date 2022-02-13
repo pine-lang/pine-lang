@@ -68,7 +68,7 @@
       (->> id
            db/get-connection
            (reset! db/connection))
-      {:connection-id (connection-id) :message "Success!"})
+      {:connection-id (connection-id)})
     {:error (format "Connection '%s' does not exist" id)}
     ))
 
@@ -76,7 +76,7 @@
   (POST "/pine/build" [expression] (->> expression api-build response)) ;; backwads compat
   (POST "/build" [expression] (->> expression api-build (assoc {} :connection-id (connection-id) :query) response))
   (POST "/eval" [expression] (api-eval expression))
-  (PUT "/connection" [id] (->> id keyword set-connection response))
+  (PUT "/connection" [connection-id] (->> connection-id keyword set-connection response))
   (route/not-found "Not Found"))
 
 (def app
