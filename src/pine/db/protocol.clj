@@ -3,6 +3,8 @@
 (defprotocol Connection
   "Abstractions for db engines e.g. mysql, postgres, etc"
 
+  (get-connection-id [this] "Unique identified for the connection connection")
+
   (get-schema [this] "Get the schema for the database. This function gets
   the schema for every table and can be very slow. Should be called once and the
   schema should be passed around.")

@@ -8,10 +8,11 @@
   (:import pine.db.postgres.PostgresConnection)
   )
 
-(defn get-connection [id] (let [config ((c/config :connections) id)
+(defn get-connections [] (c/config :connections))
+(defn get-connection [id] (let [config ((get-connections) id)
                                 type (config :dbtype)]
-                            (cond (= type "mysql") (MysqlConnection. config)
-                                  (= type "postgres") (PostgresConnection. config)
+                            (cond (= type "mysql") (MysqlConnection. id config)
+                                  (= type "postgres") (PostgresConnection. id config)
                                   :else (throw (Exception. (format "Db not supported: %s" type))))))
 
 (def connection (->> :connection-id

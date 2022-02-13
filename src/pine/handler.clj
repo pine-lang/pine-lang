@@ -11,8 +11,6 @@
 
             [pine.db.protocol :as protocol]))
 
-;; (reset! db/connection (db/get-connection :mysql-test))
-
 (defn prepare [expression]
   (let [schema (protocol/get-schema @db/connection)]
     (pine/pine-prepare schema expression)))
@@ -53,18 +51,32 @@
        build
        ))
 
+(defn- connection-id []
+  (protocol/get-connection-id @db/connection))
+
 (defn- api-eval [expression]
   (->> expression
        prepare
        pine/pine-eval
-       (assoc {} :result)
+       (assoc {} :connection-id (connection-id) :result)
        response
        ))
 
+(defn- set-connection [id]
+  (if-let [connections ((db/get-connections) id)]
+    (do
+      (->> id
+           db/get-connection
+           (reset! db/connection))
+      {:connection-id (connection-id) :message "Success!"})
+    {:error (format "Connection '%s' does not exist" id)}
+    ))
+
 (defroutes app-routes
   (POST "/pine/build" [expression] (->> expression api-build response)) ;; backwads compat
-  (POST "/build" [expression] (->> expression api-build (assoc {} :query) response))
+  (POST "/build" [expression] (->> expression api-build (assoc {} :connection-id (connection-id) :query) response))
   (POST "/eval" [expression] (api-eval expression))
+  (PUT "/connection" [id] (->> id keyword set-connection response))
   (route/not-found "Not Found"))
 
 (def app
