@@ -13,8 +13,9 @@
 
 ;; (reset! db/connection (db/get-connection :mysql-test))
 
-(defn prepare [connection expression]
-  (pine/pine-prepare (protocol/get-schema connection) expression))
+(defn prepare [expression]
+  (let [schema (protocol/get-schema @db/connection)]
+    (pine/pine-prepare schema expression)))
 
 (defn build
   "Build the query with with the params filled in"
@@ -45,19 +46,25 @@
      "\n")
     ))
 
+(defn- api-build [request]
+  (->> (get-in request [:params "expression"])
+       ((fn [x] (prn x) x))
+       prepare
+       build
+       response
+       ))
+
+(defn- api-eval [request]
+  (->> (get-in request [:params "expression"])
+       prepare
+       pine/pine-eval
+       response
+       ))
+
 (defroutes app-routes
-  (context "/pine/build" []
-           (defroutes query-routes
-             (POST "/" request
-                   (->> (get-in request [:params "expression"])
-                        ((fn [x] (prn x) x))
-                        (prepare @db/connection)
-                        build
-                        ;; ((fn [x] {:query x}))
-                        response
-                        )
-                   )
-             ))
+  (POST "/pine/build" request api-build) ;; backwads compat
+  (POST "/build" request api-build)
+  (POST "/eval" request api-eval)
   (route/not-found "Not Found"))
 
 (def app
