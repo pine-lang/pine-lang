@@ -63,8 +63,8 @@
 
 (defroutes app-routes
   (POST "/pine/build" [expression] (->> expression api-build response)) ;; backwads compat
-  (GET "/build" [expression] (->> expression api-build (assoc {} :query) response))
-  (GET "/eval" [expression] (api-eval expression))
+  (POST "/build" [expression] (->> expression api-build (assoc {} :query) response))
+  (POST "/eval" [expression] (api-eval expression))
   (route/not-found "Not Found"))
 
 (def app
