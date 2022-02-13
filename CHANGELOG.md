@@ -4,8 +4,30 @@ log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 
 ## [Unreleased] - 2022-02-13
 ### Added
-- API endpoint for building expressions: `POST /build`
-- API endpoint for evaluating expressions: `POST /eval`
+- API endpoint for building expressions:
+```
+POST /build?expression=user
+
+{
+  "query": "\nSELECT user_0.* FROM \"user\" AS user_0 WHERE true;\n"
+}
+```
+
+- API endpoint for evaluating expressions:
+```
+POST /eval?expression=user
+
+{
+  "result": [
+    {
+      "email": "john@acme.com",
+      "name": "John Doe",
+      ...
+    },
+    ...
+  ]
+}
+```
 
 ### Deprecated
 - API endpoint for building sql expressions `POST /pine/build`. Use the new endpoint: `POST /build`.
@@ -32,7 +54,7 @@ customers | unselect: id
 ```
 
 ### Fixed
-- It wasn't possible to use empty strings in conditions e.g. the following wasn't working:
+- It wasn''t working:
 ```
 customers industry=""
 ```
