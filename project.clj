@@ -29,7 +29,7 @@
           :dependencies [[nrepl/nrepl "0.8.3"]]
           }
    }
-  :aot :all
+  ;; :aot :all
   ;; https://github.com/technomancy/leiningen/blob/master/sample.project.clj
   :repl-options {
                  :welcome (println "\nRepl for pine :: warming up ... \n")

@@ -86,8 +86,9 @@
   (route/not-found "Not Found"))
 
 (def app
-  (-> app-routes
-      wrap-json-params
-      wrap-json-response
-      (wrap-defaults api-defaults)
-      ))
+  (do
+    (prn (format "Connection: [%s]" (protocol/get-connection-id @db/connection)))
+    (-> app-routes
+        wrap-json-params
+        wrap-json-response
+        (wrap-defaults api-defaults))))

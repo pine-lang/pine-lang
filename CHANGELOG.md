@@ -2,6 +2,11 @@
 All notable changes to this project will be documented in this file. This change
 log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 
+## [Unreleased]
+
+### Fixed
+- Pine expression build/eval was failing if the db connection isn't initialized
+
 ## [0.3.1] - 2022-02-14
 ### Added
 - API endpoint for building expressions:
