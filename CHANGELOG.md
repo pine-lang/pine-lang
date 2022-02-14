@@ -48,6 +48,14 @@ PUT /connection
   "connection-id": "default"
 }
 ```
+- API endpoint for getting the connections
+```
+GET /connections
+
+[
+  "result": [ "default", "mysql-test" ]
+]
+```
 
 ### Deprecated
 - API endpoint for building sql expressions `POST /pine/build`. Use the new endpoint: `POST /build`.

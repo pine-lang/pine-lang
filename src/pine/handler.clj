@@ -72,11 +72,17 @@
     {:error (format "Connection '%s' does not exist" id)}
     ))
 
+(defn- get-connections []
+  (->> (db/get-connections)
+       keys
+       (map name)))
+
 (defroutes app-routes
   (POST "/pine/build" [expression] (->> expression api-build response)) ;; backwads compat
   (POST "/build" [expression] (->> expression api-build (assoc {} :connection-id (connection-id) :query) response))
   (POST "/eval" [expression] (api-eval expression))
   (PUT "/connection" [connection-id] (->> connection-id keyword set-connection response))
+  (GET "/connections" [] (->> (get-connections) (assoc {} :result) response))
   (route/not-found "Not Found"))
 
 (def app
