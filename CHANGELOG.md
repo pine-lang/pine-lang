@@ -2,7 +2,7 @@
 All notable changes to this project will be documented in this file. This change
 log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 
-## [Unreleased] - 2022-02-13
+## [0.3.1] - 2022-02-14
 ### Added
 - API endpoint for building expressions:
 ```
@@ -96,7 +96,8 @@ customers 1 | set! industry=123
 ### Added
 - Check out the [features][features] document for a list of features
 
-[Unreleased]: https://github.com/ahmadnazir/pine/compare/0.3.0...HEAD
+[Unreleased]: https://github.com/ahmadnazir/pine/compare/0.3.1...HEAD
+[0.3.1]: https://github.com/ahmadnazir/pine/compare/0.3.0...0.3.1
 [0.3.0]: https://github.com/ahmadnazir/pine/compare/0.2.0...0.3.0
 [0.2.0]: https://github.com/ahmadnazir/pine/compare/0.1.0...0.2.0
 [features]: FEATURES.md
