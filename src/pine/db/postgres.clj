@@ -106,7 +106,8 @@ SELECT *
     (->> table
          keyword
          schema
-         :db/refs))
+         :db/refs
+         ))
 
   (quote [this x]
     (format "\"%s\"" x))

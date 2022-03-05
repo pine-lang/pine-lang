@@ -30,18 +30,6 @@
 (defn references [schema table]
   (protocol/references @connection schema table))
 
-(defn relation
-  "Get the column that has the relationship between the tables:
-  (relation :caseFiles: :owns :documents:) => \"caseFileId\"
-  (relation :documents: :owned-by :caseFile:) => \"caseFileId\"
-  "
-  [schema t1 relationship t2]
-  (case relationship
-    :owns     (t1 (protocol/references @connection schema t2))
-    :owned-by (t2 (protocol/references @connection schema t1))
-    :else     nil)
-  )
-
 (defn get-columns
   "Returns the list of columns a table has"
   [schema table-name]

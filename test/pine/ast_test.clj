@@ -3,7 +3,11 @@
             [clojure.test :refer :all]
             [clojure.string :as s]
             [pine.fixtures.mysql :as fixtures]
-            ))
+            [pine.db :as db]
+            [pine.db.protocol :as protocol]
+            )
+  (:import pine.db.mysql.MysqlConnection)
+  )
 
 ;; Parsing the Pine Expressions and Lexemes
 
@@ -197,8 +201,8 @@
       [:documents "d" ["d.`caseFileId`" "cf.`id`"]]
       (ast/operations->join
        fixtures/schema
-       {:entity :caseFiles :values [[ "id" "1" ]], :alias "cf"}
-       {:entity :documents :values [[ "id" "2" ]], :alias "d"})
+       {:entity :caseFiles, :alias "cf"}
+       {:entity :documents, :alias "d"})
       ))))
 
 (deftest operations->join:entity-owned-by-another-entity
@@ -208,8 +212,8 @@
       [:caseFiles "cf" ["cf.`id`" "d.`caseFileId`"]]
       (ast/operations->join
        fixtures/schema
-       {:entity :documents :values [[ "id" "2" ]] :alias "d"}
-       {:entity :caseFiles :values [[ "id" "1" ]] :alias "cf"}
+       {:entity :documents :alias "d"}
+       {:entity :caseFiles :alias "cf"}
        )
       ))))
 
@@ -219,9 +223,9 @@
      (=
       (ast/operations->joins
        fixtures/schema
-       [{:entity :customers :values [[ "id" "1" ]]      :alias "c"}
-        {:entity :caseFiles :values [[ "id" "2" ]]      :alias "cf"}
-        {:entity :documents :values [[ "name" "test" ]] :alias "d"}
+       [{:entity :customers :alias "c"}
+        {:entity :caseFiles :alias "cf"}
+        {:entity :documents :alias "d"}
         ])
       [:caseFiles "cf" ["cf.`customerId`" "c.`id`"]
        :documents "d" ["d.`caseFileId`" "cf.`id`"]]

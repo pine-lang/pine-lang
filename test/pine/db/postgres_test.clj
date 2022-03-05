@@ -8,6 +8,8 @@
   (:import pine.db.postgres.PostgresConnection)
   )
 
+(def dc "Dummy connection" (atom (PostgresConnection. "dummy" nil)))
+
 (deftest references:test-schema
   (testing "Get the references of a table"
     (is
@@ -15,23 +17,7 @@
       {:attachment "attachment_id"
        :tenant "tenant_id"
        }
-      (protocol/references (PostgresConnection. "dummy" nil) fixtures/schema "user")
+      (protocol/references @dc fixtures/schema "user")
       ))))
 
-;; (deftest relation:test-schema-owns
-;;   (testing "Get the references of a table"
-;;     (is
-;;      (=
-;;       "attachment_id"
-;;       (db/relation fixtures/schema :user :owns :attachment))
-;;      )))
-
-;; ;; (db/relation fixtures/schema  :owns :attachment)
-
-;; (deftest relation:test-schema-owned-by
-;;   (testing "Get the references of a table"
-;;     (is
-;;      (=
-;;       "caseFileId"
-;;       (db/relation fixtures/schema :documents :owned-by :caseFiles))
-;;      )))
+;; (protocol/references @dc fixtures/schema "user")

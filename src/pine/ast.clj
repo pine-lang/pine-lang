@@ -1,6 +1,7 @@
 (ns pine.ast
   (:require [clojure.string :as s]
             [pine.db :as db]
+            [pine.db.protocol :as protocol]
             [pine.utils :as utils]
             [instaparse.core :as insta]
             [clojure.core.match :refer [match]]
@@ -159,7 +160,7 @@
        get-parsed-ops     ;; [ [:CONDITION ..                ] ]
        (map index)        ;; [ {:type "condition" ...} ]
        add-aliases        ;; [ {:type "condition" ... :entity :users :alias "u"} ]
-       add-context        ;; [ [:type "condition" ... :context {:entity .. :alias ..} ] ]
+       add-context        ;; [ [:type "condition" ... :context {:entity :users :alias "u"} ] ]
        )))
 
 ;; Build SQL from the AST
@@ -432,21 +433,44 @@
     )
   )
 
+(defn- select-relation [relations]
+  (->> relations
+       (filter (fn [[_ _ _ _ _ _ column]] (some? column))) ;; filter out no relations - can be useful for hints
+       ;; TODO: change the heuristic from `first`
+       first
+       )
+  )
 
-(defn operations->join
-  "Get the join from 2 operations"
+(defn- relation->join [o1 o2 relation]
+  (match relation
+         [e1 a1 :has e2 a2 :on column] [(qualify (db/quote column) :with a2) (primary-key o1)]
+         [e1 a1 :of  e2 a2 :on column] [(primary-key o2) (qualify (db/quote column) :with a1)]
+         :else ["1" "2 /* No relationship exists */"])
+  )
+
+(defn operations->join "Get the join from two operations"
   [schema o1 o2]
-  (let [e1  (:entity o1)
-        e2  (:entity o2)
+  (let [e1 (:entity o1)
+        e2 (:entity o2)
         a1 (table-alias o1)
         a2 (table-alias o2)
-        e1-foreign-key (db/relation schema e2 :owns e1)
-        e2-foreign-key (db/relation schema e1 :owns e2)
-        join-on (cond e1-foreign-key [(primary-key o2) (qualify (db/quote e1-foreign-key) :with a1)]
-                      e2-foreign-key [(qualify (db/quote e2-foreign-key) :with a2) (primary-key o1)]
-                      :else ["1" "2 /* No relationship exists */"])
+        r1 (protocol/references @db/connection schema e1)
+        r2 (protocol/references @db/connection schema e2)
+
+        ;; TODO: remove the aliases here. They are only used when making the
+        ;; join
+        relations (->> [[e1 a1 :of  e2 a2 :on (e2 r1)] ;; e1 has/owns e2 because
+                                                       ;; e2 refers to it
+                        [e1 a1 :has e2 a2 :on (e1 r2)]]
+                       )
+        relation (select-relation relations)
+        join-on (relation->join o1 o2 relation)
         ]
-    [e2 a2 join-on]
+    (->> relations
+         select-relation
+         (relation->join o1 o2)
+         (conj [e2 a2])
+         )
     ))
 
 

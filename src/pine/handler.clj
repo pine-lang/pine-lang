@@ -85,6 +85,9 @@
   (GET "/connections" [] (->> (get-connections) (assoc {} :result) response))
   (route/not-found "Not Found"))
 
+;; DEBUG
+;; (set-connection :default)
+
 (def app
   (do
     (prn (format "Connection: [%s]" (protocol/get-connection-id @db/connection)))

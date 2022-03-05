@@ -17,20 +17,3 @@
        }
       (protocol/references (MysqlConnection. "dummy" nil) fixtures/schema "caseFiles")
       ))))
-
-
-(deftest relation:test-schema-owns
-  (testing "Get the references of a table"
-    (is
-     (=
-      "caseFileId"
-      (db/relation fixtures/schema :caseFiles :owns :documents))
-     )))
-
-(deftest relation:test-schema-owned-by
-  (testing "Get the references of a table"
-    (is
-     (=
-      "caseFileId"
-      (db/relation fixtures/schema :documents :owned-by :caseFiles))
-     )))
