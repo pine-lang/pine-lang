@@ -71,8 +71,9 @@
     (->> table
          ((keyword table) schema)
          (re-seq #"FOREIGN KEY .`(.*)`. REFERENCES `(.*?)`") ;; TODO: fix `nil` case
-         (map (fn [[_ col t]] {(keyword t) col}))
-         (apply (partial merge-with (fn [a b] a))) ;; TODO: fix `nil` case
+         (map (fn [[_ col t]] [t col]))                                      ;; (["user" "user_id"])
+         (group-by first)                                                    ;; {"user" ["user_id" "user"]} .. )
+         (reduce (fn [acc [k v]] (assoc acc (keyword k) (map second v))) {}) ;; {:user ["user_id"]} .. )
          ))
 
   (quote [this x]

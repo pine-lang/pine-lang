@@ -435,7 +435,7 @@
 
 (defn- select-relation [relations]
   (->> relations
-       (filter (fn [[_ _ _ _ _ _ column]] (some? column))) ;; filter out no relations - can be useful for hints
+       (filter (fn [[_ _ _ _ _ _ column]] (some? column))) ;;
        ;; TODO: change the heuristic from `first`
        first
        )
@@ -457,12 +457,13 @@
         r1 (protocol/references @db/connection schema e1)
         r2 (protocol/references @db/connection schema e2)
 
-        ;; TODO: remove the aliases here. They are only used when making the
-        ;; join
-        relations (->> [[e1 a1 :of  e2 a2 :on (e2 r1)] ;; e1 has/owns e2 because
-                                                       ;; e2 refers to it
-                        [e1 a1 :has e2 a2 :on (e1 r2)]]
-                       )
+        relations (concat
+                   ;; TODO:
+                   ;; - Remove the aliases here. They are only used when making the join
+                   (map (partial conj [e1 a1 :of  e2 a2 :on ]) (e2 r1))
+                   (map (partial conj [e1 a1 :has e2 a2 :on ]) (e1 r2))
+                   )
+
         relation (select-relation relations)
         join-on (relation->join o1 o2 relation)
         ]
@@ -472,8 +473,6 @@
          (conj [e2 a2])
          )
     ))
-
-
 
 (defn operations->joins
   "Get the joins from the operations"

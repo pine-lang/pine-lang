@@ -27,7 +27,7 @@ SELECT *
        (map :column_name)))
 ;; (columns c/config "user") ;; local test
 
-(defn- refs
+(defn refs
   "Find the foreign keys using the db connection"
   [config table]
   (->> table
@@ -46,14 +46,14 @@ SELECT *
 ")
        (u/exec config)
        (map (juxt :foreign_table_name
-                  :column_name))                                ;; (["user_id" "user"])
+                  :column_name))                                           ;; (["user" "user_id"])
+       (group-by first)                                                    ;; {"user" ["user_id" "user"]} .. )
+       (reduce (fn [acc [k v]] (assoc acc (keyword k) (map second v))) {}) ;; {:user ["user_id"]} .. )
 
-       ;; TODO: there can be multiple references to the foreign table
-       (reduce (fn [acc [ft c]] (assoc acc (keyword ft) c)) {}) ;; { :user "user_id" }
        ))
 ;; (refs c/config "document")
 
-(defn- table-definition
+(defn table-definition
   "Create table definition using the db connection"
   ;; TODO: use the db name or schema name (mysql or postgres respectively)
   [config table]

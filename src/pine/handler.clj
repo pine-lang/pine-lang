@@ -62,7 +62,7 @@
        response
        ))
 
-(defn- set-connection [id]
+(defn set-connection [id]
   (if-let [connections ((db/get-connections) id)]
     (do
       (->> id
