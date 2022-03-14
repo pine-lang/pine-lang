@@ -4,6 +4,22 @@ log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Added
+- Disabled CORS
+- API endpoint for getting the active connection:
+```
+GET /connection
+
+{
+  ...
+  "connection-id": "..."
+}
+
+```
+- When using `POST /build` the response also includes the `connection-id`
+- When using `POST /eval` the response also includes the `connection-id` and the `query`
+- In case of an error, it is handled and the error message is returned in the API response as `error`
+
 ### Fixed
 - Pine expression build/eval was failing if the db connection isn't initialized
 

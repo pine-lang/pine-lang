@@ -7,6 +7,7 @@
             [pine.config :as c]
             [ring.util.response :refer [response]]
             [ring.middleware.json :refer [wrap-json-params wrap-json-response]]
+            [ring.middleware.cors :refer [wrap-cors]]
             [clojure.string :as s]
 
             [pine.db.protocol :as protocol]))
@@ -54,13 +55,35 @@
 (defn- connection-id []
   (protocol/get-connection-id @db/connection))
 
+(defn- api-build-response [expression]
+  (let [id (connection-id)]
+    (try {
+          :connection-id id
+          :query (api-build expression)
+          }
+         (catch Exception e {
+                             :connection-id id
+                             :error (.getMessage e)
+                             }))))
+
+
 (defn- api-eval [expression]
-  (->> expression
-       prepare
-       pine/pine-eval
-       (assoc {} :connection-id (connection-id) :result)
-       response
-       ))
+  (let [
+        id (connection-id)]
+    (try
+      (let [prepared (prepare expression)
+            query (prepared :query)
+            ]
+        {
+         :connection-id id
+         :query query
+         :result (pine/pine-eval prepared)
+         })
+      (catch Exception e {:connection-id id
+                          :error (.getMessage e)})
+      )
+    )
+  )
 
 (defn set-connection [id]
   (if-let [connections ((db/get-connections) id)]
@@ -79,9 +102,10 @@
 
 (defroutes app-routes
   (POST "/pine/build" [expression] (->> expression api-build response)) ;; backwads compat
-  (POST "/build" [expression] (->> expression api-build (assoc {} :connection-id (connection-id) :query) response))
-  (POST "/eval" [expression] (api-eval expression))
+  (POST "/build" [expression] (->> expression api-build-response response))
+  (POST "/eval" [expression] (->> expression api-eval response))
   (PUT "/connection" [connection-id] (->> connection-id keyword set-connection response))
+  (GET "/connection" [] (->> (connection-id) (assoc {} :result) response))
   (GET "/connections" [] (->> (get-connections) (assoc {} :result) response))
   (route/not-found "Not Found"))
 
@@ -90,8 +114,10 @@
 
 (def app
   (do
-    (prn (format "Connection: [%s]" (protocol/get-connection-id @db/connection)))
+    (prn (format "Connections: [%s]" (protocol/get-connection-id @db/connection)))
     (-> app-routes
         wrap-json-params
         wrap-json-response
-        (wrap-defaults api-defaults))))
+        (wrap-defaults api-defaults)
+        (wrap-cors :access-control-allow-origin [#".*"] :access-control-allow-methods [:get :post])
+        )))

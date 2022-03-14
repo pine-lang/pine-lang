@@ -15,6 +15,8 @@
                  [org.clojure/java.jdbc "0.7.3"]
                  [mysql/mysql-connector-java "5.1.18"]
                  [org.postgresql/postgresql "42.2.24.jre7"]
+
+                 [ring-cors "0.1.13"]
                  ]
   :plugins [[lein-ring "0.9.7"]
             ]
