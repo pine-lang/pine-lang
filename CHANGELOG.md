@@ -16,8 +16,8 @@ GET /connection
 }
 
 ```
-- When using `POST /build` the response also includes the `connection-id`
-- When using `POST /eval` the response also includes the `connection-id` and the `query`
+- When using `POST /build` the response also includes the `connection-id`, and `params`
+- When using `POST /eval` the response also includes the `connection-id`, `query`, and `params`.
 - In case of an error, it is handled and the error message is returned in the API response as `error`
 
 ### Fixed

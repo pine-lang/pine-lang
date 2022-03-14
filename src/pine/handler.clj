@@ -57,10 +57,13 @@
 
 (defn- api-build-response [expression]
   (let [id (connection-id)]
-    (try {
-          :connection-id id
-          :query (api-build expression)
-          }
+    (try
+      (let [prepared (prepare expression)]
+        {
+         :connection-id id
+         :query (prepared :query)
+         :params (prepared :params)
+         })
          (catch Exception e {
                              :connection-id id
                              :error (.getMessage e)
@@ -73,10 +76,12 @@
     (try
       (let [prepared (prepare expression)
             query (prepared :query)
+            params (prepared :params)
             ]
         {
          :connection-id id
          :query query
+         :params params
          :result (pine/pine-eval prepared)
          })
       (catch Exception e {:connection-id id

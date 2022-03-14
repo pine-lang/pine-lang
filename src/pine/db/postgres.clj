@@ -116,7 +116,14 @@ SELECT *
     (format "'%s'" x))
 
   (query [this statement]
-    (jdbc/query config statement))
+    ;; args is [ [:string ".."] ] which works for mysql
+    ;; However, it doesn't work for postgres, we need to convert that to [ ".." ]
+    (let [query (first statement)
+          params (->> statement rest (map second))
+          s (cons query params)
+          ]
+      (jdbc/query config s
+                  )))
 
   (execute! [this statement]
     (jdbc/execute! config statement)))
