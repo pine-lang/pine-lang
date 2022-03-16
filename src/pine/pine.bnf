@@ -36,9 +36,10 @@ comparison  := string <whitespace*> <"="> <whitespace*> ids | string <whitespace
 
 number        := #"[0-9]+"
 whitespace    := #"\s+"
-entity        := string
+entity        := token | token <"."> token
 operator      := #"<|>|="
 
 quoted-string := <"'"> space-string? <"'"> | <'"'> space-string? <'"'>
 space-string  := #"[A-Za-z0-9-_*.@ ]+"
 string        := #"[A-Za-z0-9-_*.@]+"
+token         := #"[A-Za-z0-9-_]+"

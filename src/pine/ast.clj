@@ -110,14 +110,17 @@
         (parsed-op->indexed-op [op]
           (match op
                  ;; resource/conditions
-                 ;;
-                 ;; At the moment the resource and condition operations are
-                 ;; grouped
-                 [:RESOURCE [:entity [:string table]] ]                   {:type "condition" :entity (keyword table) :values []}
-                 [:RESOURCE [:entity [:string table]] [:id [:number id]]] {:type "condition" :entity (keyword table) :values [["id" [:number id] "="]]}
-                 [:RESOURCE [:entity [:string table]] [:ids & ids]]       {:type "condition" :entity (keyword table) :values [["id" [:expression (str "(" (s/join "," (map second ids)) ")")] "IN"]]}
-                 [:RESOURCE [:entity [:string table]] [:ands & values]]   {:type "condition" :entity (keyword table) :values (map parsed-value->indexed-value values) :or false}
-                 [:RESOURCE [:entity [:string table]] [:ors & values]]    {:type "condition" :entity (keyword table) :values (map parsed-value->indexed-value values) :or true}
+                 [:RESOURCE [:entity                 [:token table]] ]                   {:type "condition"                          :entity (keyword table) :values []}
+                 [:RESOURCE [:entity [:token schema] [:token table]] ]                   {:type "condition" :schema (keyword schema) :entity (keyword table) :values []}
+                 [:RESOURCE [:entity                 [:token table]] [:id [:number id]]] {:type "condition"                          :entity (keyword table) :values [["id" [:number id] "="]]}
+                 [:RESOURCE [:entity [:token schema] [:token table]] [:id [:number id]]] {:type "condition" :schema (keyword schema) :entity (keyword table) :values [["id" [:number id] "="]]}
+                 [:RESOURCE [:entity                 [:token table]] [:ids & ids]]       {:type "condition"                          :entity (keyword table) :values [["id" [:expression (str "(" (s/join "," (map second ids)) ")")] "IN"]]}
+                 [:RESOURCE [:entity [:token schema] [:token table]] [:ids & ids]]       {:type "condition" :schema (keyword schema) :entity (keyword table) :values [["id" [:expression (str "(" (s/join "," (map second ids)) ")")] "IN"]]}
+                 [:RESOURCE [:entity                 [:token table]] [:ands & values]]   {:type "condition"                          :entity (keyword table) :values (map parsed-value->indexed-value values) :or false}
+                 [:RESOURCE [:entity [:token schema] [:token table]] [:ands & values]]   {:type "condition" :schema (keyword schema) :entity (keyword table) :values (map parsed-value->indexed-value values) :or false}
+                 [:RESOURCE [:entity                 [:token table]] [:ors & values]]    {:type "condition"                          :entity (keyword table) :values (map parsed-value->indexed-value values) :or true}
+                 [:RESOURCE [:entity [:token schema] [:token table]] [:ors & values]]    {:type "condition" :schema (keyword schema) :entity (keyword table) :values (map parsed-value->indexed-value values) :or true}
+
                  ;; select
                  [:SELECT [:specific [:columns & columns]]]               {:type "select" :columns (parsed-cols->indexed-cols columns)}
                  [:SELECT [:invert-specific [:columns & columns]]]        {:type "unselect" :columns (parsed-cols->indexed-cols columns)}
@@ -191,7 +194,7 @@
   "Create an sql query"
   [ast]
   (let [select-columns (s/join ", " (ast :select))
-        [table alias]  (ast :from)
+        [schema table alias]  (ast :from)
         select-sql     (str "SELECT %s FROM %s AS %s")
         update-sql     (str "UPDATE %s AS %s")
         delete-table   (ast :delete)
@@ -225,7 +228,11 @@
             (->> [(cond set-values   nil
                         delete-table nil
                         :else        select-columns)                   ;; update/delete/select
-                  (db/quote (name table))                              ;; table
+                  (->> [schema table]                                  ;; schema and table
+                       (remove nil?)
+                       (map name)
+                       (map db/quote)
+                       (s/join "."))
                   (cond set-values   alias
                         delete-table nil
                         :else        alias)                            ;; alias
@@ -678,9 +685,11 @@
 (defn operations->ast
   "operations to ast"
   [schema ops]
-  (let [columns       (operations->select-columns schema ops)
+  (let [
+        columns       (operations->select-columns schema ops)
         condition-ops (filter (operation-type? ["condition"]) ops)
         primary-op    (first condition-ops)
+        table-group   (:schema primary-op)
         table         (:entity primary-op)
         delete        (operations->delete ops)
         set-values    (operations->set ops)
@@ -693,7 +702,7 @@
         ]
     {
      :select columns
-     :from [table (table-alias primary-op)]
+     :from [table-group table (table-alias primary-op)]
      :joins joins
      :where where
      :order order
