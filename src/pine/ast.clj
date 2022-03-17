@@ -176,9 +176,10 @@
 
 
 (defn ast-join->sql
-  "Convert a single join in the joins parts of the AST to an sql query"
-  [entity alias [t1 t2]]
-  (format "JOIN %s AS %s ON (%s = %s)" (db/quote (name entity)) alias t1 t2) )
+  "Convert a single join in the joins parts of the AST to an sql query
+  TODO: The function assumes that the parameters are already escaped. This needs to be fixed."
+  [table alias [t1 t2]]
+  (format "JOIN %s AS %s ON (%s = %s)" table alias t1 t2) )
 
 (defn ast-joins->sql
   "Convert joins part of the AST to an sql query"
@@ -448,37 +449,37 @@
        )
   )
 
-(defn- relation->join [o1 o2 relation]
+(defn- relation->join [o1 o2 tg relation]
+  "TODO: instead of quoting the values here, we should quote/escape when the sql query is generated.
+   See: `ast-join->sql` function"
   (match relation
-         [e1 a1 :has e2 a2 :on column] [(qualify (db/quote column) :with a2) (primary-key o1)]
-         [e1 a1 :of  e2 a2 :on column] [(primary-key o2) (qualify (db/quote column) :with a1)]
-         :else ["1" "2 /* No relationship exists */"])
+         [e1 a1 :has e2 a2 :on [col group]] [(db/quote tg e2) a2 [(qualify (db/quote col) :with a2) (primary-key o1)]]
+         [e1 a1 :of  e2 a2 :on [col group]] [(db/quote tg e2) a2 [(primary-key o2) (qualify (db/quote col) :with a1)]]
+         :else                              ["?" "?" "1" (format "2 /* Relationship: %s */" relation)])
   )
 
 (defn operations->join "Get the join from two operations"
   [schema o1 o2]
   (let [e1 (:entity o1)
         e2 (:entity o2)
+        tg (:schema o2) ;; postgres schema. Calling it table-group to avoid name clash
         a1 (table-alias o1)
         a2 (table-alias o2)
         r1 (protocol/references @db/connection schema e1)
         r2 (protocol/references @db/connection schema e2)
-
+        of-cols  (map vec (e2 r1))
+        has-cols (map vec (e1 r2))
         relations (concat
                    ;; TODO:
                    ;; - Remove the aliases here. They are only used when making the join
-                   (map (partial conj [e1 a1 :of  e2 a2 :on ]) (e2 r1))
-                   (map (partial conj [e1 a1 :has e2 a2 :on ]) (e1 r2))
+                   (map (partial conj [e1 a1 :of  e2 a2 :on ]) of-cols)
+                   (map (partial conj [e1 a1 :has e2 a2 :on ]) has-cols)
                    )
-
         relation (select-relation relations)
-        join-on (relation->join o1 o2 relation)
         ]
     (->> relations
          select-relation
-         (relation->join o1 o2)
-         (conj [e2 a2])
-         )
+         (relation->join o1 o2 tg))
     ))
 
 (defn operations->joins

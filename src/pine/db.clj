@@ -21,8 +21,13 @@
                      atom))
 
 ;; DB wrappers
-(defn quote [x]
-  (protocol/quote @connection x))
+(defn- qt [x]
+  (protocol/quote @connection (name x)))
+(defn quote
+  ([x] (qt x))
+  ([x y]
+   (cond (not (nil? x)) (format "%s.%s" (qt x) (qt y))
+         :else (qt y))))
 
 (defn quote-string [x]
   (protocol/quote-string @connection x))

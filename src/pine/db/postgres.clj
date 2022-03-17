@@ -14,58 +14,59 @@
 
 (defn- columns
   "Find the column names using the db connection"
-  [config table]
-  (->> table
-       u/escape
-       (format "
-SELECT *
-  FROM information_schema.columns
- WHERE table_name = '%s'
- -- AND table_schema = 'schema_name?'
-")
-       (u/exec config)
-       (map :column_name)))
-;; (columns c/config "user") ;; local test
+  ([config table table-group]
+   (->> (format
+         "SELECT * FROM information_schema.columns WHERE table_name = '%s' AND table_schema = '%s' "
+         (u/escape table) (u/escape table-group))
+        (u/exec config)
+        (map :column_name)))
+  ([config table]
+   (columns config table "public")))
+
+;; (columns (->> c/config :connections :?) "request" "requests") ;; local test
+;; (columns (->> c/config :connections :?) "user") ;; local test
 
 (defn refs
   "Find the foreign keys using the db connection"
-  [config table]
-  (->> table
-       u/escape
-       (format "
- SELECT kcu.column_name,
-        ccu.table_name AS foreign_table_name,
-        ccu.column_name AS foreign_column_name
-   FROM information_schema.table_constraints AS tc
-   JOIN information_schema.key_column_usage AS kcu
-     ON tc.constraint_name = kcu.constraint_name
-   LEFT JOIN information_schema.constraint_column_usage AS ccu
-     ON ccu.constraint_name = tc.constraint_name
-  WHERE tc.table_name='%s'
-    AND tc.constraint_type = 'FOREIGN KEY'
-")
-       (u/exec config)
-       (map (juxt :foreign_table_name
-                  :column_name))                                           ;; (["user" "user_id"])
-       (group-by first)                                                    ;; {"user" ["user_id" "user"]} .. )
-       (reduce (fn [acc [k v]] (assoc acc (keyword k) (map second v))) {}) ;; {:user ["user_id"]} .. )
+  ([config table table-group]
+   (->> (format "
+SELECT kcu.column_name,
+ccu.table_name AS foreign_table_name,
+ccu.column_name AS foreign_column_name,
+ccu.table_schema AS foreign_table_schema
+FROM information_schema.table_constraints AS tc
+JOIN information_schema.key_column_usage AS kcu
+ON tc.constraint_name = kcu.constraint_name
+LEFT JOIN information_schema.constraint_column_usage AS ccu
+ON ccu.constraint_name = tc.constraint_name
+WHERE tc.table_name='%s'
+-- AND ccu.foreign_table_schema='%s'
+AND tc.constraint_type = 'FOREIGN KEY'
+" (u/escape table) (u/escape table-group))
+        (u/exec config)
+        (map (juxt :foreign_table_name :column_name :foreign_table_schema)) ;; (["user"  "user_id" "public"])
+        (group-by first)                                                    ;; { "user" ["user" "user_id" "public"]}.. )
+        (reduce (fn [acc [k v]] (assoc acc (keyword k) (map rest v))) {})   ;; { :user  [["user_id" "public"]]}..)
+        ))
+  ([config table]
+   (refs config table "public")))
 
-       ))
-;; (refs c/config "document")
+;; (refs (->> c/config :connections :avallone) "document")
 
 (defn table-definition
-  "Create table definition using the db connection"
-  ;; TODO: use the db name or schema name (mysql or postgres respectively)
-  [config table]
+  "Create table definition using the db connection
+  TODO: also return the table group (postgres schema)"
+  [config table table-group]
   (prn (format "Loading schema definition for table: %s." table))
-  {:db/columns (columns config table)
-   :db/refs (refs config table)})
+  {:db/columns (columns config table table-group)
+   :db/refs (refs config table table-group)})
 ;; (table-definition c/config "user_tenant_role") ;; local test
 
 
 (defn- get-tables [config table-catalog]
-  (->> (u/exec config (format "SELECT * FROM information_schema.tables WHERE table_schema = 'public' AND table_catalog = '%s'" table-catalog))
-       (map :table_name)))
+  (->> (u/exec config (format "SELECT table_schema, table_name FROM information_schema.tables WHERE table_catalog = '%s'
+ -- AND table_schema = 'public' " table-catalog))
+       (map (juxt :table_schema :table_name))))
 
 ;; TODO: can the specs exist on a protocol level?
 ;; https://groups.google.com/g/clojure/c/f068WTgakpk
@@ -79,12 +80,15 @@ SELECT *
 (defn get-schema' [config]
   (let [db-name     (:dbname config)
         column-name (format "tables_in_%s" db-name)
-        column      (keyword column-name)]
+        column      (keyword column-name)
+        tables      (get-tables config db-name)
+        ]
     (prn (format "Loading schema definition for db: %s" db-name))
-    (->>
-     db-name
-     (get-tables config)
-     (reduce (fn [acc v] (assoc acc (keyword v) (table-definition config v))) {}))))
+    (reduce (fn [acc [table-group table]]
+              (assoc acc (keyword table) (table-definition config table table-group))
+              )
+            {} tables)
+    ))
 (def get-schema-memoized (memoize get-schema'))
 
 (deftype PostgresConnection [id config]
@@ -120,8 +124,7 @@ SELECT *
     ;; However, it doesn't work for postgres, we need to convert that to [ ".." ]
     (let [query (first statement)
           params (->> statement rest (map second))
-          s (cons query params)
-          ]
+          s (cons query params)]
       (jdbc/query config s
                   )))
 
