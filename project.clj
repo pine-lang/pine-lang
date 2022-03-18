@@ -10,6 +10,7 @@
                  [org.clojure/core.match "0.3.0-alpha5"]
                  [ring/ring-defaults "0.2.1"]
                  [ring/ring-json "0.4.0"]
+                 [cheshire ~"5.10.2"]
 
                  ;; database
                  [org.clojure/java.jdbc "0.7.3"]

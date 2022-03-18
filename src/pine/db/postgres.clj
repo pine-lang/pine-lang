@@ -51,7 +51,7 @@ AND tc.constraint_type = 'FOREIGN KEY'
   ([config table]
    (refs config table "public")))
 
-;; (refs (->> c/config :connections :avallone) "document")
+;; (refs (->> c/config :connections :work) "document")
 
 (defn table-definition
   "Create table definition using the db connection

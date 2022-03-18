@@ -9,8 +9,11 @@
             [ring.middleware.json :refer [wrap-json-params wrap-json-response]]
             [ring.middleware.cors :refer [wrap-cors]]
             [clojure.string :as s]
-
+            [cheshire.core :refer [encode]]
+            [cheshire.generate :refer [add-encoder encode-str remove-encoder]]
             [pine.db.protocol :as protocol]))
+
+(add-encoder org.postgresql.util.PGobject encode-str)
 
 (defn prepare [expression]
   (let [schema (protocol/get-schema @db/connection)]
@@ -78,12 +81,13 @@
             query (prepared :query)
             params (prepared :params)
             ]
-        {
-         :connection-id id
-         :query query
-         :params params
-         :result (pine/pine-eval prepared)
-         })
+        (encode
+         {
+          :connection-id id
+          :query query
+          :params params
+          :result (pine/pine-eval prepared)
+          }))
       (catch Exception e {:connection-id id
                           :error (.getMessage e)})
       )
