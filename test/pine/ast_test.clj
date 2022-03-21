@@ -198,7 +198,7 @@
   (testing "Create operations for a query"
     (is
      (=
-      [:documents "d" ["d.`caseFileId`" "cf.`id`"]]
+      ["`documents`" "d" ["d.`caseFileId`" "cf.`id`"]]
       (ast/operations->join
        fixtures/schema
        {:entity :caseFiles, :alias "cf"}
@@ -209,7 +209,7 @@
   (testing "Create operations for a query"
     (is
      (=
-      [:caseFiles "cf" ["cf.`id`" "d.`caseFileId`"]]
+      ["`caseFiles`" "cf" ["cf.`id`" "d.`caseFileId`"]]
       (ast/operations->join
        fixtures/schema
        {:entity :documents :alias "d"}
@@ -227,15 +227,17 @@
         {:entity :caseFiles :alias "cf"}
         {:entity :documents :alias "d"}
         ])
-      [:caseFiles "cf" ["cf.`customerId`" "c.`id`"]
-       :documents "d" ["d.`caseFileId`" "cf.`id`"]]
+
+      ["`caseFiles`" "cf" ["cf.`customerId`" "c.`id`"]
+        "`documents`" "d" ["d.`caseFileId`" "cf.`id`"]]
+
       ))))
 
 (deftest operations->joins:no-filter
   (testing "Create operations for a query"
     (is
      (=
-      [:caseFiles "cf" ["cf.`customerId`" "c.`id`"]]
+      ["`caseFiles`" "cf" ["cf.`customerId`" "c.`id`"]]
       (ast/operations->joins
        fixtures/schema
        [{:type "condition" :entity :customers :values [] :alias "c"}
@@ -259,9 +261,9 @@
      (=
       {
        :select ["documents_2.*"]
-       :from [:customers "customers_0"]
-       :joins [:caseFiles "casefiles_1" ["casefiles_1.`customerId`" "customers_0.`id`"]
-               :documents "documents_2" ["documents_2.`caseFileId`" "casefiles_1.`id`"]]
+       :from [nil :customers "customers_0"]
+       :joins ["`caseFiles`" "casefiles_1" ["casefiles_1.`customerId`" "customers_0.`id`"]
+               "`documents`" "documents_2" ["documents_2.`caseFileId`" "casefiles_1.`id`"]]
        :where {
                :conditions ["(customers_0.`id` = ?)"
                             "(casefiles_1.`name` = ?)"
@@ -289,7 +291,7 @@
      (=
       (ast/ast->sql-and-params {
                      :select ["c.*"]
-                     :from [:customers "c"]
+                     :from [nil :customers "c"]
                      :where {
                              :conditions ["c.id = ?"
                                           ]
@@ -303,7 +305,7 @@
   (testing "Create sql from a single join from the joins part of the ast"
     (is
      (=
-      (ast/ast-join->sql :users "u" ["u.customerId" "c.id"])
+      (ast/ast-join->sql "`users`" "u" ["u.customerId" "c.id"])
       "JOIN `users` AS u ON (u.customerId = c.id)"
       ))))
 
@@ -319,8 +321,8 @@
   (testing "Create sql from a joins part of the ast"
     (is
      (=
-      (ast/ast-joins->sql [:users "u" ["u.customerId" "c.id"]
-                          :address "a" ["a.userId" "u.id"]])
+      (ast/ast-joins->sql ["`users`" "u" ["u.customerId" "c.id"]
+                          "`address`" "a" ["a.userId" "u.id"]])
       "JOIN `users` AS u ON (u.customerId = c.id) JOIN `address` AS a ON (a.userId = u.id)"
       ))))
 
@@ -330,8 +332,8 @@
      (=
       (ast/ast->sql-and-params {
                                 :select ["u.*"]
-                                :from [:customers "c"]
-                                :joins [:users "u" ["u.customerId" "c.id"]]
+                                :from [nil :customers "c"]
+                                :joins ["`users`" "u" ["u.customerId" "c.id"]]
                                 :where {
                                         :conditions ["c.id = ?"
                                                      "u.name = ?"

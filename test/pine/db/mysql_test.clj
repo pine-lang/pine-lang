@@ -12,8 +12,8 @@
   (testing "Get the references of a table"
     (is
      (=
-      {:users ["userId" "createdByUserId"]
-       :customers ["customerId"]
+      {:users [["userId" nil] ["createdByUserId" nil]]
+       :customers [["customerId" nil]]
        }
       (protocol/references (MysqlConnection. "dummy" nil) fixtures/schema "caseFiles")
       ))))

@@ -71,9 +71,9 @@
     (->> table
          ((keyword table) schema)
          (re-seq #"FOREIGN KEY .`(.*)`. REFERENCES `(.*?)`") ;; TODO: fix `nil` case
-         (map (fn [[_ col t]] [t col]))                                      ;; (["user" "user_id"])
-         (group-by first)                                                    ;; {"user" ["user_id" "user"]} .. )
-         (reduce (fn [acc [k v]] (assoc acc (keyword k) (map second v))) {}) ;; {:user ["user_id"]} .. )
+         (map (fn [[_ col t]] [t col nil]))                                  ;; (["user" "user_id" nil]) ;; group is nil (postgres has schemas - mysql doesn't have them)
+         (group-by first)                                                    ;; {"user" ["user" "user_id"]} .. )
+         (reduce (fn [acc [k v]] (assoc acc (keyword k) (map rest v))) {})   ;; {:user ["user_id"]} .. )
          ))
 
   (quote [this x]

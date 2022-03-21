@@ -460,7 +460,8 @@
 
 (defn operations->join "Get the join from two operations"
   [schema o1 o2]
-  (let [e1 (:entity o1)
+  (let [
+        e1 (:entity o1)
         e2 (:entity o2)
         tg (:schema o2) ;; postgres schema. Calling it table-group to avoid name clash
         a1 (table-alias o1)
@@ -476,10 +477,9 @@
                    (map (partial conj [e1 a1 :has e2 a2 :on ]) has-cols)
                    )
         relation (select-relation relations)
+        result (relation->join o1 o2 tg relation)
         ]
-    (->> relations
-         select-relation
-         (relation->join o1 o2 tg))
+    result
     ))
 
 (defn operations->joins
