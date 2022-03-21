@@ -14,6 +14,7 @@
             [pine.db.protocol :as protocol]))
 
 (add-encoder org.postgresql.util.PGobject encode-str)
+(add-encoder org.postgresql.jdbc.PgArray encode-str)
 
 (defn prepare [expression]
   (let [schema (protocol/get-schema @db/connection)]
