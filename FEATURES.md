@@ -183,7 +183,7 @@ to
 SHOW CREATE TABLE customers
 ```
 
-## [ ] Support multiple database schemas
+## [x] Support multiple database schemas
 For now, the API runs with one predefined database name.
 
 ## [ ] Meta function - getting inverse relationships
@@ -219,7 +219,7 @@ users 1,2
 users id=1,2
 ```
 
-## [ ] Figure out relationships between entities
+## [ ] Figure out indirect relationships between entities
 
 Automatically figure out the relationship between entities if they are not directly related.
 
@@ -353,5 +353,29 @@ should build the following query:
 SELECT c.id AS customer_id, c.name AS customer_name
   FROM customers AS c
  WHERE c.id = 1
+```
+
+## [x] Support for schema
+
+Supported for postgres:
+
+```
+public.user
+```
+
+Or when joining:
+
+```
+public.user | types.user_type
+```
+
+## [ ] Detect schema for joined table
+
+Relevant to postgres:
+
+Imagine if the `user_type` is in the `types` schema then it should be infered:
+
+```
+public.user | user_type
 ```
 
