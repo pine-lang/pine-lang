@@ -91,6 +91,11 @@ AND tc.constraint_type = 'FOREIGN KEY'
     ))
 (def get-schema-memoized (memoize get-schema'))
 
+(defn string->uuid [x]
+  (try
+    (java.util.UUID/fromString x)
+    (catch Exception e x)))
+
 (deftype PostgresConnection [id config]
   Connection
 
@@ -123,7 +128,11 @@ AND tc.constraint_type = 'FOREIGN KEY'
     ;; args is [ [:string ".."] ] which works for mysql
     ;; However, it doesn't work for postgres, we need to convert that to [ ".." ]
     (let [query (first statement)
-          params (->> statement rest (map second))
+          params (->> statement
+                      rest
+                      (map second)
+                      (map string->uuid) ;; hack: attempt to convert to uuid
+                      )
           s (cons query params)]
       (jdbc/query config s
                   )))
