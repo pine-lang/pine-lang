@@ -22,6 +22,7 @@ GET /connection
 
 ### Fixed
 - Pine expression build/eval was failing if the db connection isn't initialized
+- An error was being thrown when using `uuid` values in the expressions: `operator does not exist: uuid = character varying`
 
 ## [0.3.1] - 2022-02-14
 ### Added
