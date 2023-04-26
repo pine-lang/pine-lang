@@ -16,6 +16,6 @@ services:
       - ~/:/home/${USR}
     environment:
       TERM: xterm
-      LEIN_FAST_TRAMPOLINE: y
+      # LEIN_FAST_TRAMPOLINE: y
     extra_hosts:
     - "host.docker.internal:host-gateway"

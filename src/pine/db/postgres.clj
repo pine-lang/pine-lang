@@ -57,7 +57,7 @@ AND tc.constraint_type = 'FOREIGN KEY'
   "Create table definition using the db connection
   TODO: also return the table group (postgres schema)"
   [config table table-group]
-  (prn (format "Loading schema definition for table: %s." table))
+  (prn (format "Loading schema: %s.%s" table-group table))
   {:db/columns (columns config table table-group)
    :db/refs (refs config table table-group)})
 ;; (table-definition c/config "user_tenant_role") ;; local test
@@ -65,7 +65,7 @@ AND tc.constraint_type = 'FOREIGN KEY'
 
 (defn- get-tables [config table-catalog]
   (->> (u/exec config (format "SELECT table_schema, table_name FROM information_schema.tables WHERE table_catalog = '%s'
- -- AND table_schema = 'public' " table-catalog))
+ AND table_schema IN ('public', 'types') " table-catalog))
        (map (juxt :table_schema :table_name))))
 
 ;; TODO: can the specs exist on a protocol level?
@@ -108,7 +108,11 @@ AND tc.constraint_type = 'FOREIGN KEY'
 
   (get-columns
     [this schema table-name]
-    (schema (keyword table-name) :db/columns))
+    (->> table-name
+         keyword
+         schema
+         :db/columns
+         ))
 
   (references
     [this schema table]
@@ -133,9 +137,14 @@ AND tc.constraint_type = 'FOREIGN KEY'
                       (map second)
                       (map string->uuid) ;; hack: attempt to convert to uuid
                       )
-          s (cons query params)]
-      (jdbc/query config s
-                  )))
+          s (cons query params)
+          ;; TODO: the order of the colums is incorrect sometimes, use
+          ;; db/get-columns, or the the select operation to enforce the order.
+          ;; On that note, maybe the select operation should be automatically
+          ;; added?
+          result (jdbc/query config s)]
+      result
+      ))
 
   (execute! [this statement]
     (jdbc/execute! config statement)))

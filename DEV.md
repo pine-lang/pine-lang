@@ -16,6 +16,15 @@ Cider will detect the repl running on localhost. Select it and you are good to g
 
 ## FAQ
 
+### I make a change in PostgresConnection but the changes are not picked up
+
+Do this:
+
+- `cider-eval-buffer` postgres.clj
+- `cider-eval-buffer` db.clj
+
+Now you should be good to go.
+
 ### How to setup a test mysql db for testing?
 
 ```

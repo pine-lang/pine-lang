@@ -289,8 +289,14 @@
 
 (defn alias->select-all
   "Get the columns for the last 'condition' operation or the select operation"
-  [alias]
-  [(format "%s.*" alias)])
+  [schema op]
+  (let [entity (or (:entity op) (-> op :context :entity))
+        alias (table-alias op)
+        columns (db/get-columns schema entity)
+        ]
+    (map #(format "%s.%s" alias (db/quote %)) columns)
+    )
+  )
 
 (defn pine-fn->sql-fn
   "Get the relevant SQL function to be used"
@@ -347,6 +353,8 @@
        )
   )
 
+;; TODO: I don't think this works - Look into db/get-columns
+;; better yet, use the update select-all function that includes all the columns by default
 (defn expand-signle-column
   "Expands table.* selections if they match the operation"
   [schema column op]
@@ -396,8 +404,7 @@
                                   (operation-type? ["condition"]))
         all-columns          (cond all-columns-needed? (->> operations
                                                             last
-                                                            table-alias
-                                                            alias->select-all
+                                                            (alias->select-all schema)
                                                             )
                                    :else               [])
         function-columns-needed? (->> operations
