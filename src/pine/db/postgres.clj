@@ -143,11 +143,7 @@ AND tc.constraint_type = 'FOREIGN KEY'
                       (map string->uuid) ;; hack: attempt to convert to uuid
                       )
           s (cons query params)
-          ;; TODO: the order of the colums is incorrect sometimes, use
-          ;; db/get-columns, or the the select operation to enforce the order.
-          ;; On that note, maybe the select operation should be automatically
-          ;; added?
-          result (jdbc/query config s)]
+          result (jdbc/query config s {:as-arrays? true})]
       result
       ))
 
