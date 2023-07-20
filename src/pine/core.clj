@@ -3,6 +3,7 @@
             [pine.ast :as ast]
             [pine.db :as db]
             [pine.db.protocol :as protocol]
+            [pine.hints :as hints]
             ))
 
 ;; Eval
@@ -20,8 +21,26 @@
      :params params})
   )
 
+(defn pine-hint
+  "Using a pine expression, generate hints for the last operation given"
+  [expression]
+  (->> expression
+       ast/str->operations
+       ;; (map (juxt :partial :context))
+       last
+       hints/generate
+       ))
+
+;; (->> "tenant | company"
+;;      ast/str->operations
+;;      (map (juxt :partial :context))
+;;      last
+;;      (apply db/hints)
+;;      )
+
 ;; (pine-prepare (db/get-schema c/config) "caseFiles 1 | delete!")
 ;; (pine-prepare (db/get-schema c/config) "caseFiles 1 | s: id")
+
 
 (defn pine-eval
   "Evalate an SQL query"
@@ -29,5 +48,6 @@
   (let [query (prepared :query)
         params (prepared :params)
         args   (cons query params)]
+    (prn args)
     (protocol/query @db/connection args)
     ))

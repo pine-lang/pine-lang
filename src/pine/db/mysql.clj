@@ -60,6 +60,8 @@
   (get-schema [this]
     (get-schema-memoized config))
 
+  (get-tables [this] "TODO: not supported yet" [])
+
   (get-columns [this schema table-name]
     (->>
      schema

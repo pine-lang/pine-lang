@@ -32,8 +32,12 @@
 (defn quote-string [x]
   (protocol/quote-string @connection x))
 
-(defn references [schema table]
-  (protocol/references @connection schema table))
+(defn references
+  ([schema table]
+   (protocol/references @connection schema table))
+  ([table]
+   (let [schema (protocol/get-schema @connection)]
+     (protocol/references @connection schema table))))
 
 (defn get-columns
   "Returns the list of columns a table has"

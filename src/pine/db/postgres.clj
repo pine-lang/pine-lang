@@ -65,8 +65,9 @@ AND tc.constraint_type = 'FOREIGN KEY'
 
 (defn- get-tables [config table-catalog]
   (->> (u/exec config (format "SELECT table_schema, table_name FROM information_schema.tables WHERE table_catalog = '%s'
- AND table_schema IN ('public', 'types') " table-catalog))
+ AND table_schema IN ('public', 'types', 'security', 'requests', 'screening', 'questions', 'signatures', 'data_request') " table-catalog))
        (map (juxt :table_schema :table_name))))
+(def get-tables-memoized (memoize get-tables))
 
 ;; TODO: can the specs exist on a protocol level?
 ;; https://groups.google.com/g/clojure/c/f068WTgakpk
@@ -81,7 +82,7 @@ AND tc.constraint_type = 'FOREIGN KEY'
   (let [db-name     (:dbname config)
         column-name (format "tables_in_%s" db-name)
         column      (keyword column-name)
-        tables      (get-tables config db-name)
+        tables      (get-tables-memoized config db-name)
         ]
     (prn (format "Loading schema definition for db: %s" db-name))
     (reduce (fn [acc [table-group table]]
@@ -105,6 +106,10 @@ AND tc.constraint_type = 'FOREIGN KEY'
   (get-schema
     [this]
     (get-schema-memoized config))
+
+  (get-tables
+    [this]
+    (get-tables-memoized config (:dbname config)))
 
   (get-columns
     [this schema table-name]

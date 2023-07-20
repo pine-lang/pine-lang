@@ -62,17 +62,18 @@
 (defn- api-build-response [expression]
   (let [id (connection-id)]
     (try
-      (let [prepared (prepare expression)]
+      (let [prepared (prepare expression)
+            hints (pine/pine-hint expression)]
         {
          :connection-id id
          :query (prepared :query)
          :params (prepared :params)
+         :hints hints
          })
-         (catch Exception e {
-                             :connection-id id
-                             :error (.getMessage e)
-                             }))))
-
+      (catch Exception e {
+                          :connection-id id
+                          :error (.getMessage e)
+                          }))))
 
 (defn- api-eval [expression]
   (let [
@@ -120,7 +121,11 @@
   (route/not-found "Not Found"))
 
 ;; DEBUG
-;; (set-connection :default)
+(set-connection :avallone-local-testing)
+(set-connection :avallone-local)
+
+(prn (format "Connections: [%s]" (protocol/get-connection-id @db/connection)))
+(->> "company | l: 1" api-eval)
 
 (def app
   (do

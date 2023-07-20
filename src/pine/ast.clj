@@ -110,16 +110,16 @@
         (parsed-op->indexed-op [op]
           (match op
                  ;; resource/conditions
-                 [:RESOURCE [:entity                 [:token table]] ]                   {:type "condition"                          :entity (keyword table) :values []}
-                 [:RESOURCE [:entity [:token schema] [:token table]] ]                   {:type "condition" :schema (keyword schema) :entity (keyword table) :values []}
-                 [:RESOURCE [:entity                 [:token table]] [:id [:number id]]] {:type "condition"                          :entity (keyword table) :values [["id" [:number id] "="]]}
-                 [:RESOURCE [:entity [:token schema] [:token table]] [:id [:number id]]] {:type "condition" :schema (keyword schema) :entity (keyword table) :values [["id" [:number id] "="]]}
-                 [:RESOURCE [:entity                 [:token table]] [:ids & ids]]       {:type "condition"                          :entity (keyword table) :values [["id" [:expression (str "(" (s/join "," (map second ids)) ")")] "IN"]]}
-                 [:RESOURCE [:entity [:token schema] [:token table]] [:ids & ids]]       {:type "condition" :schema (keyword schema) :entity (keyword table) :values [["id" [:expression (str "(" (s/join "," (map second ids)) ")")] "IN"]]}
-                 [:RESOURCE [:entity                 [:token table]] [:ands & values]]   {:type "condition"                          :entity (keyword table) :values (map parsed-value->indexed-value values) :or false}
-                 [:RESOURCE [:entity [:token schema] [:token table]] [:ands & values]]   {:type "condition" :schema (keyword schema) :entity (keyword table) :values (map parsed-value->indexed-value values) :or false}
-                 [:RESOURCE [:entity                 [:token table]] [:ors & values]]    {:type "condition"                          :entity (keyword table) :values (map parsed-value->indexed-value values) :or true}
-                 [:RESOURCE [:entity [:token schema] [:token table]] [:ors & values]]    {:type "condition" :schema (keyword schema) :entity (keyword table) :values (map parsed-value->indexed-value values) :or true}
+                 [:RESOURCE [:entity                 [:partial-token token]] ]                   {:type "condition"                          :entity (keyword token) :partial [token [:schema :table]] :values []}
+                 [:RESOURCE [:entity [:token schema] [:partial-token token]] ]                   {:type "condition" :schema (keyword schema) :entity (keyword token) :partial [token [        :table]] :values []}
+                 [:RESOURCE [:entity                 [:partial-token token]] [:id [:number id]]] {:type "condition"                          :entity (keyword token) :partial [token [:schema :table]] :values [["id" [:number id] "="]]}
+                 [:RESOURCE [:entity [:token schema] [:partial-token token]] [:id [:number id]]] {:type "condition" :schema (keyword schema) :entity (keyword token) :partial [token [        :table]] :values [["id" [:number id] "="]]}
+                 [:RESOURCE [:entity                 [:partial-token token]] [:ids & ids]]       {:type "condition"                          :entity (keyword token) :partial [token [:schema :table]] :values [["id" [:expression (str "(" (s/join "," (map second ids)) ")")] "IN"]]}
+                 [:RESOURCE [:entity [:token schema] [:partial-token token]] [:ids & ids]]       {:type "condition" :schema (keyword schema) :entity (keyword token) :partial [token [        :table]] :values [["id" [:expression (str "(" (s/join "," (map second ids)) ")")] "IN"]]}
+                 [:RESOURCE [:entity                 [:partial-token token]] [:ands & values]]   {:type "condition"                          :entity (keyword token) :partial [token [:schema :table]] :values (map parsed-value->indexed-value values) :or false}
+                 [:RESOURCE [:entity [:token schema] [:partial-token token]] [:ands & values]]   {:type "condition" :schema (keyword schema) :entity (keyword token) :partial [token [        :table]] :values (map parsed-value->indexed-value values) :or false}
+                 [:RESOURCE [:entity                 [:partial-token token]] [:ors & values]]    {:type "condition"                          :entity (keyword token) :partial [token [:schema :table]] :values (map parsed-value->indexed-value values) :or true}
+                 [:RESOURCE [:entity [:token schema] [:partial-token token]] [:ors & values]]    {:type "condition" :schema (keyword schema) :entity (keyword token) :partial [token [        :table]] :values (map parsed-value->indexed-value values) :or true}
 
                  ;; select
                  [:SELECT [:specific [:columns & columns]]]               {:type "select" :columns (parsed-cols->indexed-cols columns)}
@@ -462,7 +462,7 @@
   (match relation
          [e1 a1 :has e2 a2 :on [col group]] [(db/quote tg e2) a2 [(qualify (db/quote col) :with a2) (primary-key o1)]]
          [e1 a1 :of  e2 a2 :on [col group]] [(db/quote tg e2) a2 [(primary-key o2) (qualify (db/quote col) :with a1)]]
-         :else                              ["?" "?" "1" (format "2 /* Relationship: %s */" relation)])
+         :else                              ["?" "?" ["1" (format "2 /* Relationship: %s */" relation)]])
   )
 
 (defn operations->join "Get the join from two operations"
