@@ -52,7 +52,7 @@
 
 (def get-schema-memoized (memoize get-schema'))
 
-(deftype MysqlConnection [id config]
+(deftype Mysql [id config]
   Connection
   (get-connection-id [this]
     id)

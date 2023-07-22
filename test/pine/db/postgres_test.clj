@@ -4,11 +4,9 @@
             [pine.db.postgres :as postgres]
             [pine.fixtures.postgres :as fixtures]
             [pine.db.protocol :as protocol]
-            )
-  (:import pine.db.postgres.PostgresConnection)
-  )
+            ))
 
-(def dc "Dummy connection" (atom (PostgresConnection. "dummy" nil)))
+(def dc "Dummy connection" (atom (pine.db.postgres.Postgres. "dummy" nil)))
 
 (deftest references:test-schema
   (testing "Get the references of a table"

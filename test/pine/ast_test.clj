@@ -5,9 +5,7 @@
             [pine.fixtures.mysql :as fixtures]
             [pine.db :as db]
             [pine.db.protocol :as protocol]
-            )
-  (:import pine.db.mysql.MysqlConnection)
-  )
+            ))
 
 ;; Parsing the Pine Expressions and Lexemes
 

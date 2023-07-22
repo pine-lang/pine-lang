@@ -97,7 +97,7 @@ AND tc.constraint_type = 'FOREIGN KEY'
     (java.util.UUID/fromString x)
     (catch Exception e x)))
 
-(deftype PostgresConnection [id config]
+(deftype Postgres [id config]
   Connection
 
   (get-connection-id [this]

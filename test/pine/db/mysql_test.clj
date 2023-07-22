@@ -4,9 +4,7 @@
             [pine.db.mysql :as mysql]
             [pine.fixtures.mysql :as fixtures]
             [pine.db.protocol :as protocol]
-            )
-  (:import pine.db.mysql.MysqlConnection)
-  )
+            ))
 
 (deftest references:test-schema
   (testing "Get the references of a table"
@@ -15,5 +13,5 @@
       {:users [["userId" nil] ["createdByUserId" nil]]
        :customers [["customerId" nil]]
        }
-      (protocol/references (MysqlConnection. "dummy" nil) fixtures/schema "caseFiles")
+      (protocol/references (pine.db.mysql.Mysql. "dummy" nil) fixtures/schema "caseFiles")
       ))))
