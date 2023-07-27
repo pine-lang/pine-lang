@@ -3,7 +3,7 @@
             [pine.db :as db]
             [pine.db.mysql :as mysql]
             [pine.fixtures.mysql :as fixtures]
-            [pine.db.protocol :as protocol]
+            [pine.db.connection :as connection]
             ))
 
 (deftest references:test-schema
@@ -13,5 +13,5 @@
       {:users [["userId" nil] ["createdByUserId" nil]]
        :customers [["customerId" nil]]
        }
-      (protocol/references (pine.db.mysql.Mysql. "dummy" nil) fixtures/schema "caseFiles")
+      (connection/references (pine.db.mysql.Mysql. "dummy" nil) fixtures/schema "caseFiles")
       ))))

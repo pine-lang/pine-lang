@@ -1,6 +1,6 @@
 (ns pine.hints
   (:require [clojure.string :as s]
-            [pine.db.protocol :as protocol]
+            [pine.db.connection :as connection]
             [pine.db :as db]
             [clojure.core.match :refer [match]]))
 
@@ -16,7 +16,7 @@
              (filter #(s/includes? (abbreviate %1) token) candidates)))))
 
 (defn schema-hint [op token]
-  (let [result (protocol/get-tables @db/connection) ;; [ ["schema-a" "table-a"] ["schema-b" "table-b"] .. ]
+  (let [result (connection/get-tables @db/connection) ;; [ ["schema-a" "table-a"] ["schema-b" "table-b"] .. ]
         schemas (map first result)                  ;; [ ["schema-a"] ["schema-b"] .. ]
         cs (candidates token schemas)
         ]
@@ -24,7 +24,7 @@
     ))
 
 (defn table-hint [op token]
-  (let [results (protocol/get-tables @db/connection) ;; [ ["schema-a" "table-a"] ["schema-b" "table-b"] .. ]
+  (let [results (connection/get-tables @db/connection) ;; [ ["schema-a" "table-a"] ["schema-b" "table-b"] .. ]
 
         ;; TODO: filter the result set if there is a `context`. Bidirectional
         ;; references are required in the reference data to do that

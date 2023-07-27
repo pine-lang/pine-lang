@@ -3,7 +3,7 @@
             [pine.db :as db]
             [pine.db.postgres :as postgres]
             [pine.fixtures.postgres :as fixtures]
-            [pine.db.protocol :as protocol]
+            [pine.db.connection :as connection]
             ))
 
 (def dc "Dummy connection" (atom (pine.db.postgres.Postgres. "dummy" nil)))
@@ -15,7 +15,7 @@
       {:attachment "attachment_id"
        :tenant "tenant_id"
        }
-      (protocol/references @dc fixtures/schema "user")
+      (connection/references @dc fixtures/schema "user")
       ))))
 
-;; (protocol/references @dc fixtures/schema "user")
+;; (connection/references @dc fixtures/schema "user")

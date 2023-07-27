@@ -2,7 +2,7 @@
   (:require [clojure.java.jdbc :as j]
             [pine.ast :as ast]
             [pine.db :as db]
-            [pine.db.protocol :as protocol]
+            [pine.db.connection :as connection]
             [pine.hints :as hints]
             ))
 
@@ -49,5 +49,5 @@
         params (prepared :params)
         args   (cons query params)]
     (prn args)
-    (protocol/query @db/connection args)
+    (connection/query @db/connection args)
     ))

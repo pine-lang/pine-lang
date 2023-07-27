@@ -4,7 +4,7 @@
             ;;  temp imports
             [pine.config :as c]
             [clojure.spec.alpha :as s]
-            [pine.db.protocol :refer [Connection]]
+            [pine.db.connection :refer [Connection]]
             [clojure.spec.test.alpha :as stest]))
 
 ;; `instrument` or `unstrument`

@@ -1,4 +1,4 @@
-(ns pine.db.protocol)
+(ns pine.db.connection)
 
 (defprotocol Connection
   "Abstractions for db engines e.g. mysql, postgres, etc"

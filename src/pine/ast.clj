@@ -1,7 +1,7 @@
 (ns pine.ast
   (:require [clojure.string :as s]
             [pine.db :as db]
-            [pine.db.protocol :as protocol]
+            [pine.db.connection :as connection]
             [pine.utils :as utils]
             [instaparse.core :as insta]
             [clojure.core.match :refer [match]]
@@ -473,8 +473,8 @@
         tg (:schema o2) ;; postgres schema. Calling it table-group to avoid name clash
         a1 (table-alias o1)
         a2 (table-alias o2)
-        r1 (protocol/references @db/connection schema e1)
-        r2 (protocol/references @db/connection schema e2)
+        r1 (connection/references @db/connection schema e1)
+        r2 (connection/references @db/connection schema e2)
         of-cols  (map vec (e2 r1))
         has-cols (map vec (e1 r2))
         relations (concat

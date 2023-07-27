@@ -11,13 +11,13 @@
             [clojure.string :as s]
             [cheshire.core :refer [encode]]
             [cheshire.generate :refer [add-encoder encode-str remove-encoder]]
-            [pine.db.protocol :as protocol]))
+            [pine.db.connection :as connection]))
 
 (add-encoder org.postgresql.util.PGobject encode-str)
 (add-encoder org.postgresql.jdbc.PgArray encode-str)
 
 (defn prepare [expression]
-  (let [schema (protocol/get-schema @db/connection)]
+  (let [schema (connection/get-schema @db/connection)]
     (pine/pine-prepare schema expression)))
 
 (defn build
@@ -57,7 +57,7 @@
        ))
 
 (defn- connection-id []
-  (protocol/get-connection-id @db/connection))
+  (connection/get-connection-id @db/connection))
 
 (defn- api-build-response [expression]
   (let [id (connection-id)]
@@ -124,12 +124,12 @@
 (set-connection :avallone-local-testing)
 (set-connection :avallone-local)
 
-(prn (format "Connections: [%s]" (protocol/get-connection-id @db/connection)))
+(prn (format "Connections: [%s]" (connection/get-connection-id @db/connection)))
 (->> "company | l: 1" api-eval)
 
 (def app
   (do
-    (prn (format "Connections: [%s]" (protocol/get-connection-id @db/connection)))
+    (prn (format "Connections: [%s]" (connection/get-connection-id @db/connection)))
     (-> app-routes
         wrap-json-params
         wrap-json-response

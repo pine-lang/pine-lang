@@ -4,7 +4,7 @@
             [clojure.string :as s]
             [pine.fixtures.mysql :as fixtures]
             [pine.db :as db]
-            [pine.db.protocol :as protocol]
+            [pine.db.connection :as connection]
             ))
 
 ;; Parsing the Pine Expressions and Lexemes

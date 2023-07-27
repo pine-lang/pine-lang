@@ -2,7 +2,7 @@
   (:require [pine.config :as c]
             [pine.db.mysql :as mysql ]
             [pine.db.postgres :as postgres]
-            [pine.db.protocol :as protocol]
+            [pine.db.connection :as connection]
             )
   )
 
@@ -20,7 +20,7 @@
 
 ;; DB wrappers
 (defn- qt [x]
-  (protocol/quote @connection (name x)))
+  (connection/quote @connection (name x)))
 (defn quote
   ([x] (qt x))
   ([x y]
@@ -28,19 +28,19 @@
          :else (qt y))))
 
 (defn quote-string [x]
-  (protocol/quote-string @connection x))
+  (connection/quote-string @connection x))
 
 (defn references
   ([schema table]
-   (protocol/references @connection schema table))
+   (connection/references @connection schema table))
   ([table]
-   (let [schema (protocol/get-schema @connection)]
-     (protocol/references @connection schema table))))
+   (let [schema (connection/get-schema @connection)]
+     (connection/references @connection schema table))))
 
 (defn get-columns
   "Returns the list of columns a table has"
   [schema table-name]
-  (protocol/get-columns @connection schema table-name))
+  (connection/get-columns @connection schema table-name))
 
 ;; Helpers
 
@@ -51,7 +51,7 @@
   "
   ([fn query]
    (->> query
-        (protocol/query @connection)
+        (connection/query @connection)
         fn))
   ([query]
    ($ identity query)))
@@ -62,7 +62,7 @@
   "
   ([fn query]
    (->> query
-        (protocol/execute! @connection)
+        (connection/execute! @connection)
         fn))
   ([query]
    ($! identity query)))

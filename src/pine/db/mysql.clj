@@ -1,7 +1,7 @@
 (ns pine.db.mysql
   (:require [clojure.java.jdbc :as jdbc]
             [pine.db.util :as u]
-            [pine.db.protocol :refer [Connection]]
+            [pine.db.connection :refer [Connection]]
             )
   (:import com.mchange.v2.c3p0.ComboPooledDataSource)
   )
