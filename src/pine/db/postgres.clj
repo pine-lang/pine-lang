@@ -2,7 +2,7 @@
   (:require [clojure.java.jdbc :as jdbc]
             [pine.db.util :as u]
             ;;  temp imports
-            [pine.config :as c]
+            [pine.config :as config]
             [clojure.spec.alpha :as s]
             [pine.db.connection :refer [Connection]]
             [clojure.spec.test.alpha :as stest]))
@@ -23,8 +23,8 @@
   ([config table]
    (columns config table "public")))
 
-;; (columns (->> c/config :connections :?) "request" "requests") ;; local test
-;; (columns (->> c/config :connections :?) "user") ;; local test
+;; (columns (->> config/config :connections :?) "request" "requests") ;; local test
+;; (columns (->> config/config :connections :?) "user") ;; local test
 
 (defn refs
   "Find the foreign keys using the db connection"
@@ -51,7 +51,7 @@ AND tc.constraint_type = 'FOREIGN KEY'
   ([config table]
    (refs config table "public")))
 
-;; (refs (->> c/config :connections :work) "document")
+;; (refs (->> config/config :connections :work) "document")
 
 (defn table-definition
   "Create table definition using the db connection
@@ -60,7 +60,7 @@ AND tc.constraint_type = 'FOREIGN KEY'
   (prn (format "Loading schema: %s.%s" table-group table))
   {:db/columns (columns config table table-group)
    :db/refs (refs config table table-group)})
-;; (table-definition c/config "user_tenant_role") ;; local test
+;; (table-definition config/config "user_tenant_role") ;; local test
 
 
 (defn- get-tables [config table-catalog]
@@ -78,19 +78,23 @@ AND tc.constraint_type = 'FOREIGN KEY'
 (s/def :db/table string?)
 (s/def :db/references (s/map-of keyword? string?))
 
-(defn get-schema' [config]
+(defn get-schema'' [config]
   (let [db-name     (:dbname config)
         column-name (format "tables_in_%s" db-name)
         column      (keyword column-name)
-        tables      (get-tables-memoized config db-name)
-        ]
+        tables      (get-tables-memoized config db-name)]
     (prn (format "Loading schema definition for db: %s" db-name))
     (reduce (fn [acc [table-group table]]
-              (assoc acc (keyword table) (table-definition config table table-group))
-              )
-            {} tables)
-    ))
-(def get-schema-memoized (memoize get-schema'))
+              (assoc acc (keyword table) (table-definition config table table-group)))
+            {} tables)))
+
+(def get-schema-memoized (memoize get-schema''))
+
+(defn get-schema'
+  "Get schema for a given config"
+  [config]
+  (or (config :schema)
+      (get-schema-memoized config)))
 
 (defn string->uuid [x]
   (try
@@ -105,27 +109,28 @@ AND tc.constraint_type = 'FOREIGN KEY'
 
   (get-schema
     [this]
-    (get-schema-memoized config))
+    (get-schema' config))
 
   (get-tables
     [this]
-    (get-tables-memoized config (:dbname config)))
+    ((get-schema' config) (:dbname config))
+    )
 
   (get-columns
-    [this schema table-name]
-    (->> table-name
-         keyword
-         schema
-         :db/columns
-         ))
+    [this table-name]
+    (let [schema (get-schema' config)]
+      (->> table-name
+           keyword
+           schema
+           :db/columns)))
 
   (references
-    [this schema table]
-    (->> table
-         keyword
-         schema
-         :db/refs
-         ))
+    [this table]
+    (let [schema (get-schema' config)]
+      (->> table
+           keyword
+           schema
+           :db/refs)))
 
   (quote [this x]
     (format "\"%s\"" x))
@@ -144,8 +149,7 @@ AND tc.constraint_type = 'FOREIGN KEY'
                       )
           s (cons query params)
           result (jdbc/query config s {:as-arrays? true})]
-      result
-      ))
+      result))
 
   (execute! [this statement]
     (jdbc/execute! config statement)))

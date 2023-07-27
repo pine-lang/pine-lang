@@ -5,15 +5,13 @@
 
   (get-connection-id [this] "Unique identified for the connection connection")
 
-  (get-schema [this] "Get the schema for the database. This function gets
-  the schema for every table and can be very slow. Should be called once and the
-  schema should be passed around.")
+  (get-schema [this] "Deprecated. The schema should not be exposed")
 
   (get-tables [this] "Get tables.")
 
-  (get-columns [this schema table-name] "Get columns")
+  (get-columns [this table-name] "Get columns")
 
-  (references [this schema table] "Get the tables used in the foreign keys")
+  (references [this table] "Get the tables used in the foreign keys")
 
   (quote [this x] "Quote table names, columns names, etc.")
 

@@ -2,7 +2,8 @@
   (:require [clojure.java.jdbc :as jdbc]
             [pine.db.util :as u]
             [pine.db.connection :refer [Connection]]
-            )
+
+            [pine.db.connection :as connection])
   (:import com.mchange.v2.c3p0.ComboPooledDataSource)
   )
 
@@ -35,7 +36,7 @@
        ((keyword "create table"))
        ))
 
-(defn get-schema' [config]
+(defn get-schema'' [config]
   (let [db-name     (:dbname config)
         column-name (format "tables_in_%s" db-name)
         column      (keyword column-name)]
@@ -50,7 +51,12 @@
     )
   )
 
-(def get-schema-memoized (memoize get-schema'))
+(def get-schema-memoized (memoize get-schema''))
+(defn get-schema'
+  "Get schema for a given config"
+  [config]
+  (or (:schema config)
+      (get-schema-memoized config)))
 
 (deftype Mysql [id config]
   Connection
@@ -58,20 +64,24 @@
     id)
 
   (get-schema [this]
-    (get-schema-memoized config))
+    "Deprecated. The schema should not be exposed"
+    (get-schema' config)
+    )
 
-  (get-tables [this] "TODO: not supported yet" [])
+  (get-tables [this] "TODO: not supported yet" []
+    (get-schema' config)
+    )
 
-  (get-columns [this schema table-name]
+  (get-columns [this table-name]
     (->>
-     schema
+     (get-schema' config)
      ((keyword table-name))
      (re-seq #"(?m)^  `(\S+)`")
      (map #(second %))))
 
-  (references [this schema table]
+  (references [this table]
     (->> table
-         ((keyword table) schema)
+         ((keyword table) (get-schema' config))
          (re-seq #"FOREIGN KEY .`(.*)`. REFERENCES `(.*?)`") ;; TODO: fix `nil` case
          (map (fn [[_ col t]] [t col nil]))                                  ;; (["user" "user_id" nil]) ;; group is nil (postgres has schemas - mysql doesn't have them)
          (group-by first)                                                    ;; {"user" ["user" "user_id"]} .. )

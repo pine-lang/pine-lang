@@ -1,12 +1,12 @@
 (ns pine.db
-  (:require [pine.config :as c]
+  (:require [pine.config :as config]
             [pine.db.mysql :as mysql ]
             [pine.db.postgres :as postgres]
             [pine.db.connection :as connection]
             )
   )
 
-(defn get-connections [] (c/config :connections))
+(defn get-connections [] (config/config :connections))
 (defn get-connection [id] (let [config ((get-connections) id)
                                 type (config :dbtype)]
                             (cond (= type "mysql") (pine.db.mysql.Mysql. id config)
@@ -14,7 +14,7 @@
                                   :else (throw (Exception. (format "Db not supported: %s" type))))))
 
 (def connection (->> :connection-id
-                     c/config
+                     config/config
                      get-connection
                      atom))
 
@@ -32,15 +32,15 @@
 
 (defn references
   ([schema table]
-   (connection/references @connection schema table))
+   (connection/references @connection table))
   ([table]
    (let [schema (connection/get-schema @connection)]
-     (connection/references @connection schema table))))
+     (connection/references @connection table))))
 
 (defn get-columns
   "Returns the list of columns a table has"
-  [schema table-name]
-  (connection/get-columns @connection schema table-name))
+  [table-name]
+  (connection/get-columns @connection table-name))
 
 ;; Helpers
 

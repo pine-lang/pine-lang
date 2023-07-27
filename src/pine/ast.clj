@@ -289,10 +289,10 @@
 
 (defn alias->select-all
   "Get the columns for the last 'condition' operation or the select operation"
-  [schema op]
+  [_ op]
   (let [entity (or (:entity op) (-> op :context :entity))
         alias (table-alias op)
-        columns (db/get-columns schema entity)
+        columns (db/get-columns entity)
         ]
     (map #(format "%s.%s" alias (db/quote %)) columns)
     )
@@ -357,12 +357,12 @@
 ;; better yet, use the update select-all function that includes all the columns by default
 (defn expand-signle-column
   "Expands table.* selections if they match the operation"
-  [schema column op]
+  [_ column op]
   (if
    (= column (format "%s.*" (:alias (:context op))))
      (->>
        (:entity (:context op))
-       (db/get-columns schema)
+       db/get-columns
        (map #(format "%s.%s" (:alias (:context op)) %)))
      [column]))
 
@@ -473,8 +473,8 @@
         tg (:schema o2) ;; postgres schema. Calling it table-group to avoid name clash
         a1 (table-alias o1)
         a2 (table-alias o2)
-        r1 (connection/references @db/connection schema e1)
-        r2 (connection/references @db/connection schema e2)
+        r1 (connection/references @db/connection e1)
+        r2 (connection/references @db/connection e2)
         of-cols  (map vec (e2 r1))
         has-cols (map vec (e1 r2))
         relations (concat

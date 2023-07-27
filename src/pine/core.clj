@@ -38,8 +38,8 @@
 ;;      (apply db/hints)
 ;;      )
 
-;; (pine-prepare (db/get-schema c/config) "caseFiles 1 | delete!")
-;; (pine-prepare (db/get-schema c/config) "caseFiles 1 | s: id")
+;; (pine-prepare (db/get-schema config/config) "caseFiles 1 | delete!")
+;; (pine-prepare (db/get-schema config/config) "caseFiles 1 | s: id")
 
 
 (defn pine-eval

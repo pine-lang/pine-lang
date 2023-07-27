@@ -16,12 +16,12 @@ Cider will detect the repl running on localhost. Select it and you are good to g
 
 ## FAQ
 
-### I make a change in PostgresConnection but the changes are not picked up
+### I make a change in Postgres connection (deftype) but the changes are not picked up
 
 Do this:
 
 - `cider-eval-buffer` postgres.clj
-- `cider-eval-buffer` db.clj
+- `cider-eval-buffer` connection_factory.clj
 
 Now you should be good to go.
 
@@ -53,6 +53,8 @@ docker stop mysql-test-pine
 ```
 
 ### How to run the http server while the repl is running?
+
+I am not able to do this at the moment.
 
 I could make it work by explicitly running a jetty server but as soon as I did
 that, **cider stopped showing me evaluated results in emacs**.

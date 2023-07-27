@@ -4,7 +4,7 @@
             [ring.middleware.defaults :refer [wrap-defaults api-defaults]]
             [pine.core :as pine]
             [pine.db :as db]
-            [pine.config :as c]
+            [pine.config :as config]
             [ring.util.response :refer [response]]
             [ring.middleware.json :refer [wrap-json-params wrap-json-response]]
             [ring.middleware.cors :refer [wrap-cors]]
@@ -73,7 +73,8 @@
       (catch Exception e {
                           :connection-id id
                           :error (.getMessage e)
-                          }))))
+                          })
+      )))
 
 (defn- api-eval [expression]
   (let [
