@@ -3,7 +3,7 @@
             [pine.db.mysql :as mysql ]
             [pine.db.postgres :as postgres]
             [pine.db.connection :as connection]
-            )
+            [pine.state :as state])
   )
 
 (defn get-connections [] (config/config :connections))
@@ -13,34 +13,29 @@
                                   (= type "postgres") (pine.db.postgres.Postgres. id config)
                                   :else (throw (Exception. (format "Db not supported: %s" type))))))
 
-(def connection (->> :connection-id
-                     config/config
-                     get-connection
-                     atom))
-
 ;; DB wrappers
-(defn- qt [x]
-  (connection/quote @connection (name x)))
-(defn quote
-  ([x] (qt x))
-  ([x y]
-   (cond (not (nil? x)) (format "%s.%s" (qt x) (qt y))
-         :else (qt y))))
+;; (defn- qt [x]
+;;   (connection/quote @state/c (name x)))
+;; (defn quote
+;;   ([x] (qt x))
+;;   ([x y]
+;;    (cond (not (nil? x)) (format "%s.%s" (qt x) (qt y))
+;;          :else (qt y))))
 
 (defn quote-string [x]
-  (connection/quote-string @connection x))
+  (connection/quote-string @state/c x))
 
 (defn references
   ([schema table]
-   (connection/references @connection table))
+   (connection/references @state/c table))
   ([table]
-   (let [schema (connection/get-schema @connection)]
-     (connection/references @connection table))))
+   (let [schema (connection/get-schema @state/c)]
+     (connection/references @state/c table))))
 
 (defn get-columns
   "Returns the list of columns a table has"
-  [table-name]
-  (connection/get-columns @connection table-name))
+  [connection table-name]
+  (connection/get-columns connection table-name))
 
 ;; Helpers
 
@@ -51,7 +46,7 @@
   "
   ([fn query]
    (->> query
-        (connection/query @connection)
+        (connection/query @state/c)
         fn))
   ([query]
    ($ identity query)))
@@ -62,7 +57,7 @@
   "
   ([fn query]
    (->> query
-        (connection/execute! @connection)
+        (connection/execute! @state/c)
         fn))
   ([query]
    ($! identity query)))

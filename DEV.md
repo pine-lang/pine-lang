@@ -79,10 +79,10 @@ Now, the server can be run explicitly once the `repl` is running (using `./repl.
 (ns pine.repl
   (:require
    [compojure.handler :as handler]
-   [pine.handler :as h]
+   [pine.api :as api]
    [ring.adapter.jetty :as ring]))
 
-(ring/run-jetty (handler/site h/app) {:port 33333})
+(ring/run-jetty (handler/site api/app) {:port 33333})
 ```
 
 <!-- # Issue with Mysql 8 -->

@@ -1,9 +1,8 @@
-(ns pine.handler-test
+(ns pine.api-test
   (:require [clojure.test :refer :all]
-            [pine.handler :refer :all]
-            [clojure.test :as t]
-            [pine.fixtures.mysql :as fixtures]
-            ))
+            [pine.api :as api]
+
+            [pine.db.connection-factory :as cf]))
 
 
 (deftest build-query:single-resource-with-id
@@ -11,7 +10,7 @@
     (is
      (=
       "\nSELECT customers_0.* FROM `customers` AS customers_0 WHERE (customers_0.`id` = 1);\n"
-      (build {:query "SELECT customers_0.* FROM `customers` AS customers_0 WHERE (customers_0.`id` = ?)"
+      (api/build (cf/create :mysql) {:query "SELECT customers_0.* FROM `customers` AS customers_0 WHERE (customers_0.`id` = ?)"
               :params [[:number 1]]})
       ))))
 
@@ -20,6 +19,6 @@
     (is
      (=
       "\nSELECT customers_0.* FROM `customers` AS customers_0 WHERE (customers_0.`name` = \"Acme Inc\");\n"
-      (build {:query "SELECT customers_0.* FROM `customers` AS customers_0 WHERE (customers_0.`name` = ?)"
+      (api/build (cf/create :mysql) {:query "SELECT customers_0.* FROM `customers` AS customers_0 WHERE (customers_0.`name` = ?)"
               :params [[:string "Acme Inc"]]})
       ))))

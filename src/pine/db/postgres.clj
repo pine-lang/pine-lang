@@ -5,7 +5,8 @@
             [pine.config :as config]
             [clojure.spec.alpha :as s]
             [pine.db.connection :refer [Connection]]
-            [clojure.spec.test.alpha :as stest]))
+            [clojure.spec.test.alpha :as stest]
+            [pine.db.connection :as connection]))
 
 ;; `instrument` or `unstrument`
 
@@ -63,11 +64,13 @@ AND tc.constraint_type = 'FOREIGN KEY'
 ;; (table-definition config/config "user_tenant_role") ;; local test
 
 
-(defn- get-tables [config table-catalog]
+(defn- get-tables' [config table-catalog]
   (->> (u/exec config (format "SELECT table_schema, table_name FROM information_schema.tables WHERE table_catalog = '%s'
  AND table_schema IN ('public', 'types', 'security', 'requests', 'screening', 'questions', 'signatures', 'data_request') " table-catalog))
        (map (juxt :table_schema :table_name))))
-(def get-tables-memoized (memoize get-tables))
+(def get-tables-memoized (memoize get-tables'))
+
+
 
 ;; TODO: can the specs exist on a protocol level?
 ;; https://groups.google.com/g/clojure/c/f068WTgakpk
@@ -113,7 +116,9 @@ AND tc.constraint_type = 'FOREIGN KEY'
 
   (get-tables
     [this]
-    ((get-schema' config) (:dbname config))
+    (if (config :schema)
+      (throw (Exception. "You seem to be using a hard coded schema (used for testing). `get-tables` is not supported in this mode yet."))
+      (get-tables-memoized config (:dbname config)))
     )
 
   (get-columns
@@ -133,7 +138,12 @@ AND tc.constraint_type = 'FOREIGN KEY'
            :db/refs)))
 
   (quote [this x]
-    (format "\"%s\"" x))
+    (format "\"%s\"" (name x)))
+  (quote [this x y]
+    (cond (not (nil? x)) (format "%s.%s" (connection/quote this x) (connection/quote this y))
+          :else (connection/quote this y))
+    )
+
 
   (quote-string [this x]
     (format "'%s'" x))

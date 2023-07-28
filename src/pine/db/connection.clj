@@ -13,7 +13,7 @@
 
   (references [this table] "Get the tables used in the foreign keys")
 
-  (quote [this x] "Quote table names, columns names, etc.")
+  (quote [this x] [this x y] "Quote table names, columns names, etc.")
 
   (quote-string [this x] "Quote values")
 

@@ -89,7 +89,11 @@
          ))
 
   (quote [this x]
-    (format "`%s`" x))
+    (format "`%s`" (name x)))
+  (quote [this x y]
+    (cond (not (nil? x)) (format "%s.%s" (connection/quote this x) (connection/quote this y))
+          :else (connection/quote this y))
+    )
 
   (quote-string [this x]
     (format "\"%s\"" x))

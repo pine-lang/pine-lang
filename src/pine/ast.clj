@@ -2,6 +2,7 @@
   (:require [clojure.string :as s]
             [pine.db :as db]
             [pine.db.connection :as connection]
+            [pine.state :as state]
             [pine.utils :as utils]
             [instaparse.core :as insta]
             [clojure.core.match :refer [match]]
@@ -65,114 +66,114 @@
 ;; Indexed 'anything' is what we need int the AST
 (defn str->operations
   "Create a filter AST from the raw query part"
-  [expression]
-(letfn [(get-parsed-ops [ops]
-          (match ops
-           [:OPERATIONS & parsed] parsed
-           :else ops))
-        (parsed-value->indexed-value [v]
-          (match v
-                 [:comparison
-                  [:string column]
-                  [:operator op ]
-                  [:quoted-string [:space-string value]]]        [column [:string value]                                           op]
-                 [:comparison
-                  [:string column]
-                  [:operator op ]
-                  [:quoted-string ]]                             [column [:string ""]                                              op]
-                 [:comparison
-                  [:string column]
-                  [:operator op ]
-                  [:number value]]                               [column [:number value]                                           op]
-                 [:comparison [:string column] [:ids & ids]]     [column [:expression (str "(" (s/join "," (map second ids)) ")")] "IN"]
-                 [:comparison [:string column] "?" ]             [column [:expression "NULL"]                                      "IS NOT"]
-                 [:comparison "!" [:string column] "?" ]         [column [:expression "NULL"]                                      "IS"]
-                 [:assignment
-                  [:string column]
-                  [:quoted-string [:space-string value]]]        [column [:string value]                                           "="]
-                 [:assignment
-                  [:string column]
-                  [:quoted-string ]]                             [column [:string ""]                                              "="]
-                 [:assignment
-                  [:string column]
-                  [:number value]]                               [column [:number value]                                           "="]
-                 :else                                           (throw (Exception. (format "Can't index value: %s" v)))
-                 )
-          )
-        (parsed-cols->indexed-cols [cs]
-          (reduce (fn [acc c]
-                    (match c
-                           [:column [:string column-name]]                           (conj acc (db/quote column-name))
-                           [:column [:string column-name] [:alias [:string a]]]      (conj acc (format "%s AS %s" (db/quote column-name) a))
-                           :else (throw (Exception. (format "Can't index column: %s" c)))
-                           )) [] cs)
-          )
-        (parsed-op->indexed-op [op]
-          (match op
-                 ;; resource/conditions
-                 [:RESOURCE [:entity                 [:partial-token token]] ]                   {:type "condition"                          :entity (keyword token) :partial [token [:schema :table]] :values []}
-                 [:RESOURCE [:entity [:token schema] [:partial-token token]] ]                   {:type "condition" :schema (keyword schema) :entity (keyword token) :partial [token [        :table]] :values []}
-                 [:RESOURCE [:entity                 [:partial-token token]] [:id [:number id]]] {:type "condition"                          :entity (keyword token) :partial [token [:schema :table]] :values [["id" [:number id] "="]]}
-                 [:RESOURCE [:entity [:token schema] [:partial-token token]] [:id [:number id]]] {:type "condition" :schema (keyword schema) :entity (keyword token) :partial [token [        :table]] :values [["id" [:number id] "="]]}
-                 [:RESOURCE [:entity                 [:partial-token token]] [:ids & ids]]       {:type "condition"                          :entity (keyword token) :partial [token [:schema :table]] :values [["id" [:expression (str "(" (s/join "," (map second ids)) ")")] "IN"]]}
-                 [:RESOURCE [:entity [:token schema] [:partial-token token]] [:ids & ids]]       {:type "condition" :schema (keyword schema) :entity (keyword token) :partial [token [        :table]] :values [["id" [:expression (str "(" (s/join "," (map second ids)) ")")] "IN"]]}
-                 [:RESOURCE [:entity                 [:partial-token token]] [:ands & values]]   {:type "condition"                          :entity (keyword token) :partial [token [:schema :table]] :values (map parsed-value->indexed-value values) :or false}
-                 [:RESOURCE [:entity [:token schema] [:partial-token token]] [:ands & values]]   {:type "condition" :schema (keyword schema) :entity (keyword token) :partial [token [        :table]] :values (map parsed-value->indexed-value values) :or false}
-                 [:RESOURCE [:entity                 [:partial-token token]] [:ors & values]]    {:type "condition"                          :entity (keyword token) :partial [token [:schema :table]] :values (map parsed-value->indexed-value values) :or true}
-                 [:RESOURCE [:entity [:token schema] [:partial-token token]] [:ors & values]]    {:type "condition" :schema (keyword schema) :entity (keyword token) :partial [token [        :table]] :values (map parsed-value->indexed-value values) :or true}
+  [connection expression]
+   (letfn [(get-parsed-ops [ops]
+             (match ops
+                    [:OPERATIONS & parsed] parsed
+                    :else ops))
+           (parsed-value->indexed-value [v]
+             (match v
+                    [:comparison
+                     [:string column]
+                     [:operator op ]
+                     [:quoted-string [:space-string value]]]        [column [:string value]                                           op]
+                    [:comparison
+                     [:string column]
+                     [:operator op ]
+                     [:quoted-string ]]                             [column [:string ""]                                              op]
+                    [:comparison
+                     [:string column]
+                     [:operator op ]
+                     [:number value]]                               [column [:number value]                                           op]
+                    [:comparison [:string column] [:ids & ids]]     [column [:expression (str "(" (s/join "," (map second ids)) ")")] "IN"]
+                    [:comparison [:string column] "?" ]             [column [:expression "NULL"]                                      "IS NOT"]
+                    [:comparison "!" [:string column] "?" ]         [column [:expression "NULL"]                                      "IS"]
+                    [:assignment
+                     [:string column]
+                     [:quoted-string [:space-string value]]]        [column [:string value]                                           "="]
+                    [:assignment
+                     [:string column]
+                     [:quoted-string ]]                             [column [:string ""]                                              "="]
+                    [:assignment
+                     [:string column]
+                     [:number value]]                               [column [:number value]                                           "="]
+                    :else                                           (throw (Exception. (format "Can't index value: %s" v)))
+                    )
+             )
+           (parsed-cols->indexed-cols [cs]
+             (reduce (fn [acc c]
+                       (match c
+                              [:column [:string column-name]]                           (conj acc (connection/quote connection column-name))
+                              [:column [:string column-name] [:alias [:string a]]]      (conj acc (format "%s AS %s" (connection/quote connection column-name) a))
+                              :else (throw (Exception. (format "Can't index column: %s" c)))
+                              )) [] cs)
+             )
+           (parsed-op->indexed-op [op]
+             (match op
+                    ;; resource/conditions
+                    [:RESOURCE [:entity                 [:partial-token token]] ]                   {:type "condition"                          :entity (keyword token) :partial [token [:schema :table]] :values []}
+                    [:RESOURCE [:entity [:token schema] [:partial-token token]] ]                   {:type "condition" :schema (keyword schema) :entity (keyword token) :partial [token [        :table]] :values []}
+                    [:RESOURCE [:entity                 [:partial-token token]] [:id [:number id]]] {:type "condition"                          :entity (keyword token) :partial [token [:schema :table]] :values [["id" [:number id] "="]]}
+                    [:RESOURCE [:entity [:token schema] [:partial-token token]] [:id [:number id]]] {:type "condition" :schema (keyword schema) :entity (keyword token) :partial [token [        :table]] :values [["id" [:number id] "="]]}
+                    [:RESOURCE [:entity                 [:partial-token token]] [:ids & ids]]       {:type "condition"                          :entity (keyword token) :partial [token [:schema :table]] :values [["id" [:expression (str "(" (s/join "," (map second ids)) ")")] "IN"]]}
+                    [:RESOURCE [:entity [:token schema] [:partial-token token]] [:ids & ids]]       {:type "condition" :schema (keyword schema) :entity (keyword token) :partial [token [        :table]] :values [["id" [:expression (str "(" (s/join "," (map second ids)) ")")] "IN"]]}
+                    [:RESOURCE [:entity                 [:partial-token token]] [:ands & values]]   {:type "condition"                          :entity (keyword token) :partial [token [:schema :table]] :values (map parsed-value->indexed-value values) :or false}
+                    [:RESOURCE [:entity [:token schema] [:partial-token token]] [:ands & values]]   {:type "condition" :schema (keyword schema) :entity (keyword token) :partial [token [        :table]] :values (map parsed-value->indexed-value values) :or false}
+                    [:RESOURCE [:entity                 [:partial-token token]] [:ors & values]]    {:type "condition"                          :entity (keyword token) :partial [token [:schema :table]] :values (map parsed-value->indexed-value values) :or true}
+                    [:RESOURCE [:entity [:token schema] [:partial-token token]] [:ors & values]]    {:type "condition" :schema (keyword schema) :entity (keyword token) :partial [token [        :table]] :values (map parsed-value->indexed-value values) :or true}
 
-                 ;; select
-                 [:SELECT [:specific [:columns & columns]]]               {:type "select" :columns (parsed-cols->indexed-cols columns)}
-                 [:SELECT [:invert-specific [:columns & columns]]]        {:type "unselect" :columns (parsed-cols->indexed-cols columns)}
-                 ;; limit
-                 [:LIMIT [:number number]]                                {:type "limit" :count (Integer. number)}
+                    ;; select
+                    [:SELECT [:specific [:columns & columns]]]               {:type "select" :columns (parsed-cols->indexed-cols columns)}
+                    [:SELECT [:invert-specific [:columns & columns]]]        {:type "unselect" :columns (parsed-cols->indexed-cols columns)}
+                    ;; limit
+                    [:LIMIT [:number number]]                                {:type "limit" :count (Integer. number)}
 
-                 ;; group
-                 [:GROUP [:column [:string col]] ]                        {:type "group" :column col :fn-name "count" :fn-column col}
-                 [:GROUP [:column [:string col-a]]
-                  [:FUNCTION fn-name [:column [:string col-b]]]]          {:type "group" :column col-a :fn-name fn-name :fn-column col-b}
+                    ;; group
+                    [:GROUP [:column [:string col]] ]                        {:type "group" :column col :fn-name "count" :fn-column col}
+                    [:GROUP [:column [:string col-a]]
+                     [:FUNCTION fn-name [:column [:string col-b]]]]          {:type "group" :column col-a :fn-name fn-name :fn-column col-b}
 
-                 ;; function
-                 [:FUNCTION fn-name [:column [:string col]]]              {:type "function" :fn-name fn-name :fn-column col}
+                    ;; function
+                    [:FUNCTION fn-name [:column [:string col]]]              {:type "function" :fn-name fn-name :fn-column col}
 
-                 ;; order
-                 [:ORDER "+" [:column [:string column]]]                  {:type "order" :direction "ascending"  :column column}
-                 [:ORDER [:column [:string column]]]                      {:type "order" :direction "descending" :column column}
+                    ;; order
+                    [:ORDER "+" [:column [:string column]]]                  {:type "order" :direction "ascending"  :column column}
+                    [:ORDER [:column [:string column]]]                      {:type "order" :direction "descending" :column column}
 
-                 ;; meta
-                 [:META [:ref]]                                           {:type "meta" :fn-name "references"}
+                    ;; meta
+                    [:META [:ref]]                                           {:type "meta" :fn-name "references"}
 
-                 ;; Delete
-                 [:DELETE]                                                {:type "delete"}
+                    ;; Delete
+                    [:DELETE]                                                {:type "delete"}
 
-                 ;; Set
-                 [:SET [:assignments & values] ]                          {:type "set" :values (map parsed-value->indexed-value values)}
+                    ;; Set
+                    [:SET [:assignments & values] ]                          {:type "set" :values (map parsed-value->indexed-value values)}
 
-                 ;; not specified
-                 :else (throw (Exception. (format "Can't convert format of operation: %s" op)))
-                 )
-          )
-        (index [op]
-          (match op
-                 [:OPERATION o] (parsed-op->indexed-op o)
-                 :else (throw (Exception. (format  "Can't index operation: %s" op)))
-                 ))
-        ]
-  (->> expression         ;; users 1
-       parse              ;; [ :OPERATIONS .. [:CONDITION .. ].. ]
-       get-parsed-ops     ;; [ [:CONDITION ..                ] ]
-       (map index)        ;; [ {:type "condition" ...} ]
-       add-aliases        ;; [ {:type "condition" ... :entity :users :alias "u"} ]
-       add-context        ;; [ [:type "condition" ... :context {:entity :users :alias "u"} ] ]
-       )))
+                    ;; not specified
+                    :else (throw (Exception. (format "Can't convert format of operation: %s" op)))
+                    )
+             )
+           (index [op]
+             (match op
+                    [:OPERATION o] (parsed-op->indexed-op o)
+                    :else (throw (Exception. (format  "Can't index operation: %s" op)))
+                    ))
+           ]
+     (->> expression         ;; users 1
+          parse              ;; [ :OPERATIONS .. [:CONDITION .. ].. ]
+          get-parsed-ops     ;; [ [:CONDITION ..                ] ]
+          (map index)        ;; [ {:type "condition" ...} ]
+          add-aliases        ;; [ {:type "condition" ... :entity :users :alias "u"} ]
+          add-context        ;; [ [:type "condition" ... :context {:entity :users :alias "u"} ] ]
+          )))
 
 ;; Build SQL from the AST
 
 
 (defn table->sql
   "Table to sql"
-  [table]
-  (str "SELECT * FROM " (db/quote (name table))))
+  [connection table]
+  (str "SELECT * FROM " (connection/quote connection (name table))))
 
 
 (defn ast-join->sql
@@ -193,7 +194,7 @@
 
 (defn ast->sql-and-params'
   "Create an sql query"
-  [ast]
+  [connection ast]
   (let [select-columns (s/join ", " (ast :select))
         [schema table alias]  (ast :from)
         select-sql     (str "SELECT %s FROM %s AS %s")
@@ -232,7 +233,7 @@
                   (->> [schema table]                                  ;; schema and table
                        (remove nil?)
                        (map name)
-                       (map db/quote)
+                       (map (partial connection/quote connection))
                        (s/join "."))
                   (cond set-values   alias
                         delete-table nil
@@ -249,10 +250,10 @@
 
 (defn ast->sql-and-params
   "Create an sql query from the ast."
-  [ast]
-  (let [meta (:meta ast)]
-    (cond meta [meta []]
-          :else (ast->sql-and-params' ast))))
+  [connection ast]
+   (let [meta (:meta ast)]
+     (cond meta [meta []]
+           :else (ast->sql-and-params' connection ast))))
 
 ;; -----------------
 ;; DB operations
@@ -280,8 +281,8 @@
 (defn primary-key
   "Get the qualified primary key for the table. This is a naive function that
   assumes that the primary key is always Id."
-  [op]
-  (format "%s.%s" (op :alias) (db/quote "id")))
+  [connection op]
+  (format "%s.%s" (op :alias) (connection/quote connection "id")))
 
 ;; -----------------
 ;; Operations to AST
@@ -289,12 +290,12 @@
 
 (defn alias->select-all
   "Get the columns for the last 'condition' operation or the select operation"
-  [_ op]
+  [connection op]
   (let [entity (or (:entity op) (-> op :context :entity))
         alias (table-alias op)
-        columns (db/get-columns entity)
+        columns (db/get-columns connection entity)
         ]
-    (map #(format "%s.%s" alias (db/quote %)) columns)
+    (map #(format "%s.%s" alias (connection/quote connection %)) columns)
     )
   )
 
@@ -339,7 +340,7 @@
 
 (defn operations->select-specific
   "Get the columns specified using the 'select:' keyword"
-  [schema ops]
+  [ops]
   (->> ops
        (filter (operation-type? ["condition", "select"]))
        (partition 2 1)
@@ -368,19 +369,19 @@
 
 (defn expand-columns-if-operated-on
   "Expands 'table.*' selections if they are related to operations"
-  [schema columns ops]
+  [connection columns ops]
   (match [columns ops]
          [some-columns                       ([]  :seq)] some-columns
          [[first-column & rest-of-columns]   ([first-op & rest-of-ops] :seq)]
-           (let [expanded       (expand-signle-column schema first-column first-op)
+           (let [expanded       (expand-signle-column connection first-column first-op)
                  columns-so-far (reduce conj (vec expanded) rest-of-columns)]
-             (expand-columns-if-operated-on schema columns-so-far rest-of-ops))))
+             (expand-columns-if-operated-on connection columns-so-far rest-of-ops))))
 
 (defn operation->exclude-columns
   "Removes unselected columns from results"
-  [schema columns unselect-ops]
+  [connection columns unselect-ops]
 
-  (let [expanded-columns (expand-columns-if-operated-on schema (vec columns) unselect-ops)
+  (let [expanded-columns (expand-columns-if-operated-on connection (vec columns) unselect-ops)
         excluded-columns (mapcat
              (fn [op] (map
                         (fn [column] (format "%s.%s" (:alias (:context op)) column))
@@ -392,8 +393,8 @@
 
 (defn operations->select-columns
   "Get the columns for the last 'condition' operation or the select operation"
-  [schema operations]
-  (let [specific-columns    (operations->select-specific schema operations)
+  [connection operations]
+  (let [specific-columns    (operations->select-specific operations)
         group-columns       (->> operations
                                  (filter (operation-type? ["group"]))
                                  operations->group-columns
@@ -404,7 +405,7 @@
                                   (operation-type? ["condition"]))
         all-columns          (cond all-columns-needed? (->> operations
                                                             last
-                                                            (alias->select-all schema)
+                                                            (alias->select-all connection)
                                                             )
                                    :else               [])
         function-columns-needed? (->> operations
@@ -436,7 +437,7 @@
           )
           columns-after-exclusion (->> operations
                                        (filter (operation-type? ["unselect"]))
-                                       (operation->exclude-columns schema columns-before-exclusion)
+                                       (operation->exclude-columns connection columns-before-exclusion)
                                        )
         ]
 
@@ -456,25 +457,27 @@
        )
   )
 
-(defn- relation->join [o1 o2 tg relation]
+(defn- relation->join
   "TODO: instead of quoting the values here, we should quote/escape when the sql query is generated.
    See: `ast-join->sql` function"
-  (match relation
-         [e1 a1 :has e2 a2 :on [col group]] [(db/quote tg e2) a2 [(qualify (db/quote col) :with a2) (primary-key o1)]]
-         [e1 a1 :of  e2 a2 :on [col group]] [(db/quote tg e2) a2 [(primary-key o2) (qualify (db/quote col) :with a1)]]
-         :else                              ["?" "?" ["1" (format "2 /* Relationship: %s */" relation)]])
+  [c o1 o2 tg relation]
+  (prn tg)
+   (match relation
+          [e1 a1 :has e2 a2 :on [col group]] [(connection/quote c tg e2) a2 [(qualify (connection/quote c col) :with a2) (primary-key c o1)]]
+          [e1 a1 :of  e2 a2 :on [col group]] [(connection/quote c tg e2) a2 [(primary-key c o2) (qualify (connection/quote c col) :with a1)]]
+          :else                              ["?" "?" ["1" (format "2 /* Relationship: %s */" relation)]])
   )
 
 (defn operations->join "Get the join from two operations"
-  [schema o1 o2]
+  [connection o1 o2]
   (let [
         e1 (:entity o1)
         e2 (:entity o2)
         tg (:schema o2) ;; postgres schema. Calling it table-group to avoid name clash
         a1 (table-alias o1)
         a2 (table-alias o2)
-        r1 (connection/references @db/connection e1)
-        r2 (connection/references @db/connection e2)
+        r1 (connection/references connection e1)
+        r2 (connection/references connection e2)
         of-cols  (map vec (e2 r1))
         has-cols (map vec (e1 r2))
         relations (concat
@@ -484,19 +487,19 @@
                    (map (partial conj [e1 a1 :has e2 a2 :on ]) has-cols)
                    )
         relation (select-relation relations)
-        result (relation->join o1 o2 tg relation)
+        result (relation->join connection o1 o2 tg relation)
         ]
     result
     ))
 
 (defn operations->joins
   "Get the joins from the operations"
-  [schema operations]
+  [c operations]
   (let [[op & ops] operations]
     (->>
      (cond (nil? ops) []
            :else (reduce (fn [acc [o1 o2]]
-                           (concat acc (operations->join schema o1 o2))
+                           (concat acc (operations->join c o1 o2))
                            )
                          [] (partition 2 1 operations)))
      (apply vector)
@@ -506,57 +509,57 @@
 
 (defn filter->where-condition
   "Convert the filter part of an operation to a where sql"
-  [entity qualify? [column [type value] op]]
-  (let [col (cond qualify? (qualify (db/quote column) :with (name entity)) :else column)
-        operator (cond (= :null value) op
-                       (re-find #"\*" value) "LIKE"
-                       :else op)
-        val      (case value
-                   :null :null
-                   (s/replace value "*" "%")
-                   )]
-    (case val
-      :null [(format "%s %s" col operator)]
-      [(format "%s %s ?" col operator) [type val]]
-      )
-    )
+  [connection entity qualify? [column [type value] op]]
+   (let [col (cond qualify? (qualify (connection/quote connection column) :with (name entity)) :else column)
+         operator (cond (= :null value) op
+                        (re-find #"\*" value) "LIKE"
+                        :else op)
+         val      (case value
+                    :null :null
+                    (s/replace value "*" "%")
+                    )]
+     (case val
+       :null [(format "%s %s" col operator)]
+       [(format "%s %s ?" col operator) [type val]]
+       )
+     )
   )
 
 (defn operation->where
   "Get the where condition for an operation."
-  [qualify? operation]
-  (let [vs (:values operation)
-        or (:or operation)]
-    (cond (empty? vs) { :conditions "true" :params nil}
-          :else       (->> vs
-                           (map (partial filter->where-condition (:alias operation) qualify?))
-                           ((fn [where-conditions] { :conditions (str "(" (->> where-conditions
-                                                                               (map first)
-                                                                               (s/join (cond or " OR " :else " AND "))) ")")
-                                                    :params (->> where-conditions
-                                                         (map second)
-                                                         vec
-                                                         ) }))
+  [connection qualify? operation]
+   (let [vs (:values operation)
+         or (:or operation)]
+     (cond (empty? vs) { :conditions "true" :params nil}
+           :else       (->> vs
+                            (map (partial filter->where-condition connection (:alias operation) qualify?))
+                            ((fn [where-conditions] { :conditions (str "(" (->> where-conditions
+                                                                                (map first)
+                                                                                (s/join (cond or " OR " :else " AND "))) ")")
+                                                     :params (->> where-conditions
+                                                                  (map second)
+                                                                  vec
+                                                                  ) }))
 
-                           ))))
+                            ))))
 
 (defn operations->where
   "Get the conditions from the operations"
-  [qualify? ops]
-  (let [
-        wheres (map (partial operation->where qualify?) ops)
-        ]
-    {
-     :conditions (->> wheres
-                     (map :conditions)
-                     )
-     :params (->> wheres
-                  (map :params)
-                  (apply concat)
-                  vec
-                  )
-     }
-    )
+  [connection qualify? ops]
+   (let [
+         wheres (map (partial operation->where connection qualify?) ops)
+         ]
+     {
+      :conditions (->> wheres
+                       (map :conditions)
+                       )
+      :params (->> wheres
+                   (map :params)
+                   (apply concat)
+                   vec
+                   )
+      }
+     )
   )
 
 (defn operations->limit
@@ -578,7 +581,7 @@
 
 (defn operations->order
   "Create the ORDER BY SQL statement"
-  [ops]
+  [c ops]
   (let [[condition-op order-op] (->> ops
                                      (filter (operation-type? ["condition", "order"]))
                                      (partition 2 1)
@@ -589,7 +592,7 @@
     (cond (and condition-op order-op) (let [direction (order-op :direction)
                                             column (order-op :column)
                                             a      (table-alias condition-op)]
-                                        (format "ORDER BY %s.%s %s" a (db/quote column) (cond (= direction "ascending") "ASC" :else "DESC")))
+                                        (format "ORDER BY %s.%s %s" a (connection/quote c column) (cond (= direction "ascending") "ASC" :else "DESC")))
           :else nil)))
 
 (defn operations->group
@@ -666,7 +669,7 @@
 
 (defn operation->set
   "Execute the command "
-  [op]
+  [c op]
   (let [values (op :values)
         alias  (table-alias op)
         ]
@@ -674,7 +677,7 @@
      :values (->> values
                   (map first)
                   (map (fn [column]
-                         (str (db/quote column) " = ?"))))
+                         (str (connection/quote c column) " = ?"))))
      :params (->> values
                   (map second)
                   vec)
@@ -682,28 +685,28 @@
 
 (defn operations->set
   "Create the AST for the SET part"
-  [operations]
+  [connection operations]
   (let [ops (filter (operation-type? ["set"]) operations)]
     (cond (empty? ops) nil
           :else        (->> ops
                             last
-                            operation->set)))
+                            (operation->set connection))))
   )
 
 (defn operations->ast
   "operations to ast"
-  [schema ops]
+  [c ops]
   (let [
-        columns       (operations->select-columns schema ops)
+        columns       (operations->select-columns c ops)
         condition-ops (filter (operation-type? ["condition"]) ops)
         primary-op    (first condition-ops)
         table-group   (:schema primary-op)
         table         (:entity primary-op)
         delete        (operations->delete ops)
-        set-values    (operations->set ops)
-        joins         (operations->joins schema condition-ops)
-        where         (operations->where (cond delete nil :else true) condition-ops)
-        order         (operations->order ops)
+        set-values    (operations->set c ops)
+        joins         (operations->joins c condition-ops)
+        where         (operations->where c (cond delete nil :else true) condition-ops)
+        order         (operations->order c ops)
         group         (operations->group ops)
         limit         (operations->limit ops)
         meta          (operations->meta ops)
