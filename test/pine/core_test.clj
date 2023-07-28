@@ -3,17 +3,18 @@
             [pine.core :refer :all]
             [pine.ast :as ast]
             [pine.fixtures.mysql :as fixtures]
-            ))
+
+            [pine.db.connection-factory :as cf]))
 
 (deftest pine-prepare:one-operation-no-filter
   (testing "Create sql a pine expression containing one operation"
     (is
      (=
       {
-       :query "SELECT customers_0.* FROM `customers` AS customers_0 WHERE true"
+       :query "SELECT customers_0.`id`, customers_0.`name` FROM `customers` AS customers_0 WHERE true"
        :params []
        }
-      (pine-prepare fixtures/schema "customers")
+      (pine-prepare (cf/create :mysql) "customers")
       ))))
 
 
@@ -23,10 +24,10 @@
     (is
      (=
       {
-       :query "SELECT customers_0.* FROM `customers` AS customers_0 WHERE (customers_0.`id` = ?)"
+       :query "SELECT customers_0.`id`, customers_0.`name` FROM `customers` AS customers_0 WHERE (customers_0.`id` = ?)"
        :params [[:number "1"]]
        }
-      (pine-prepare fixtures/schema  "customers 1")
+      (pine-prepare (cf/create :mysql)  "customers 1")
       ))))
 
 (deftest pine-prepare:one-operation-explicit-filter-on-id
@@ -34,10 +35,10 @@
     (is
      (=
       {
-       :query "SELECT customers_0.* FROM `customers` AS customers_0 WHERE (customers_0.`id` = ?)"
+       :query "SELECT customers_0.`id`, customers_0.`name` FROM `customers` AS customers_0 WHERE (customers_0.`id` = ?)"
        :params [[:number "1"]]
        }
-      (pine-prepare fixtures/schema  "customers id=1")
+      (pine-prepare (cf/create :mysql)  "customers id=1")
       ))))
 
 (deftest pine-prepare:one-operation-comprison-operator
@@ -45,10 +46,10 @@
     (is
      (=
       {
-       :query "SELECT customers_0.* FROM `customers` AS customers_0 WHERE (customers_0.`id` > ?)"
+       :query "SELECT customers_0.`id`, customers_0.`name` FROM `customers` AS customers_0 WHERE (customers_0.`id` > ?)"
        :params [[:number "1"]]
        }
-      (pine-prepare fixtures/schema  "customers id>1")
+      (pine-prepare (cf/create :mysql)  "customers id>1")
       ))))
 
 (deftest pine-prepare:one-operation-multiple-and-filters
@@ -56,10 +57,10 @@
     (is
      (=
       {
-       :query "SELECT customers_0.* FROM `customers` AS customers_0 WHERE (customers_0.`name` LIKE ? AND customers_0.`industry` = ?)"
+       :query "SELECT customers_0.`id`, customers_0.`name` FROM `customers` AS customers_0 WHERE (customers_0.`name` LIKE ? AND customers_0.`industry` = ?)"
        :params [[:string "acme%"], [:string "test"]]
        }
-      (pine-prepare fixtures/schema  "customers name='acme*' industry='test'")
+      (pine-prepare (cf/create :mysql)  "customers name='acme*' industry='test'")
       ))))
 
 (deftest pine-prepare:one-operation-multiple-or-filters
@@ -67,10 +68,10 @@
     (is
      (=
       {
-       :query "SELECT customers_0.* FROM `customers` AS customers_0 WHERE (customers_0.`name` LIKE ? OR customers_0.`industry` = ?)"
+       :query "SELECT customers_0.`id`, customers_0.`name` FROM `customers` AS customers_0 WHERE (customers_0.`name` LIKE ? OR customers_0.`industry` = ?)"
        :params [[:string "acme%"], [:string "test"]]
        }
-      (pine-prepare fixtures/schema  "customers name='acme*', industry='test'")
+      (pine-prepare (cf/create :mysql)  "customers name='acme*', industry='test'")
       ))))
 
 (deftest pine-prepare:two-operation
@@ -78,10 +79,10 @@
     (is
      (=
       {
-       :query "SELECT casefiles_1.* FROM `customers` AS customers_0 JOIN `caseFiles` AS casefiles_1 ON (casefiles_1.`customerId` = customers_0.`id`) WHERE (customers_0.`name` = ?) AND (casefiles_1.`title` = ?)"
+       :query "SELECT casefiles_1.`id`, casefiles_1.`title`, casefiles_1.`customerId`, casefiles_1.`createdByUserId` FROM `customers` AS customers_0 JOIN `caseFiles` AS casefiles_1 ON (casefiles_1.`customerId` = customers_0.`id`) WHERE (customers_0.`name` = ?) AND (casefiles_1.`title` = ?)"
        :params [[:string "Acme"] [:string "John"]]
        }
-      (pine-prepare fixtures/schema "customers name='Acme' | caseFiles title='John'")
+      (pine-prepare (cf/create :mysql) "customers name='Acme' | caseFiles title='John'")
       ))))
 
 (deftest pine-prepare:one-operation-without-filters
@@ -89,10 +90,10 @@
     (is
      (=
       {
-       :query "SELECT customers_0.* FROM `customers` AS customers_0 WHERE true"
+       :query "SELECT customers_0.`id`, customers_0.`name` FROM `customers` AS customers_0 WHERE true"
        :params []
        }
-      (pine-prepare fixtures/schema "customers")
+      (pine-prepare (cf/create :mysql) "customers")
       ))))
 
 (deftest pine-prepare:two-operations-without-filters
@@ -100,10 +101,10 @@
     (is
      (=
       {
-       :query "SELECT casefiles_1.* FROM `customers` AS customers_0 JOIN `caseFiles` AS casefiles_1 ON (casefiles_1.`customerId` = customers_0.`id`) WHERE true AND true"
+       :query "SELECT casefiles_1.`id`, casefiles_1.`title`, casefiles_1.`customerId`, casefiles_1.`createdByUserId` FROM `customers` AS customers_0 JOIN `caseFiles` AS casefiles_1 ON (casefiles_1.`customerId` = customers_0.`id`) WHERE true AND true"
        :params []
        }
-      (pine-prepare fixtures/schema "customers | caseFiles")
+      (pine-prepare (cf/create :mysql) "customers | caseFiles")
       ))))
 
 
@@ -112,10 +113,10 @@
     (is
      (=
       {
-       :query "SELECT casefiles_1.* FROM `users` AS users_0 JOIN `caseFiles` AS casefiles_1 ON (casefiles_1.`userId` = users_0.`id`) WHERE true AND true"
+       :query "SELECT casefiles_1.`id`, casefiles_1.`title`, casefiles_1.`customerId`, casefiles_1.`createdByUserId` FROM `users` AS users_0 JOIN `caseFiles` AS casefiles_1 ON (casefiles_1.`userId` = users_0.`id`) WHERE true AND true"
        :params []
        }
-      (pine-prepare fixtures/schema "users | caseFiles")
+      (pine-prepare (cf/create :mysql) "users | caseFiles")
       ))))
 
 (deftest pine-prepare:one-table-selected-columns
@@ -126,7 +127,7 @@
        :query "SELECT users_0.`id`, users_0.`fullName` AS name FROM `users` AS users_0 WHERE true"
        :params []
        }
-      (pine-prepare fixtures/schema "users | select: id, fullName as name")
+      (pine-prepare (cf/create :mysql) "users | select: id, fullName as name")
       ))))
 
 (deftest pine-prepare:two-tables-selected-columns
@@ -137,7 +138,7 @@
        :query "SELECT users_0.`id`, users_0.`fullName`, casefiles_2.`id` FROM `users` AS users_0 JOIN `caseFiles` AS casefiles_2 ON (casefiles_2.`userId` = users_0.`id`) WHERE true AND true"
        :params []
        }
-      (pine-prepare fixtures/schema "users | select: id, fullName | caseFiles | select: id")
+      (pine-prepare (cf/create :mysql) "users | select: id, fullName | caseFiles | select: id")
       ))))
 
 (deftest pine-prepare:two-tables-selected-and-all-columns
@@ -145,10 +146,10 @@
     (is
      (=
       {
-       :query "SELECT users_0.`id`, users_0.`fullName`, casefiles_2.* FROM `users` AS users_0 JOIN `caseFiles` AS casefiles_2 ON (casefiles_2.`userId` = users_0.`id`) WHERE true AND true ORDER BY casefiles_2.`id` DESC"
+       :query "SELECT users_0.`id`, users_0.`fullName`, casefiles_2.`id`, casefiles_2.`title`, casefiles_2.`customerId`, casefiles_2.`createdByUserId` FROM `users` AS users_0 JOIN `caseFiles` AS casefiles_2 ON (casefiles_2.`userId` = users_0.`id`) WHERE true AND true ORDER BY casefiles_2.`id` DESC"
        :params []
        }
-      (pine-prepare fixtures/schema "users | select: id, fullName | caseFiles | o: id")
+      (pine-prepare (cf/create :mysql) "users | select: id, fullName | caseFiles | o: id")
       ))))
 
 
@@ -156,11 +157,11 @@
   (testing "Self join"
     (is
      (=
-      {
-       :query "SELECT folders_1.* FROM `folders` AS folders_0 JOIN `folders` AS folders_1 ON (folders_1.`id` = folders_0.`parentId`) WHERE (folders_0.`id` = ?) AND true"
+      {:query
+        "SELECT folders_1.`id`, folders_1.`title`, folders_1.`parentId` FROM `folders` AS folders_0 JOIN `folders` AS folders_1 ON (folders_1.`id` = folders_0.`parentId`) WHERE (folders_0.`id` = ?) AND true"
        :params [[:number "1"]]
        }
-      (pine-prepare fixtures/schema "folders 1 | folders")
+      (pine-prepare (cf/create :mysql) "folders 1 | folders")
       ))))
 
 (deftest pine-prepare:set-value-string
@@ -171,7 +172,7 @@
        :query "UPDATE `folders` AS folders_0 SET `title` = ? WHERE (folders_0.`id` = ?)"
        :params [[:string "test"] [:number "1"]]
        }
-      (pine-prepare fixtures/schema "folders 1 | set! title='test'")
+      (pine-prepare (cf/create :mysql) "folders 1 | set! title='test'")
       ))))
 
 (deftest pine-prepare:set-value-number
@@ -182,7 +183,7 @@
        :query "UPDATE `folders` AS folders_0 SET `title` = ? WHERE (folders_0.`id` = ?)"
        :params [[:number "123"] [:number "1"]]
        }
-      (pine-prepare fixtures/schema "folders 1 | set! title=123")
+      (pine-prepare (cf/create :mysql) "folders 1 | set! title=123")
       ))))
 
 (deftest pine-prepare:set-values
@@ -193,7 +194,7 @@
        :query "UPDATE `folders` AS folders_0 SET `title` = ?, `order` = ? WHERE (folders_0.`id` = ?)"
        :params [[:string "test"] [:number "10"] [:number "1"]]
        }
-      (pine-prepare fixtures/schema "folders 1 | set! title='test' order=10")
+      (pine-prepare (cf/create :mysql) "folders 1 | set! title='test' order=10")
       ))))
 
 (deftest pine-prepare:one-operation-group-implicit-fn
@@ -204,7 +205,7 @@
        :query "SELECT customers_0.status, count(customers_0.status) FROM `customers` AS customers_0 WHERE true GROUP BY customers_0.status"
        :params []
        }
-      (pine-prepare fixtures/schema  "customers | group: status")
+      (pine-prepare (cf/create :mysql)  "customers | group: status")
       ))))
 
 (deftest pine-prepare:one-operation-group-explicity-fn
@@ -215,7 +216,7 @@
        :query "SELECT customers_0.status, max(customers_0.id) FROM `customers` AS customers_0 WHERE true GROUP BY customers_0.status"
        :params []
        }
-      (pine-prepare fixtures/schema  "customers | group: status max: id")
+      (pine-prepare (cf/create :mysql)  "customers | group: status max: id")
       ))))
 
 (deftest pine-prepare:condition-in
@@ -223,10 +224,10 @@
     (is
      (=
       {
-       :query "SELECT users_0.* FROM `users` AS users_0 WHERE (users_0.`id` IN ?)"
+       :query "SELECT users_0.`id`, users_0.`fullName`, users_0.`realEmail` FROM `users` AS users_0 WHERE (users_0.`id` IN ?)"
        :params [[:expression "(1,2,3,4)"]]
        }
-      (pine-prepare fixtures/schema  "users 1,2,3,4")
+      (pine-prepare (cf/create :mysql)  "users 1,2,3,4")
       ))))
 
 (deftest pine-prepare:condition-value-in
@@ -234,10 +235,10 @@
     (is
      (=
       {
-       :query "SELECT users_0.* FROM `users` AS users_0 WHERE (users_0.`id` IN ?)"
+       :query "SELECT users_0.`id`, users_0.`fullName`, users_0.`realEmail` FROM `users` AS users_0 WHERE (users_0.`id` IN ?)"
        :params [[:expression "(1,2,3)"]]
        }
-      (pine-prepare fixtures/schema  "users id=1,2,3")
+      (pine-prepare (cf/create :mysql)  "users id=1,2,3")
       ))))
 
 (deftest pine-prepare:condition-is-not-null
@@ -245,10 +246,10 @@
     (is
      (=
       {
-       :query "SELECT users_0.* FROM `users` AS users_0 WHERE (users_0.`name` IS NOT ?)"
+       :query "SELECT users_0.`id`, users_0.`fullName`, users_0.`realEmail` FROM `users` AS users_0 WHERE (users_0.`name` IS NOT ?)"
        :params [[:expression "NULL"]]
        }
-      (pine-prepare fixtures/schema  "users name?")
+      (pine-prepare (cf/create :mysql)  "users name?")
       ))))
 
 (deftest pine-prepare:condition-is-null
@@ -256,10 +257,10 @@
     (is
      (=
       {
-       :query "SELECT users_0.* FROM `users` AS users_0 WHERE (users_0.`name` IS ?)"
+       :query "SELECT users_0.`id`, users_0.`fullName`, users_0.`realEmail` FROM `users` AS users_0 WHERE (users_0.`name` IS ?)"
        :params [[:expression "NULL"]]
        }
-      (pine-prepare fixtures/schema  "users !name?")
+      (pine-prepare (cf/create :mysql)  "users !name?")
       ))))
 
 (deftest pine-prepare:function-count
@@ -270,7 +271,7 @@
        :query "SELECT count(users_0.id) FROM `users` AS users_0 WHERE true"
        :params []
        }
-      (pine-prepare fixtures/schema  "users | count: id")
+      (pine-prepare (cf/create :mysql)  "users | count: id")
       ))))
 
 (deftest pine-prepare:condition-empty-string
@@ -278,8 +279,8 @@
     (is
      (=
       {
-       :query "SELECT customers_0.* FROM `customers` AS customers_0 WHERE (customers_0.`industry` = ?)"
+       :query "SELECT customers_0.`id`, customers_0.`name` FROM `customers` AS customers_0 WHERE (customers_0.`industry` = ?)"
        :params [[:string ""]]
        }
-      (pine-prepare fixtures/schema  "customers industry=''")
+      (pine-prepare (cf/create :mysql)  "customers industry=''")
       ))))

@@ -3,10 +3,10 @@
             [pine.db :as db]
             [pine.db.mysql :as mysql]
             [pine.fixtures.mysql :as fixtures]
-            [pine.db.protocol :as protocol]
-            )
-  (:import pine.db.mysql.MysqlConnection)
-  )
+            [pine.db.connection :as connection]
+
+            [pine.config :as config]
+            [pine.db.connection-factory :as cf]))
 
 (deftest references:test-schema
   (testing "Get the references of a table"
@@ -15,5 +15,13 @@
       {:users [["userId" nil] ["createdByUserId" nil]]
        :customers [["customerId" nil]]
        }
-      (protocol/references (MysqlConnection. "dummy" nil) fixtures/schema "caseFiles")
+      (connection/references (cf/create :mysql) "caseFiles")
+      ))))
+
+(deftest get-columns:test-schema
+  (testing "Get the columns of a table"
+    (is
+     (=
+      [ "id" "title" "customerId" "createdByUserId" ]
+      (connection/get-columns (cf/create :mysql) "caseFiles")
       ))))

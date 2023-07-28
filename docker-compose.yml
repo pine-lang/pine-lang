@@ -3,6 +3,7 @@ services:
   app:
     image: "clojure:lein-2.8.3"
     command: "lein trampoline ring server-headless 33333"
+    # command: "lein ring server-headless 33333"
     user: "${UID}:${GID}"
     ports:
       - "33333:33333"
@@ -16,6 +17,6 @@ services:
       - ~/:/home/${USR}
     environment:
       TERM: xterm
-      LEIN_FAST_TRAMPOLINE: y
+      # LEIN_FAST_TRAMPOLINE: y
     extra_hosts:
     - "host.docker.internal:host-gateway"

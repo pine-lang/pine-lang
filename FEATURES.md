@@ -379,3 +379,39 @@ Imagine if the `user_type` is in the `types` schema then it should be infered:
 public.user | user_type
 ```
 
+## [ ] Hints
+
+
+### [x] Simple case
+
+Consider the following input:
+```
+us
+```
+
+tables matching `us` e.g. `user`
+
+### With Schema
+
+```
+public.us
+```
+
+tables matching `us` in `public` schema.
+
+### [x] Join
+
+```
+user | file
+```
+
+tables matching `file` related to `user`
+
+
+### [ ] Join with schema
+
+```
+public.user | public.fi
+```
+
+tables matching `fi` in `public` related to `user` in `public`

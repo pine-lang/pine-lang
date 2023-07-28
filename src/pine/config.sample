@@ -1,10 +1,8 @@
 (ns pine.config)
 
 (def config
-  {
-   :connection-id :default
-   :connections {
-                 :default
+  {:connection-id :default
+   :connections {:default
                  {:host "host.docker.internal"
                   :dbtype "mysql"
                   :dbname "information_schema"
@@ -12,7 +10,8 @@
                   :password "secret"
                   ;; required for mysql pooling
                   :classname "com.mysql.jdbc.Driver"
-                  :subname  "//host.docker.internal:3306/information_schema"}
+                  :subname  "//host.docker.internal:3306/information_schema"
+                  :schema nil}
 
                  :mysql-test
                  {:host "host.docker.internal"
@@ -22,6 +21,5 @@
                   :password "secret"
                   ;; required for mysql pooling
                   :classname "com.mysql.jdbc.Driver"
-                  :subname  "//host.docker.internal:3306/tmp"}
-
-                  }})
+                  :subname  "//host.docker.internal:3306/tmp"
+                  :schema nil}}})

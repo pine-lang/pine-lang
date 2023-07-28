@@ -1,44 +1,41 @@
 (ns pine.db
-  (:require [pine.config :as c]
+  (:require [pine.config :as config]
             [pine.db.mysql :as mysql ]
             [pine.db.postgres :as postgres]
-            [pine.db.protocol :as protocol]
-            )
-  (:import pine.db.mysql.MysqlConnection)
-  (:import pine.db.postgres.PostgresConnection)
+            [pine.db.connection :as connection]
+            [pine.state :as state])
   )
 
-(defn get-connections [] (c/config :connections))
+(defn get-connections [] (config/config :connections))
 (defn get-connection [id] (let [config ((get-connections) id)
                                 type (config :dbtype)]
-                            (cond (= type "mysql") (MysqlConnection. id config)
-                                  (= type "postgres") (PostgresConnection. id config)
+                            (cond (= type "mysql") (pine.db.mysql.Mysql. id config)
+                                  (= type "postgres") (pine.db.postgres.Postgres. id config)
                                   :else (throw (Exception. (format "Db not supported: %s" type))))))
 
-(def connection (->> :connection-id
-                     c/config
-                     get-connection
-                     atom))
-
 ;; DB wrappers
-(defn- qt [x]
-  (protocol/quote @connection (name x)))
-(defn quote
-  ([x] (qt x))
-  ([x y]
-   (cond (not (nil? x)) (format "%s.%s" (qt x) (qt y))
-         :else (qt y))))
+;; (defn- qt [x]
+;;   (connection/quote @state/c (name x)))
+;; (defn quote
+;;   ([x] (qt x))
+;;   ([x y]
+;;    (cond (not (nil? x)) (format "%s.%s" (qt x) (qt y))
+;;          :else (qt y))))
 
 (defn quote-string [x]
-  (protocol/quote-string @connection x))
+  (connection/quote-string @state/c x))
 
-(defn references [schema table]
-  (protocol/references @connection schema table))
+(defn references
+  ([schema table]
+   (connection/references @state/c table))
+  ([table]
+   (let [schema (connection/get-schema @state/c)]
+     (connection/references @state/c table))))
 
 (defn get-columns
   "Returns the list of columns a table has"
-  [schema table-name]
-  (protocol/get-columns @connection schema table-name))
+  [connection table-name]
+  (connection/get-columns connection table-name))
 
 ;; Helpers
 
@@ -49,7 +46,7 @@
   "
   ([fn query]
    (->> query
-        (protocol/query @connection)
+        (connection/query @state/c)
         fn))
   ([query]
    ($ identity query)))
@@ -60,7 +57,7 @@
   "
   ([fn query]
    (->> query
-        (protocol/execute! @connection)
+        (connection/execute! @state/c)
         fn))
   ([query]
    ($! identity query)))

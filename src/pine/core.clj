@@ -2,26 +2,33 @@
   (:require [clojure.java.jdbc :as j]
             [pine.ast :as ast]
             [pine.db :as db]
-            [pine.db.protocol :as protocol]
+            [pine.state :as state]
+            [pine.db.connection :as connection]
+            [pine.hints :as hints]
             ))
 
 ;; Eval
 
-;; TODO: this shouldn't take the schema. Schema is embedded in the adapter (i.e
-;; connection)
 (defn pine-prepare
   "Using a pine expression, prepare and SQL statements and params"
-  [schema expression]
+  [connection expression]
   (let [[sql params] (->> expression
-                         ast/str->operations
-                         (ast/operations->ast schema)
-                         ast/ast->sql-and-params)]
+                          (ast/str->operations connection)
+                         (ast/operations->ast connection)
+                         (ast/ast->sql-and-params connection))]
     {:query sql
      :params params})
   )
 
-;; (pine-prepare (db/get-schema c/config) "caseFiles 1 | delete!")
-;; (pine-prepare (db/get-schema c/config) "caseFiles 1 | s: id")
+(defn pine-hint
+  "Using a pine expression, generate hints for the last operation given"
+  [connection expression]
+  (->> expression
+       (ast/str->operations connection)
+       ;; (map (juxt :partial :context))
+       last
+       (hints/generate connection)
+       ))
 
 (defn pine-eval
   "Evalate an SQL query"
@@ -29,5 +36,6 @@
   (let [query (prepared :query)
         params (prepared :params)
         args   (cons query params)]
-    (protocol/query @db/connection args)
+    (prn args)
+    (connection/query @state/c args)
     ))

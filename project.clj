@@ -21,7 +21,7 @@
                  ]
   :plugins [[lein-ring "0.9.7"]
             ]
-  :ring {:handler pine.handler/app}
+  :ring {:handler pine.api/app}
   :profiles
   {
    :dev {:dependencies [[javax.servlet/servlet-api "2.5"]

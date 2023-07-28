@@ -3,12 +3,9 @@
             [pine.db :as db]
             [pine.db.postgres :as postgres]
             [pine.fixtures.postgres :as fixtures]
-            [pine.db.protocol :as protocol]
-            )
-  (:import pine.db.postgres.PostgresConnection)
-  )
-
-(def dc "Dummy connection" (atom (PostgresConnection. "dummy" nil)))
+            [pine.db.connection :as connection]
+            [pine.db.connection-factory :as cf]
+            [pine.config :as config]))
 
 (deftest references:test-schema
   (testing "Get the references of a table"
@@ -17,7 +14,14 @@
       {:attachment "attachment_id"
        :tenant "tenant_id"
        }
-      (protocol/references @dc fixtures/schema "user")
+      (connection/references (cf/create :postgres) "user")
       ))))
 
-;; (protocol/references @dc fixtures/schema "user")
+
+(deftest get-columns:test-schema
+  (testing "Get the columns of a table"
+    (is
+     (=
+      ["id" "email" "status" "password" "salt" "attachment_id" "user_type" "sessionId" "tenant_id"]
+      (connection/get-columns (cf/create :postgres) "user")
+      ))))

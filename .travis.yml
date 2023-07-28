@@ -1,2 +1,0 @@
-language: clojure
-script: cd src/pine && ln -s config.sample config.clj && cd - && lein test

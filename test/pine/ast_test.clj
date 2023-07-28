@@ -4,10 +4,9 @@
             [clojure.string :as s]
             [pine.fixtures.mysql :as fixtures]
             [pine.db :as db]
-            [pine.db.protocol :as protocol]
-            )
-  (:import pine.db.mysql.MysqlConnection)
-  )
+            [pine.db.connection :as connection]
+
+            [pine.db.connection-factory :as cf]))
 
 ;; Parsing the Pine Expressions and Lexemes
 
@@ -17,11 +16,12 @@
      (=
       [{:type    "condition"
         :entity  :customers
+        :partial ["customers" [:schema :table]]
         :alias   "customers_0"
         :values  [[ "id" [:number "1"] "="]]
         :context {:entity nil, :alias nil}
         }]
-      (ast/str->operations "customers 1")
+      (ast/str->operations (cf/create :mysql) "customers 1")
       ))))
 
 (deftest str->operations:group-explicit-fn
@@ -30,6 +30,7 @@
      (=
       [{:type    "condition"
         :entity  :customers
+        :partial ["customers" [:schema :table]]
         :alias   "customers_0"
         :values  []
         :context {:entity nil :alias nil}
@@ -40,7 +41,7 @@
         :fn-column "id"
         :context {:entity :customers :alias "customers_0"}
         }]
-      (ast/str->operations "customers | group: status max: id")
+      (ast/str->operations (cf/create :mysql) "customers | group: status max: id")
       ))))
 
 (deftest str->operations:one-operation-explicit-id
@@ -49,13 +50,14 @@
      (=
       [{:type    "condition"
         :entity  :customers
+        :partial ["customers" [:schema :table]]
         :alias   "customers_0"
         :values  [[ "id" [:number "1"]  "="]]
         :context {:entity nil, :alias nil}
         :or      false
         }
        ]
-      (ast/str->operations "customers id=1")
+      (ast/str->operations (cf/create :mysql) "customers id=1")
       ))))
 
 (deftest str->operations:one-operation-name-has-number-and-wildcard
@@ -64,12 +66,13 @@
      (=
       [{:type    "condition"
         :entity  :customers
+        :partial ["customers" [:schema :table]]
         :alias   "customers_0"
         :values  [[ "name" [:string "1*"] "="]]
         :context {:entity nil, :alias nil}
         :or      false
         }]
-      (ast/str->operations "customers name='1*'")
+      (ast/str->operations (cf/create :mysql) "customers name='1*'")
       ))))
 
 (deftest str->operations:two-operations
@@ -78,17 +81,19 @@
      (=
       [{:type    "condition"
         :entity  :customers
+        :partial ["customers" [:schema :table]]
         :alias   "customers_0"
         :values  [[ "id" [:number "1"] "="]]
         :context {:entity nil, :alias nil}
         }
        {:type    "condition"
         :entity  :users
+        :partial ["users" [:schema :table]]
         :alias   "users_1"
         :values  [[ "id" [:number "2"] "="]]
         :context {:entity :customers, :alias "customers_0"}
         }]
-      (ast/str->operations "customers 1 | users 2")
+      (ast/str->operations (cf/create :mysql) "customers 1 | users 2")
       ))))
 
 (deftest str->operations:three-operations
@@ -97,12 +102,14 @@
      (=
       [{:type    "condition"
         :entity  :customers
+        :partial ["customers" [:schema :table]]
         :alias   "customers_0"
         :values  [[ "id" [:number "1"] "="]]
         :context {:entity nil, :alias nil}
         }
        {:type    "condition"
         :entity  :users
+        :partial ["users" [:schema :table]]
         :alias   "users_1"
         :values  [[ "name" [:string "John"] "="]]
         :context {:entity :customers, :alias "customers_0"}
@@ -110,12 +117,13 @@
         }
        {:type    "condition"
         :entity  :address
+        :partial ["address" [:schema :table]]
         :alias   "address_2"
         :values  []
         :context {:entity :users, :alias "users_1"}
         }
        ]
-      (ast/str->operations "customers 1 | users name='John' | address")
+      (ast/str->operations (cf/create :mysql) "customers 1 | users name='John' | address")
       ))))
 
 ;; Opertations to AST
@@ -126,7 +134,7 @@
      (=
       ["customers_0.id, count(customers_0.id)"]
       (->> "customers 1 | group: id"
-       ast/str->operations
+           (ast/str->operations (cf/create :mysql))
        (filter (ast/operation-type? ["group"]))
        ast/operations->group-columns
        )
@@ -137,27 +145,20 @@
     (is
      (=
       { :conditions "(customers_0.`id` = ?)" :params [[:number "1"]] }
-      (->> (ast/str->operations "customers 1")
+      (->> (ast/str->operations (cf/create :mysql) "customers 1")
            first
-           (ast/operation->where true)
+           (ast/operation->where (cf/create :mysql) true)
            )
       ))))
-
-;; (->>
-;;  "customers 3 | set! id=1 name=1231"
-;;  ast/str->operations
-;;  (ast/operations->ast fixtures/schema)
-;;  ast/ast->sql-and-params
-;;  )
 
 (deftest operation->where:customer-name-is-acme
   (testing "Create a where condition from an operation"
     (is
      (=
       { :conditions "(customers_0.`name` = ?)" :params [[:string "acme"]] }
-      (->> (ast/str->operations "customers name='acme'")
+      (->> (ast/str->operations (cf/create :mysql) "customers name='acme'")
            first
-           (ast/operation->where true))
+           (ast/operation->where (cf/create :mysql) true))
       ))))
 
 (deftest operation->where:customer-name-is-acme-something
@@ -165,9 +166,9 @@
     (is
      (=
       { :conditions "(customers_0.`name` LIKE ?)" :params [[:string "acme%"]] }
-      (->> (ast/str->operations "customers name='acme*'")
+      (->> (ast/str->operations (cf/create :mysql) "customers name='acme*'")
            first
-           (ast/operation->where true))
+           (ast/operation->where (cf/create :mysql) true))
       ))))
 
 (deftest operations->where
@@ -180,19 +181,10 @@
        :params [[:string "acme"] [:number "1"]]
        }
       (->> "customers name='acme' | users 1"
-           ast/str->operations
-           (ast/operations->where true)
+           (ast/str->operations (cf/create :mysql))
+           (ast/operations->where (cf/create :mysql) true)
            )
       ))))
-
-;; (deftest operations->exclude-columns
-;;   (testing "Excluding columns"
-;;     (is
-;;       (=
-;;        ["users_0.fullName" "users_0.realEmail"]
-;;        (->> '({:type "unselect", :columns ["id"], :context {:entity :users, :alias "users_0"}})
-;;             (ast/operation->exclude-columns fixtures/schema ["users_0.*"])
-;;          )))))
 
 (deftest operations->join:entity-owns-another-entity
   (testing "Create operations for a query"
@@ -200,7 +192,7 @@
      (=
       ["`documents`" "d" ["d.`caseFileId`" "cf.`id`"]]
       (ast/operations->join
-       fixtures/schema
+       (cf/create :mysql)
        {:entity :caseFiles, :alias "cf"}
        {:entity :documents, :alias "d"})
       ))))
@@ -211,7 +203,7 @@
      (=
       ["`caseFiles`" "cf" ["cf.`id`" "d.`caseFileId`"]]
       (ast/operations->join
-       fixtures/schema
+       (cf/create :mysql)
        {:entity :documents :alias "d"}
        {:entity :caseFiles :alias "cf"}
        )
@@ -222,7 +214,7 @@
     (is
      (=
       (ast/operations->joins
-       fixtures/schema
+       (cf/create :mysql)
        [{:entity :customers :alias "c"}
         {:entity :caseFiles :alias "cf"}
         {:entity :documents :alias "d"}
@@ -239,7 +231,7 @@
      (=
       ["`caseFiles`" "cf" ["cf.`customerId`" "c.`id`"]]
       (ast/operations->joins
-       fixtures/schema
+      (cf/create :mysql)
        [{:type "condition" :entity :customers :values [] :alias "c"}
         {:type "condition" :entity :caseFiles :values [] :alias "cf"}
         ])
@@ -260,7 +252,7 @@
     (is
      (=
       {
-       :select ["documents_2.*"]
+       :select ["documents_2.`id`" "documents_2.`title`" "documents_2.`caseFileId`"]
        :from [nil :customers "customers_0"]
        :joins ["`caseFiles`" "casefiles_1" ["casefiles_1.`customerId`" "customers_0.`id`"]
                "`documents`" "documents_2" ["documents_2.`caseFileId`" "casefiles_1.`id`"]]
@@ -279,8 +271,8 @@
        :set nil
        }
       (->> "customers 1 | caseFiles name='john' | documents name='test'"
-      ast/str->operations
-      (ast/operations->ast fixtures/schema))
+           (ast/str->operations (cf/create :mysql))
+           (ast/operations->ast (cf/create :mysql)))
       ))))
 
 ;; AST to SQL
@@ -289,7 +281,7 @@
   (testing "Create sql from an ast with one operation"
     (is
      (=
-      (ast/ast->sql-and-params {
+      (ast/ast->sql-and-params (cf/create :mysql) {
                      :select ["c.*"]
                      :from [nil :customers "c"]
                      :where {
@@ -330,7 +322,7 @@
   (testing "Create sql from an ast with two operations"
     (is
      (=
-      (ast/ast->sql-and-params {
+      (ast/ast->sql-and-params (cf/create :mysql) {
                                 :select ["u.*"]
                                 :from [nil :customers "c"]
                                 :joins ["`users`" "u" ["u.customerId" "c.id"]]
@@ -350,13 +342,14 @@
      (=
       [{:type    "condition"
         :entity  :customers
+        :partial ["customers" [:schema :table]]
         :alias   "customers_0"
         :values  [[ "id" [:number "1"]  "<"]]
         :context {:entity nil, :alias nil}
         :or      false
         }
        ]
-      (ast/str->operations "customers id<1")
+      (ast/str->operations (cf/create :mysql) "customers id<1")
       ))))
 
 (deftest str->operations:one-operation-comparison-greater-than
@@ -365,12 +358,13 @@
      (=
       [{:type    "condition"
         :entity  :customers
+        :partial ["customers" [:schema :table]]
         :alias   "customers_0"
         :values  [[ "id" [:number "1"]  ">"]]
         :context {:entity nil, :alias nil}
         :or      false
         }
        ]
-      (ast/str->operations "customers id>1")
+      (ast/str->operations (cf/create :mysql) "customers id>1")
       ))))
 

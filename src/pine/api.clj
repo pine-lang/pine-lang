@@ -1,28 +1,29 @@
-(ns pine.handler
+(ns pine.api
   (:require [compojure.core :refer :all]
             [compojure.route :as route]
             [ring.middleware.defaults :refer [wrap-defaults api-defaults]]
             [pine.core :as pine]
             [pine.db :as db]
-            [pine.config :as c]
+            [pine.state :as state]
+            [pine.config :as config]
             [ring.util.response :refer [response]]
             [ring.middleware.json :refer [wrap-json-params wrap-json-response]]
             [ring.middleware.cors :refer [wrap-cors]]
             [clojure.string :as s]
             [cheshire.core :refer [encode]]
             [cheshire.generate :refer [add-encoder encode-str remove-encoder]]
-            [pine.db.protocol :as protocol]))
+            [pine.db.connection :as connection]))
 
 (add-encoder org.postgresql.util.PGobject encode-str)
 (add-encoder org.postgresql.jdbc.PgArray encode-str)
 
-(defn prepare [expression]
-  (let [schema (protocol/get-schema @db/connection)]
-    (pine/pine-prepare schema expression)))
+;; (defn prepare [connection expression]
+;;   (let [schema (connection/get-schema @state/c)]
+;;     (pine/pine-prepare schema expression)))
 
 (defn build
   "Build the query with with the params filled in"
-  [prepared]
+  [connection prepared]
   (let [query    (:query prepared)
         params   (->> (:params prepared)
 
@@ -38,7 +39,7 @@
                               ]))
 
                       (map (fn [[t x]] (case t
-                                             :string (db/quote-string x) ;; TODO: qouting shouldn't happen here
+                                             :string (connection/quote-string connection x)
                                              (format "%s" x)
                                              )))
                       )
@@ -52,33 +53,35 @@
 (defn- api-build [expression]
   (->> expression
        ((fn [x] (prn x) x))
-       prepare
-       build
+       (pine/pine-prepare @state/c)
+       (build @state/c)
        ))
 
 (defn- connection-id []
-  (protocol/get-connection-id @db/connection))
+  (connection/get-connection-id @state/c))
 
 (defn- api-build-response [expression]
   (let [id (connection-id)]
     (try
-      (let [prepared (prepare expression)]
+      (let [prepared (pine/pine-prepare @state/c expression)
+            hints (pine/pine-hint @state/c expression)]
         {
          :connection-id id
          :query (prepared :query)
          :params (prepared :params)
+         :hints hints
          })
-         (catch Exception e {
-                             :connection-id id
-                             :error (.getMessage e)
-                             }))))
-
+      (catch Exception e {
+                          :connection-id id
+                          :error (.getMessage e)
+                          })
+      )))
 
 (defn- api-eval [expression]
   (let [
         id (connection-id)]
     (try
-      (let [prepared (prepare expression)
+      (let [prepared (pine/pine-prepare @state/c expression)
             query (prepared :query)
             params (prepared :params)
             ]
@@ -100,7 +103,7 @@
     (do
       (->> id
            db/get-connection
-           (reset! db/connection))
+           (reset! state/c))
       {:connection-id (connection-id)})
     {:error (format "Connection '%s' does not exist" id)}
     ))
@@ -120,11 +123,14 @@
   (route/not-found "Not Found"))
 
 ;; DEBUG
-;; (set-connection :default)
+;; Load schema on start
+;; (set-connection :avallone-local)
+;; (prn (format "Connections: [%s]" (connection/get-connection-id @state/c)))
+;; (->> "company | l: 1" api-build)
 
 (def app
   (do
-    (prn (format "Connections: [%s]" (protocol/get-connection-id @db/connection)))
+    ;; (prn (format "Connections: [%s]" (connection/get-connection-id @state/c)))
     (-> app-routes
         wrap-json-params
         wrap-json-response
