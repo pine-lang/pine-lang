@@ -122,15 +122,15 @@
   (GET "/connections" [] (->> (get-connections) (assoc {} :result) response))
   (route/not-found "Not Found"))
 
-;; DEBUG
-;; Load schema on start
-;; (set-connection :avallone-local)
-;; (prn (format "Connections: [%s]" (connection/get-connection-id @state/c)))
-;; (->> "company | l: 1" api-build)
+(if (config/config :connect-on-start)
+  (do
+    (set-connection (config/config :connection-id))
+    (->> "company | l: 1" api-build)
+    )
+  )
 
 (def app
   (do
-    ;; (prn (format "Connections: [%s]" (connection/get-connection-id @state/c)))
     (-> app-routes
         wrap-json-params
         wrap-json-response
