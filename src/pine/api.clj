@@ -130,7 +130,7 @@
 
 (def app
   (do
-    (prn (format "Connections: [%s]" (connection/get-connection-id @state/c)))
+    ;; (prn (format "Connections: [%s]" (connection/get-connection-id @state/c)))
     (-> app-routes
         wrap-json-params
         wrap-json-response
