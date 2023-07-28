@@ -382,23 +382,24 @@ public.user | user_type
 ## [ ] Hints
 
 
-### Simple case
+### [x] Simple case
 
+Consider the following input:
 ```
-use
+us
 ```
 
-tables matching `use`
+tables matching `us` e.g. `user`
 
 ### With Schema
 
 ```
-public.use
+public.us
 ```
 
-tables matching `use` in `public`
+tables matching `us` in `public` schema.
 
-### Join
+### [x] Join
 
 ```
 user | file
@@ -407,7 +408,7 @@ user | file
 tables matching `file` related to `user`
 
 
-### TODO: Join with schema
+### [ ] Join with schema
 
 ```
 public.user | public.fi
