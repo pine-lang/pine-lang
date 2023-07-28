@@ -1,7 +1,8 @@
 (ns pine.config)
 
 (def config
-  {:connection-id :default
+  {:connect-on-start false
+   :connection-id :default
    :connections {:default
                  {:host "host.docker.internal"
                   :dbtype "mysql"
