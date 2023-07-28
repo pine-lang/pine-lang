@@ -123,13 +123,10 @@
   (route/not-found "Not Found"))
 
 ;; DEBUG
-;; (set-connection :avallone-local-testing)
-(set-connection :avallone-local)
-
-(prn (format "Connections: [%s]" (connection/get-connection-id @state/c)))
-;; Force load the schema
-(->> "company | l: 1" api-build)
-;; (->> "company | l: 1" api-eval)
+;; Load schema on start
+;; (set-connection :avallone-local)
+;; (prn (format "Connections: [%s]" (connection/get-connection-id @state/c)))
+;; (->> "company | l: 1" api-build)
 
 (def app
   (do
