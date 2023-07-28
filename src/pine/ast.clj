@@ -461,7 +461,6 @@
   "TODO: instead of quoting the values here, we should quote/escape when the sql query is generated.
    See: `ast-join->sql` function"
   [c o1 o2 tg relation]
-  (prn tg)
    (match relation
           [e1 a1 :has e2 a2 :on [col group]] [(connection/quote c tg e2) a2 [(qualify (connection/quote c col) :with a2) (primary-key c o1)]]
           [e1 a1 :of  e2 a2 :on [col group]] [(connection/quote c tg e2) a2 [(primary-key c o2) (qualify (connection/quote c col) :with a1)]]
