@@ -90,7 +90,7 @@
           :connection-id id
           :query query
           :params params
-          :result (pine/pine-eval prepared)
+          :result (pine/pine-eval @state/c prepared)
           }))
       (catch Exception e {:connection-id id
                           :error (.getMessage e)})

@@ -102,4 +102,8 @@
     (jdbc/query config statement))
 
   (execute! [this statement]
-    (jdbc/execute! config statement)))
+    (jdbc/execute! config statement))
+
+  (get-config [this]
+    config)
+  )

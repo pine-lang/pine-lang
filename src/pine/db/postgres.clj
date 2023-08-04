@@ -24,10 +24,7 @@
   ([config table]
    (columns config table "public")))
 
-;; (columns (->> config/config :connections :?) "request" "requests") ;; local test
-;; (columns (->> config/config :connections :?) "user") ;; local test
-
-(defn refs
+(defn get-foreign-keys
   "Find the foreign keys using the db connection"
   ([config table table-group]
    (->> (format "
@@ -50,9 +47,7 @@ AND tc.constraint_type = 'FOREIGN KEY'
         (reduce (fn [acc [k v]] (assoc acc (keyword k) (map rest v))) {})   ;; { :user  [["user_id" "public"]]}..)
         ))
   ([config table]
-   (refs config table "public")))
-
-;; (refs (->> config/config :connections :work) "document")
+   (get-foreign-keys config table "public")))
 
 (defn table-definition
   "Create table definition using the db connection
@@ -60,7 +55,7 @@ AND tc.constraint_type = 'FOREIGN KEY'
   [config table table-group]
   (prn (format "Loading schema: %s.%s" table-group table))
   {:db/columns (columns config table table-group)
-   :db/refs (refs config table table-group)})
+   :db/foreign-keys (get-foreign-keys config table table-group)})
 ;; (table-definition config/config "user_tenant_role") ;; local test
 
 
@@ -76,8 +71,8 @@ AND tc.constraint_type = 'FOREIGN KEY'
 ;; https://groups.google.com/g/clojure/c/f068WTgakpk
 
 (s/def :db/columns vector?)
-(s/def :db/refs map?)
-(s/def :db/schema (s/keys :req [:db/columns :db/refs]))
+(s/def :db/foreign-keys map?)
+(s/def :db/schema (s/keys :req [:db/columns :db/foreign-keys]))
 (s/def :db/table string?)
 (s/def :db/references (s/map-of keyword? string?))
 
@@ -135,7 +130,7 @@ AND tc.constraint_type = 'FOREIGN KEY'
       (->> table
            keyword
            schema
-           :db/refs)))
+           :db/foreign-keys)))
 
   (quote [this x]
     (format "\"%s\"" (name x)))
@@ -171,7 +166,7 @@ AND tc.constraint_type = 'FOREIGN KEY'
 
 (s/fdef references
   :args (s/cat :schema :db/schema :table :db/table))
-;; (references {:x {:db/columns ["user_id" "something_else"] :db/refs {"user" "user_id"}}} "x") ;; local test
+;; (references {:x {:db/columns ["user_id" "something_else"] :db/foreign-keys {"user" "user_id"}}} "x") ;; local test
 
 
 
