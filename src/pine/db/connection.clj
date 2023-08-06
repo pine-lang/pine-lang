@@ -5,13 +5,13 @@
 
   (get-connection-id [this] "Unique identified for the connection connection")
 
-  (get-schema [this] "Deprecated. The schema should not be exposed")
-
+  ;; TODO: remove this in favor of references
   (get-tables [this] "Get tables.")
+
+  (references [this table] "Get the tables used in the foreign keys")
 
   (get-columns [this table-name] "Get columns")
 
-  (references [this table] "Get the tables used in the foreign keys")
 
   (quote [this x] [this x y] "Quote table names, columns names, etc.")
 

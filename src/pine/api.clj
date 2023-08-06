@@ -17,10 +17,6 @@
 (add-encoder org.postgresql.util.PGobject encode-str)
 (add-encoder org.postgresql.jdbc.PgArray encode-str)
 
-;; (defn prepare [connection expression]
-;;   (let [schema (connection/get-schema @state/c)]
-;;     (pine/pine-prepare schema expression)))
-
 (defn build
   "Build the query with with the params filled in"
   [connection prepared]

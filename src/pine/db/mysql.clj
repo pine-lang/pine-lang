@@ -63,21 +63,16 @@
   (get-connection-id [this]
     id)
 
-  (get-schema [this]
-    "Deprecated. The schema should not be exposed"
-    (get-schema' config)
-    )
+  (get-tables
+    [this ]
+    (throw (Exception. "Not implemented yet")))
 
-  (get-tables [this] "TODO: not supported yet" []
-    (get-schema' config)
-    )
-
-  (get-columns [this table-name]
-    (->>
-     (get-schema' config)
-     ((keyword table-name))
-     (re-seq #"(?m)^  `(\S+)`")
-     (map #(second %))))
+  ;; (get-columns [this table-name]
+  ;;   (->>
+  ;;    (get-schema' config)
+  ;;    ((keyword table-name))
+  ;;    (re-seq #"(?m)^  `(\S+)`")
+  ;;    (map #(second %))))
 
   (references [this table]
     (->> table

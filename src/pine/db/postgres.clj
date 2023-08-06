@@ -9,26 +9,33 @@
             [pine.db.connection :as connection]))
 
 ;; `instrument` or `unstrument`
-
-
 (stest/instrument [`references])
 
-(defn- columns
-  "Find the column names using the db connection"
-  ([config table table-group]
-   (->> (format
-         "SELECT * FROM information_schema.columns WHERE table_name = '%s' AND table_schema = '%s' "
-         (u/escape table) (u/escape table-group))
-        (u/exec config)
-        (map :column_name)))
-  ([config table]
-   (columns config table "public")))
+;; OBSOLETE: I was originally using this funciton to fix the order of the
+;; columns which was an unrelated issue. Getting the columns explicitly is not
+;; needed until I add support for the columns in the hints. Untill then I will
+;; leave this out.
+;;
+;; (defn- columns
+;;   "Find the column names using the db connection.
+;;   "
+;;   ([config table table-group]
+;;    (->> (format
+;;          "SELECT * FROM information_schema.columns WHERE table_name = '%s' AND table_schema = '%s' "
+;;          (u/escape table) (u/escape table-group))
+;;         (u/exec config)
+;;         (map :column_name)))
+;;   ([config table]
+;;    (columns config table "public")))
 
-(defn get-foreign-keys
+(defn get-foreign-keys-deprecated
   "Find the foreign keys using the db connection"
-  ([config table table-group]
+  [config table table-group]
    (->> (format "
-SELECT kcu.column_name,
+SELECT
+kcu.table_schema, -- TODO: left it here ... along with the schema, I need to get the schema and table as well
+kcu.table_name,   --       also this...
+kcu.column_name,
 ccu.table_name AS foreign_table_name,
 ccu.column_name AS foreign_column_name,
 ccu.table_schema AS foreign_table_schema
@@ -46,17 +53,13 @@ AND tc.constraint_type = 'FOREIGN KEY'
         (group-by first)                                                    ;; { "user" ["user" "user_id" "public"]}.. )
         (reduce (fn [acc [k v]] (assoc acc (keyword k) (map rest v))) {})   ;; { :user  [["user_id" "public"]]}..)
         ))
-  ([config table]
-   (get-foreign-keys config table "public")))
 
 (defn table-definition
   "Create table definition using the db connection
   TODO: also return the table group (postgres schema)"
   [config table table-group]
   (prn (format "Loading schema: %s.%s" table-group table))
-  {:db/columns (columns config table table-group)
-   :db/foreign-keys (get-foreign-keys config table table-group)})
-;; (table-definition config/config "user_tenant_role") ;; local test
+  {:db/foreign-keys (get-foreign-keys-deprecated config table table-group)})
 
 
 (defn- get-tables' [config table-catalog]
@@ -70,7 +73,6 @@ AND tc.constraint_type = 'FOREIGN KEY'
 ;; TODO: can the specs exist on a protocol level?
 ;; https://groups.google.com/g/clojure/c/f068WTgakpk
 
-(s/def :db/columns vector?)
 (s/def :db/foreign-keys map?)
 (s/def :db/schema (s/keys :req [:db/columns :db/foreign-keys]))
 (s/def :db/table string?)
@@ -105,10 +107,6 @@ AND tc.constraint_type = 'FOREIGN KEY'
   (get-connection-id [this]
     id)
 
-  (get-schema
-    [this]
-    (get-schema' config))
-
   (get-tables
     [this]
     (if (config :schema)
@@ -118,11 +116,7 @@ AND tc.constraint_type = 'FOREIGN KEY'
 
   (get-columns
     [this table-name]
-    (let [schema (get-schema' config)]
-      (->> table-name
-           keyword
-           schema
-           :db/columns)))
+    (throw (Exception. "Not implemented yet")))
 
   (references
     [this table]
@@ -157,7 +151,12 @@ AND tc.constraint_type = 'FOREIGN KEY'
       result))
 
   (execute! [this statement]
-    (jdbc/execute! config statement)))
+    (jdbc/execute! config statement))
+
+  (get-config [this]
+    config)
+
+  )
 
 (s/fdef get-columns
   :args (s/cat :schema :db/schema :table :db/table)

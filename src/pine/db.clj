@@ -25,13 +25,6 @@
 (defn quote-string [x]
   (connection/quote-string @state/c x))
 
-(defn references
-  ([schema table]
-   (connection/references @state/c table))
-  ([table]
-   (let [schema (connection/get-schema @state/c)]
-     (connection/references @state/c table))))
-
 (defn get-columns
   "Returns the list of columns a table has"
   [connection table-name]
