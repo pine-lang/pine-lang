@@ -28,6 +28,42 @@
 ;;   ([config table]
 ;;    (columns config table "public")))
 
+(defn get-references
+  "Get the foreign keys from the database.
+  Finding forward and inverse relations for the table
+  Example: A 'document' is owned by a 'user' (it has a
+                                                 `user_id` column that points to `user`.`id`). When we find a
+  foreign key, then we index create both forward and inverse
+  relations i.e. called :points-to and :refered-by relations.
+  "
+  [connection]
+  (let [_ (prn "Loading all relations")
+        config (connection/get-config connection)
+        opts {:as-arrays? true}
+        foreign-keys-sql "SELECT
+  kcu.table_schema,
+  kcu.table_name,
+  kcu.column_name,
+  ccu.table_schema AS foreign_table_schema,
+  ccu.table_name AS foreign_table_name,
+  ccu.column_name AS foreign_column_name
+ FROM information_schema.table_constraints AS tc
+ JOIN information_schema.key_column_usage AS kcu
+   ON tc.constraint_name = kcu.constraint_name
+ LEFT
+ JOIN information_schema.constraint_column_usage AS ccu
+   ON ccu.constraint_name = tc.constraint_name
+WHERE tc.constraint_type = 'FOREIGN KEY'
+-- AND tc.table_name=?
+-- AND ccu.foreign_table_schema=?"
+        rows (jdbc/query config foreign-keys-sql opts)]
+    (reduce (fn [acc [schema table col f-schema f-table f-col]]
+              (-> acc
+                  (assoc-in [schema table :with col :points-to f-table] [f-schema f-table f-col])
+                  (assoc-in [schema f-table :referred-by table :with col] [f-schema f-table f-col])))
+            {}
+            rows)))
+
 (defn get-foreign-keys-deprecated
   "Find the foreign keys using the db connection"
   [config table table-group]
