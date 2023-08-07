@@ -63,6 +63,10 @@
   (get-connection-id [this]
     id)
 
+  (get-metadata
+    [this]
+    (throw (Exception. "Not implemented yet")))
+
   (get-tables
     [this ]
     (throw (Exception. "Not implemented yet")))
@@ -74,7 +78,7 @@
   ;;    (re-seq #"(?m)^  `(\S+)`")
   ;;    (map #(second %))))
 
-  (references [this table]
+  (get-references [this table]
     (->> table
          ((keyword table) (get-schema' config))
          (re-seq #"FOREIGN KEY .`(.*)`. REFERENCES `(.*?)`") ;; TODO: fix `nil` case

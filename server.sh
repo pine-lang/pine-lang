@@ -4,4 +4,4 @@ UID=${UID}  \
    GID=${UID}  \
    USR=${USER} \
    docker-compose up \
-   --remove-orphans
+   # --remove-orphans

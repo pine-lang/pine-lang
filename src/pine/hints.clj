@@ -5,10 +5,11 @@
             [pine.state :as state]
             [clojure.core.match :refer [match]]))
 
-(defn- abbreviate [x]
+(defn abbreviate [x]
   (let [parts (s/split x #"_")
         initials (map first parts)]
-    (s/lower-case (s/join "" initials))))
+    (s/lower-case (s/join "" initials)))
+  )
 
 (defn candidates [token candidates]
   (let [abbreviations (map abbreviate candidates)]
@@ -17,10 +18,12 @@
              (filter #(s/includes? (abbreviate %1) token) candidates)))))
 
 (defn schema-hint [connection op token]
-  (let [result (connection/get-tables connection) ;; [ ["schema-a" "table-a"] ["schema-b" "table-b"] .. ]
-        schemas (map first result)                ;; [ ["schema-a"] ["schema-b"] .. ]
-        cs (candidates token schemas)]
-    cs))
+  (let [md (connection/get-metadata connection)]
+    (->> [:db/references :schema]
+         (get-in md)
+         keys
+         (candidates token))
+    ))
 
 (defn table-hint [connection op token]
   (let [results (connection/get-tables connection) ;; [ ["schema-a" "table-a"] ["schema-b" "table-b"] .. ]

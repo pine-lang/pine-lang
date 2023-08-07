@@ -1,10 +1,18 @@
 (ns pine.fixtures.postgres)
 
+;; Following tables exist:
+;;   `x`.`user`
+;;   `y`.`document`
+;;   `public`.`organization`
+(def relations [["x"  "user"      "org_id"    "public"  "organization"  "id"]
+                ["y"  "document"  "user_id"   "x"       "user"          "id"]])
+
+;; TODO: the following is deprecated
 (def schema {
              :tenant
              #:db{:columns ["id"
                             "title"],
-                  :refs {}},
+                  :foreign-keys {}},
 
              :user
              #:db{:columns ["id"
@@ -17,7 +25,7 @@
                             "user_type"
                             "sessionId"
                             "tenant_id"],
-                  :refs {:attachment "attachment_id",
+                  :foreign-keys {:attachment "attachment_id",
                          :tenant "tenant_id"}},
 
              :attachment
@@ -26,6 +34,6 @@
                             "originalname"
                             "createdAt"
                             "bucket"],
-                  :refs {}}}
+                  :foreign-keys {}}}
 
   )

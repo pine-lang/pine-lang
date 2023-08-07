@@ -431,8 +431,8 @@
         tg (:schema o2) ;; postgres schema. Calling it table-group to avoid name clash
         a1 (table-alias o1)
         a2 (table-alias o2)
-        r1 (connection/references connection e1)
-        r2 (connection/references connection e2)
+        r1 (connection/get-references connection e1)
+        r2 (connection/get-references connection e2)
         of-cols  (map vec (e2 r1))
         has-cols (map vec (e1 r2))
         relations (concat

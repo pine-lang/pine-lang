@@ -5,13 +5,12 @@
 
   (get-connection-id [this] "Unique identified for the connection connection")
 
-  ;; TODO: remove this in favor of references
+  ;; TODO: Remove the following in favor of get-metadata
   (get-tables [this] "Get tables.")
-
-  (references [this table] "Get the tables used in the foreign keys")
-
+  (get-references [this table] "Get the tables used in the foreign keys")
   (get-columns [this table-name] "Get columns")
 
+  (get-metadata [this] "Get metadata e.g. relations, columns, etc.")
 
   (quote [this x] [this x y] "Quote table names, columns names, etc.")
 

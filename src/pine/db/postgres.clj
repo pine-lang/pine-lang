@@ -9,7 +9,7 @@
             [pine.db.connection :as connection]))
 
 ;; `instrument` or `unstrument`
-(stest/instrument [`references])
+;; (stest/instrument [`references])
 
 ;; OBSOLETE: I was originally using this funciton to fix the order of the
 ;; columns which was an unrelated issue. Getting the columns explicitly is not
@@ -30,15 +30,10 @@
 
 (defn get-references
   "Get the foreign keys from the database.
-  Finding forward and inverse relations for the table
-  Example: A 'document' is owned by a 'user' (it has a
-                                                 `user_id` column that points to `user`.`id`). When we find a
-  foreign key, then we index create both forward and inverse
-  relations i.e. called :points-to and :refered-by relations.
   "
   [connection]
-  (let [_ (prn "Loading all relations")
-        config (connection/get-config connection)
+  (prn (format "Loading all references.."))
+  (let [config (connection/get-config connection)
         opts {:as-arrays? true}
         foreign-keys-sql "SELECT
   kcu.table_schema,
@@ -55,14 +50,37 @@
    ON ccu.constraint_name = tc.constraint_name
 WHERE tc.constraint_type = 'FOREIGN KEY'
 -- AND tc.table_name=?
--- AND ccu.foreign_table_schema=?"
-        rows (jdbc/query config foreign-keys-sql opts)]
-    (reduce (fn [acc [schema table col f-schema f-table f-col]]
-              (-> acc
-                  (assoc-in [schema table :with col :points-to f-table] [f-schema f-table f-col])
-                  (assoc-in [schema f-table :referred-by table :with col] [f-schema f-table f-col])))
-            {}
-            rows)))
+-- AND ccu.foreign_table_schema=?"]
+    (rest (jdbc/query config foreign-keys-sql opts)) ;; skip the first row
+    ))
+
+(defn index-references
+  "Finding forward and inverse relations for the table
+  Example: A 'document' is owned by a 'user' (it has a
+  `user_id` column that points to `user`.`id`). When we find a
+  foreign key, then we index create both forward and inverse
+  relations i.e. called :points-to and :refered-by relations."
+  [references]
+  (reduce (fn [acc [schema table col f-schema f-table f-col]]
+             (-> acc
+                 (assoc-in [:table table :in schema :refers-to f-table :in f-schema :via col ] [f-schema f-table f-col])
+                 (assoc-in [:schema schema :has table :refers-to f-table :in f-schema :via col ] [f-schema f-table f-col])
+                 (assoc-in [:table f-table :in f-schema  :referred-by table :in schema :via col] [f-schema f-table f-col])
+                 (assoc-in [:schema f-schema :has f-table :referred-by table :in schema :via col] [f-schema f-table f-col])
+                 )
+
+            )
+           {}
+           references))
+
+(defn get-metadata [connection]
+  (let [config (connection/get-config connection)
+        fixtures (config :fixtures)
+        references (if fixtures (fixtures :relations) (get-references connection))
+        ]
+    {:db/references (index-references references)}))
+
+(def get-metadata-memoized (memoize get-metadata))
 
 (defn get-foreign-keys-deprecated
   "Find the foreign keys using the db connection"
@@ -150,11 +168,19 @@ AND tc.constraint_type = 'FOREIGN KEY'
       (get-tables-memoized config (:dbname config)))
     )
 
+  (get-metadata [this]
+    (get-metadata-memoized this)
+
+    ;; (let [references (or (get-in config [:fixtures :relations]) (get-references-memoized this))]
+    ;;   {:references (index-references references)}
+    ;;   )
+    )
+
   (get-columns
     [this table-name]
     (throw (Exception. "Not implemented yet")))
 
-  (references
+  (get-references
     [this table]
     (let [schema (get-schema' config)]
       (->> table
