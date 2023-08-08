@@ -14,6 +14,23 @@ M-x cider-connect-clj
 
 Cider will detect the repl running on localhost. Select it and you are good to go.
 
+## Rules
+
+### 1. Keywords vs names (strings)
+
+Incorrect:
+
+```
+{ :schema :public }
+```
+
+Correct:
+
+```
+{ :schema "public" }
+```
+
+
 ## FAQ
 
 ### I make a change in Postgres connection (deftype) but the changes are not picked up

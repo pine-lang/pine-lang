@@ -62,18 +62,37 @@ WHERE tc.constraint_type = 'FOREIGN KEY'
   relations i.e. called :points-to and :refered-by relations."
   [references]
   (reduce (fn [acc [schema table col f-schema f-table f-col]]
-             (-> acc
-                 (assoc-in [:table table :in schema :refers-to f-table :in f-schema :via col ] [f-schema f-table f-col])
-                 (assoc-in [:schema schema :has table :refers-to f-table :in f-schema :via col ] [f-schema f-table f-col])
-                 (assoc-in [:table f-table :in f-schema  :referred-by table :in schema :via col] [f-schema f-table f-col])
-                 (assoc-in [:schema f-schema :has f-table :referred-by table :in schema :via col] [f-schema f-table f-col])
-                 )
+            (let [join [schema table col := f-schema f-table f-col]]
+              (-> acc
+                  ;;
+                  ;; Relations between tables (No ambiguity)
+                  ;; - Value is a single a join vector
+                  ;;
+                  (assoc-in [:table  table    :in  schema   :refers-to f-table :in f-schema :via col] join)
+                  (assoc-in [:table  f-table  :in  f-schema :referred-by table :in schema :via col] join)
+                  ;;
+                  ;; Relations between tables (in case of ambiguity)
+                  ;; - Value is multiple join vectors
+                  ;; - Even if the column to join on is not known,
+                  ;;   we get a list of join vectors to choose from.
+                  ;;
+                  ;; TODO: this shouldn't be needed as we should be able to
+                  ;; figure out which schema is being used and that value can be
+                  ;; stored in the context. For now, this acts as a convenience.
+                  ;;
+                  (update-in [:table  table   :refers-to f-table :via col ] conj join)
+                  (update-in [:table  f-table :referred-by table :via col ] conj join)
+                  ;;
+                  ;; Relations between schema and tables
+                  ;;
+                  (assoc-in [:schema schema   :contains table] true)
+                  (assoc-in [:schema f-schema :contains f-table] true))))
+          {}
+          references))
 
-            )
-           {}
-           references))
 
 (defn get-metadata [connection]
+  (prn "Generating metadata")
   (let [config (connection/get-config connection)
         fixtures (config :fixtures)
         references (if fixtures (fixtures :relations) (get-references connection))

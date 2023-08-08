@@ -1,11 +1,34 @@
 (ns pine.fixtures.postgres)
 
 ;; Following tables exist:
+;;
+;;   `public`.`organization`
 ;;   `x`.`user`
 ;;   `y`.`document`
-;;   `public`.`organization`
+;;
+;;     +----------------------+
+;;     |  public.organization |
+;;     |                      |
+;;     |        id (PK)       |
+;;     +----------------------+
+;;              ^
+;;              |       +--------------------+
+;;              |       |     x.user         |
+;;              |       |                    |
+;;              |       |       id (PK)      |
+;;              +-------|      org_id (FK)   |
+;;                      +--------------------+
+;;                          ^
+;;                          |       +--------------------+
+;;                          |       |    y.document      |
+;;                          |       |                    |
+;;                          |       |      id (PK)       |
+;;                          +-------|     user_id (FK)   |
+;;                                  +--------------------+
+
 (def relations [["x"  "user"      "org_id"    "public"  "organization"  "id"]
                 ["y"  "document"  "user_id"   "x"       "user"          "id"]])
+
 
 ;; TODO: the following is deprecated
 (def schema {

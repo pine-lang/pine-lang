@@ -17,26 +17,53 @@
      (concat (filter #(s/includes? (s/lower-case %1) token) candidates)
              (filter #(s/includes? (abbreviate %1) token) candidates)))))
 
-(defn schema-hint [connection op token]
-  (let [md (connection/get-metadata connection)]
-    (->> [:db/references :schema]
-         (get-in md)
-         keys
-         (candidates token))
-    ))
+(defn table-hint-with-context [md op token]
+  (when-let [entity (->> op :context :entity)]
+    (let [entity (name entity) ;; backward compatibility - see rule#1
+          ]
+      (into
+       ;; refers to
+       (->> [:db/references :table entity :refers-to]
+            (get-in md)
+            keys
+            (candidates token))
+       ;; referred by
+       (->> [:db/references :table entity :referred-by]
+            (get-in md)
+            keys
+            (candidates token))
+       ))))
 
-(defn table-hint [connection op token]
-  (let [results (connection/get-tables connection) ;; [ ["schema-a" "table-a"] ["schema-b" "table-b"] .. ]
+(defn table-hint-without-context [md op token]
+  (->> [:db/references :table]
+       (get-in md)
+       keys
+       distinct
+       (candidates token)
+       ))
 
-        ;; TODO: filter the result set if there is a `context`. Bidirectional
-        ;; references are required in the reference data to do that
+(defn table-hint [md op token]
+  (let [candidates (if (-> op :context :entity) (table-hint-with-context md op token)
+                       (table-hint-without-context md op token))
+        schema (op :schema)]
+    (or
+     (when-let [schema (op :schema)]
+       ;; TODO: rule#1 for schema
+       (filter (fn [x] (get-in md [:db/references :schema (name schema) :contains x])) candidates))
+     candidates)
+    )
+  )
 
-        ;; Filter if schema is specified
-        schema (:schema op)
-        results (if schema (filter #(= (name schema) (first %1)) results) results)]
-    (->> results
-         (map second)
-         (candidates token))))
+(defn schema-hint [md op token]
+  (let [tables (table-hint md op "")
+        schemas (reduce (fn [acc x]
+                          (let [schema (->> [:db/references :table x :in]
+                                            (get-in md)
+                                            keys)]
+                            (into acc schema)))
+                        #{}
+                        tables)]
+    (candidates token schemas)))
 
 (def hint-fns
   {:schema schema-hint
@@ -44,9 +71,9 @@
 
 (defn generate
   [connection op]
-  (let [[token categories] (:partial op)]
+  (let [[token categories] (:partial op)
+        md                 (connection/get-metadata connection)]
     (into {}
           (for [c categories]
             (when-let [hint-fn (hint-fns c)]
-              [c (hint-fn connection op token)])))))
-
+              [c (hint-fn md op token)])))))
