@@ -68,8 +68,8 @@ WHERE tc.constraint_type = 'FOREIGN KEY'
                   ;; Relations between tables (No ambiguity)
                   ;; - Value is a single a join vector
                   ;;
-                  (assoc-in [:table  table    :in  schema   :refers-to f-table :in f-schema :via col] join)
-                  (assoc-in [:table  f-table  :in  f-schema :referred-by table :in schema :via col] join)
+                  (assoc-in [:table  table    :in  schema   :refers-to f-table :in f-schema :via col] join) ;; Not used
+                  (assoc-in [:table  f-table  :in  f-schema :referred-by table :in schema :via col] join)   ;; Not used
                   ;;
                   ;; Relations between tables (in case of ambiguity)
                   ;; - Value is multiple join vectors
@@ -81,7 +81,7 @@ WHERE tc.constraint_type = 'FOREIGN KEY'
                   ;; stored in the context. For now, this acts as a convenience.
                   ;;
                   (update-in [:table  table   :refers-to f-table :via col ] conj join)
-                  (update-in [:table  f-table :referred-by table :via col ] conj join)
+                  (update-in [:table  f-table :referred-by table :via col ] conj join) ;; Not used
                   ;;
                   ;; Relations between schema and tables
                   ;;
@@ -101,73 +101,12 @@ WHERE tc.constraint_type = 'FOREIGN KEY'
 
 (def get-metadata-memoized (memoize get-metadata))
 
-(defn get-foreign-keys-deprecated
-  "Find the foreign keys using the db connection"
-  [config table table-group]
-   (->> (format "
-SELECT
-kcu.table_schema, -- TODO: left it here ... along with the schema, I need to get the schema and table as well
-kcu.table_name,   --       also this...
-kcu.column_name,
-ccu.table_name AS foreign_table_name,
-ccu.column_name AS foreign_column_name,
-ccu.table_schema AS foreign_table_schema
-FROM information_schema.table_constraints AS tc
-JOIN information_schema.key_column_usage AS kcu
-ON tc.constraint_name = kcu.constraint_name
-LEFT JOIN information_schema.constraint_column_usage AS ccu
-ON ccu.constraint_name = tc.constraint_name
-WHERE tc.table_name='%s'
--- AND ccu.foreign_table_schema='%s'
-AND tc.constraint_type = 'FOREIGN KEY'
-" (u/escape table) (u/escape table-group))
-        (u/exec config)
-        (map (juxt :foreign_table_name :column_name :foreign_table_schema)) ;; (["user"  "user_id" "public"])
-        (group-by first)                                                    ;; { "user" ["user" "user_id" "public"]}.. )
-        (reduce (fn [acc [k v]] (assoc acc (keyword k) (map rest v))) {})   ;; { :user  [["user_id" "public"]]}..)
-        ))
-
-(defn table-definition
-  "Create table definition using the db connection
-  TODO: also return the table group (postgres schema)"
-  [config table table-group]
-  (prn (format "Loading schema: %s.%s" table-group table))
-  {:db/foreign-keys (get-foreign-keys-deprecated config table table-group)})
-
-
-(defn- get-tables' [config table-catalog]
-  (->> (u/exec config (format "SELECT table_schema, table_name FROM information_schema.tables WHERE table_catalog = '%s'
- AND table_schema IN ('public', 'types', 'security', 'requests', 'screening', 'questions', 'signatures', 'data_request') " table-catalog))
-       (map (juxt :table_schema :table_name))))
-(def get-tables-memoized (memoize get-tables'))
-
-
-
 ;; TODO: can the specs exist on a protocol level?
 ;; https://groups.google.com/g/clojure/c/f068WTgakpk
 
-(s/def :db/foreign-keys map?)
 (s/def :db/schema (s/keys :req [:db/columns :db/foreign-keys]))
 (s/def :db/table string?)
 (s/def :db/references (s/map-of keyword? string?))
-
-(defn get-schema'' [config]
-  (let [db-name     (:dbname config)
-        column-name (format "tables_in_%s" db-name)
-        column      (keyword column-name)
-        tables      (get-tables-memoized config db-name)]
-    (prn (format "Loading schema definition for db: %s" db-name))
-    (reduce (fn [acc [table-group table]]
-              (assoc acc (keyword table) (table-definition config table table-group)))
-            {} tables)))
-
-(def get-schema-memoized (memoize get-schema''))
-
-(defn get-schema'
-  "Get schema for a given config"
-  [config]
-  (or (config :schema)
-      (get-schema-memoized config)))
 
 (defn string->uuid [x]
   (try
@@ -180,32 +119,12 @@ AND tc.constraint_type = 'FOREIGN KEY'
   (get-connection-id [this]
     id)
 
-  (get-tables
-    [this]
-    (if (config :schema)
-      (throw (Exception. "You seem to be using a hard coded schema (used for testing). `get-tables` is not supported in this mode yet."))
-      (get-tables-memoized config (:dbname config)))
-    )
-
   (get-metadata [this]
-    (get-metadata-memoized this)
-
-    ;; (let [references (or (get-in config [:fixtures :relations]) (get-references-memoized this))]
-    ;;   {:references (index-references references)}
-    ;;   )
-    )
+    (get-metadata-memoized this))
 
   (get-columns
     [this table-name]
     (throw (Exception. "Not implemented yet")))
-
-  (get-references
-    [this table]
-    (let [schema (get-schema' config)]
-      (->> table
-           keyword
-           schema
-           :db/foreign-keys)))
 
   (quote [this x]
     (format "\"%s\"" (name x)))

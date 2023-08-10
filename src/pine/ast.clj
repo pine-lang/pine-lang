@@ -405,47 +405,35 @@
     )
   )
 
-(defn- select-relation [relations]
-  (->> relations
-       (filter (fn [[_ _ _ _ _ _ column]] (some? column))) ;;
-       ;; TODO: change the heuristic from `first`
-       first
-       )
-  )
+(defn relation->join
+  [connection ta f-ta relations]
+  (let [c (-> relations :via keys
+                first  ;; Get the first column
+                )
+        join (-> (get-in relations [:via c])
+                 first ;; Get the first relation for that column
+                 )
+        [schema table col _ f-schema f-table f-col] join
+        col (connection/quote connection col)
+        f-col (connection/quote connection f-col)
+        ]
+    [(qualify col :with ta) (qualify f-col :with f-ta)]
+    ))
 
-(defn- relation->join
-  "TODO: instead of quoting the values here, we should quote/escape when the sql query is generated.
-   See: `ast-join->sql` function"
-  [connection o1 o2 tg relation]
-   (match relation
-          [e1 a1 :has e2 a2 :on [col group]] [(connection/quote connection tg e2) a2 [(qualify (connection/quote connection col) :with a2) (primary-key connection o1)]]
-          [e1 a1 :of  e2 a2 :on [col group]] [(connection/quote connection tg e2) a2 [(primary-key connection o2) (qualify (connection/quote connection col) :with a1)]]
-          :else                              ["?" "?" ["1" (format "2 /* Relationship: %s */" relation)]])
-  )
-
-(defn operations->join "Get the join from two operations"
+(defn operations->join
   [connection o1 o2]
-  (let [
-        e1 (:entity o1)
-        e2 (:entity o2)
-        tg (:schema o2) ;; postgres schema. Calling it table-group to avoid name clash
+  (let [md (connection/get-metadata connection)
         a1 (table-alias o1)
         a2 (table-alias o2)
-        r1 (connection/get-references connection e1)
-        r2 (connection/get-references connection e2)
-        of-cols  (map vec (e2 r1))
-        has-cols (map vec (e1 r2))
-        relations (concat
-                   ;; TODO:
-                   ;; - Remove the aliases here. They are only used when making the join
-                   (map (partial conj [e1 a1 :of  e2 a2 :on ]) of-cols)
-                   (map (partial conj [e1 a1 :has e2 a2 :on ]) has-cols)
-                   )
-        relation (select-relation relations)
-        result (relation->join connection o1 o2 tg relation)
-        ]
-    result
-    ))
+        s2 (:schema o2)
+        e1 (->> o1 :entity name) ;; TODO: rule#1
+        e2 (->> o2 :entity name) ;; TODO: rule#1
+        join (or (when-let [relation (get-in md [:db/references :table e1 :refers-to e2])]
+                   (relation->join connection a1 a2 relation))
+                 (when-let [relation (get-in md [:db/references :table e2 :refers-to e1])]
+                   (relation->join connection a2 a1 relation)))]
+    [(connection/quote connection s2 e2) a2 (or join ["1" "2 /* Not related!! */"])]))
+
 
 (defn operations->joins
   "Get the joins from the operations"

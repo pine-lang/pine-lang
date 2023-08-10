@@ -6,8 +6,6 @@
   (get-connection-id [this] "Unique identified for the connection connection")
 
   ;; TODO: Remove the following in favor of get-metadata
-  (get-tables [this] "Get tables.")
-  (get-references [this table] "Get the tables used in the foreign keys")
   (get-columns [this table-name] "Get columns")
 
   (get-metadata [this] "Get metadata e.g. relations, columns, etc.")
