@@ -3,9 +3,15 @@ All notable changes to this project will be documented in this file. This change
 log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 
 ## [Unreleased]
+### Added
+- Better hints i.e. taking into consideration the context e.g. for expression `document | ..`, only tables related to `document` will be suggested. Also only schemas of the related tables will be suggested.
+
 ### Changed
 - Reverted the change for getting all the columns. Instead of listing all the columns, we are relying on the `*` again. The change was a remnant of bug related to the ordering of the columns which had to do nothing with explicitly specifying the columns.
 - The `connection` protocol doesn't expose the `get-schema` method.
+
+### Breaking
+- Dropped support for MySQL.
 
 
 ## [0.4.0] - 2023-07-28
