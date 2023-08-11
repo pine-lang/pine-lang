@@ -5,7 +5,7 @@
 Pine uses pipes to query a database. When you evaluate the following pine expression:
 
 ```
-customers 1 | users name="John *" | s: id, email
+customers name="Acme" | users name="John *" | s: id, email
 ```
 
 the following SQL is executed:
@@ -15,7 +15,7 @@ SELECT u.id, u.email
   FROM customers AS c
   JOIN users AS u
     ON (u.customerId = c.id)
- WHERE c.id = 1
+ WHERE c.name = "Acme"
    AND u.name LIKE "John %"
 ```
 

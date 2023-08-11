@@ -13,24 +13,8 @@
                                   (= type "postgres") (pine.db.postgres.Postgres. id config)
                                   :else (throw (Exception. (format "Db not supported: %s" type))))))
 
-;; DB wrappers
-;; (defn- qt [x]
-;;   (connection/quote @state/c (name x)))
-;; (defn quote
-;;   ([x] (qt x))
-;;   ([x y]
-;;    (cond (not (nil? x)) (format "%s.%s" (qt x) (qt y))
-;;          :else (qt y))))
-
 (defn quote-string [x]
   (connection/quote-string @state/c x))
-
-(defn references
-  ([schema table]
-   (connection/references @state/c table))
-  ([table]
-   (let [schema (connection/get-schema @state/c)]
-     (connection/references @state/c table))))
 
 (defn get-columns
   "Returns the list of columns a table has"

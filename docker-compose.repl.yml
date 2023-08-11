@@ -6,8 +6,7 @@ services:
     command: "lein repl :start :port 30000"
     user: "${UID}:${GID}"
     ports:
-      - "30000:30000" # repl
-      # - "33333:33333" # server
+      - "30000:30000"
     working_dir: ${PWD}
     volumes:
       - ~/.m2/repository:/root/.m2/repository

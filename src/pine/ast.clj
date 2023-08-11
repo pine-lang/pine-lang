@@ -292,10 +292,9 @@
   "Get the columns for the last 'condition' operation or the select operation"
   [connection op]
   (let [entity (or (:entity op) (-> op :context :entity))
-        alias (table-alias op)
-        columns (db/get-columns connection entity)
-        ]
-    (map #(format "%s.%s" alias (connection/quote connection %)) columns)
+        alias (table-alias op)]
+    ;; (map #(format "%s.%s" alias (connection/quote connection %)) (db/get-columns connection entity))
+    [(format "%s.*" alias)]
     )
   )
 
@@ -354,42 +353,6 @@
        )
   )
 
-;; TODO: I don't think this works - Look into db/get-columns
-;; better yet, use the update select-all function that includes all the columns by default
-(defn expand-signle-column
-  "Expands table.* selections if they match the operation"
-  [_ column op]
-  (if
-   (= column (format "%s.*" (:alias (:context op))))
-     (->>
-       (:entity (:context op))
-       db/get-columns
-       (map #(format "%s.%s" (:alias (:context op)) %)))
-     [column]))
-
-(defn expand-columns-if-operated-on
-  "Expands 'table.*' selections if they are related to operations"
-  [connection columns ops]
-  (match [columns ops]
-         [some-columns                       ([]  :seq)] some-columns
-         [[first-column & rest-of-columns]   ([first-op & rest-of-ops] :seq)]
-           (let [expanded       (expand-signle-column connection first-column first-op)
-                 columns-so-far (reduce conj (vec expanded) rest-of-columns)]
-             (expand-columns-if-operated-on connection columns-so-far rest-of-ops))))
-
-(defn operation->exclude-columns
-  "Removes unselected columns from results"
-  [connection columns unselect-ops]
-
-  (let [expanded-columns (expand-columns-if-operated-on connection (vec columns) unselect-ops)
-        excluded-columns (mapcat
-             (fn [op] (map
-                        (fn [column] (format "%s.%s" (:alias (:context op)) column))
-                        (:columns op)))
-             unselect-ops)
-        ]
-    (remove (set excluded-columns) expanded-columns))
-  )
 
 (defn operations->select-columns
   "Get the columns for the last 'condition' operation or the select operation"
@@ -435,61 +398,42 @@
             (and (empty? specific-columns)    (empty? group-columns))    all-columns
             :else                                                           ["?"]
           )
-          columns-after-exclusion (->> operations
-                                       (filter (operation-type? ["unselect"]))
-                                       (operation->exclude-columns connection columns-before-exclusion)
-                                       )
         ]
 
-      ;; todo: Disabling column exclusinon feature
-      ;;       I'll re-write it later
-      ;; columns-after-exclusion
       columns-before-exclusion
       )
     )
   )
 
-(defn- select-relation [relations]
-  (->> relations
-       (filter (fn [[_ _ _ _ _ _ column]] (some? column))) ;;
-       ;; TODO: change the heuristic from `first`
-       first
-       )
-  )
+(defn relation->join
+  [connection ta f-ta relations]
+  (let [c (-> relations :via keys
+                first  ;; Get the first column
+                )
+        join (-> (get-in relations [:via c])
+                 first ;; Get the first relation for that column
+                 )
+        [schema table col _ f-schema f-table f-col] join
+        col (connection/quote connection col)
+        f-col (connection/quote connection f-col)
+        ]
+    [(qualify col :with ta) (qualify f-col :with f-ta)]
+    ))
 
-(defn- relation->join
-  "TODO: instead of quoting the values here, we should quote/escape when the sql query is generated.
-   See: `ast-join->sql` function"
-  [c o1 o2 tg relation]
-   (match relation
-          [e1 a1 :has e2 a2 :on [col group]] [(connection/quote c tg e2) a2 [(qualify (connection/quote c col) :with a2) (primary-key c o1)]]
-          [e1 a1 :of  e2 a2 :on [col group]] [(connection/quote c tg e2) a2 [(primary-key c o2) (qualify (connection/quote c col) :with a1)]]
-          :else                              ["?" "?" ["1" (format "2 /* Relationship: %s */" relation)]])
-  )
-
-(defn operations->join "Get the join from two operations"
+(defn operations->join
   [connection o1 o2]
-  (let [
-        e1 (:entity o1)
-        e2 (:entity o2)
-        tg (:schema o2) ;; postgres schema. Calling it table-group to avoid name clash
+  (let [md (connection/get-metadata connection)
         a1 (table-alias o1)
         a2 (table-alias o2)
-        r1 (connection/references connection e1)
-        r2 (connection/references connection e2)
-        of-cols  (map vec (e2 r1))
-        has-cols (map vec (e1 r2))
-        relations (concat
-                   ;; TODO:
-                   ;; - Remove the aliases here. They are only used when making the join
-                   (map (partial conj [e1 a1 :of  e2 a2 :on ]) of-cols)
-                   (map (partial conj [e1 a1 :has e2 a2 :on ]) has-cols)
-                   )
-        relation (select-relation relations)
-        result (relation->join connection o1 o2 tg relation)
-        ]
-    result
-    ))
+        s2 (:schema o2)
+        e1 (->> o1 :entity name) ;; TODO: rule#1
+        e2 (->> o2 :entity name) ;; TODO: rule#1
+        join (or (when-let [relation (get-in md [:db/references :table e1 :refers-to e2])]
+                   (relation->join connection a1 a2 relation))
+                 (when-let [relation (get-in md [:db/references :table e2 :refers-to e1])]
+                   (relation->join connection a2 a1 relation)))]
+    [(connection/quote connection s2 e2) a2 (or join ["1" "2 /* Not related!! */"])]))
+
 
 (defn operations->joins
   "Get the joins from the operations"

@@ -8,6 +8,15 @@
 
 (defn create [type]
   (case type
-    :postgres (pine.db.postgres.Postgres. "dummy" {:schema fixtures-postgres/schema})
-    :mysql (pine.db.mysql.Mysql. "dummy" {:schema fixtures-mysql/schema})
+    :postgres (pine.db.postgres.Postgres. "dummy" {
+                                                   :fixtures { :relations fixtures-postgres/relations }
+                                                   :schema fixtures-postgres/schema
+                                                   })
+    :mysql (pine.db.mysql.Mysql. "dummy" {
+                                          :fixtures { :relations (throw (Exception. "Fixtures for relations not supported for mysql")) }
+
+                                          :schema fixtures-mysql/schema})
     (throw (Exception. "Unknown type"))))
+
+
+

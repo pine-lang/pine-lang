@@ -17,10 +17,6 @@
 (add-encoder org.postgresql.util.PGobject encode-str)
 (add-encoder org.postgresql.jdbc.PgArray encode-str)
 
-;; (defn prepare [connection expression]
-;;   (let [schema (connection/get-schema @state/c)]
-;;     (pine/pine-prepare schema expression)))
-
 (defn build
   "Build the query with with the params filled in"
   [connection prepared]
@@ -90,7 +86,7 @@
           :connection-id id
           :query query
           :params params
-          :result (pine/pine-eval prepared)
+          :result (pine/pine-eval @state/c prepared)
           }))
       (catch Exception e {:connection-id id
                           :error (.getMessage e)})

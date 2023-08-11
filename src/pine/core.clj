@@ -32,10 +32,10 @@
 
 (defn pine-eval
   "Evalate an SQL query"
-  [prepared]
+  [connection prepared]
   (let [query (prepared :query)
         params (prepared :params)
         args   (cons query params)]
     (prn args)
-    (connection/query @state/c args)
+    (connection/query connection args)
     ))

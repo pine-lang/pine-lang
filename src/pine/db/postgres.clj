@@ -9,95 +9,104 @@
             [pine.db.connection :as connection]))
 
 ;; `instrument` or `unstrument`
+;; (stest/instrument [`references])
+
+;; OBSOLETE: I was originally using this funciton to fix the order of the
+;; columns which was an unrelated issue. Getting the columns explicitly is not
+;; needed until I add support for the columns in the hints. Untill then I will
+;; leave this out.
+;;
+;; (defn- columns
+;;   "Find the column names using the db connection.
+;;   "
+;;   ([config table table-group]
+;;    (->> (format
+;;          "SELECT * FROM information_schema.columns WHERE table_name = '%s' AND table_schema = '%s' "
+;;          (u/escape table) (u/escape table-group))
+;;         (u/exec config)
+;;         (map :column_name)))
+;;   ([config table]
+;;    (columns config table "public")))
+
+(defn get-references
+  "Get the foreign keys from the database.
+  "
+  [connection]
+  (prn (format "Loading all references.."))
+  (let [config (connection/get-config connection)
+        opts {:as-arrays? true}
+        foreign-keys-sql "SELECT
+  kcu.table_schema,
+  kcu.table_name,
+  kcu.column_name,
+  ccu.table_schema AS foreign_table_schema,
+  ccu.table_name AS foreign_table_name,
+  ccu.column_name AS foreign_column_name
+ FROM information_schema.table_constraints AS tc
+ JOIN information_schema.key_column_usage AS kcu
+   ON tc.constraint_name = kcu.constraint_name
+ LEFT
+ JOIN information_schema.constraint_column_usage AS ccu
+   ON ccu.constraint_name = tc.constraint_name
+WHERE tc.constraint_type = 'FOREIGN KEY'
+-- AND tc.table_name=?
+-- AND ccu.foreign_table_schema=?"]
+    (rest (jdbc/query config foreign-keys-sql opts)) ;; skip the first row
+    ))
+
+(defn index-references
+  "Finding forward and inverse relations for the table
+  Example: A 'document' is owned by a 'user' (it has a
+  `user_id` column that points to `user`.`id`). When we find a
+  foreign key, then we index create both forward and inverse
+  relations i.e. called :points-to and :refered-by relations."
+  [references]
+  (reduce (fn [acc [schema table col f-schema f-table f-col]]
+            (let [join [schema table col := f-schema f-table f-col]]
+              (-> acc
+                  ;;
+                  ;; Relations between tables (No ambiguity)
+                  ;; - Value is a single a join vector
+                  ;;
+                  (assoc-in [:table  table    :in  schema   :refers-to f-table :in f-schema :via col] join) ;; Not used
+                  (assoc-in [:table  f-table  :in  f-schema :referred-by table :in schema :via col] join)   ;; Not used
+                  ;;
+                  ;; Relations between tables (in case of ambiguity)
+                  ;; - Value is multiple join vectors
+                  ;; - Even if the column to join on is not known,
+                  ;;   we get a list of join vectors to choose from.
+                  ;;
+                  ;; TODO: this shouldn't be needed as we should be able to
+                  ;; figure out which schema is being used and that value can be
+                  ;; stored in the context. For now, this acts as a convenience.
+                  ;;
+                  (update-in [:table  table   :refers-to f-table :via col ] conj join)
+                  (update-in [:table  f-table :referred-by table :via col ] conj join) ;; Not used
+                  ;;
+                  ;; Relations between schema and tables
+                  ;;
+                  (assoc-in [:schema schema   :contains table] true)
+                  (assoc-in [:schema f-schema :contains f-table] true))))
+          {}
+          references))
 
 
-(stest/instrument [`references])
+(defn get-metadata [connection]
+  (prn "Generating metadata")
+  (let [config (connection/get-config connection)
+        fixtures (config :fixtures)
+        references (if fixtures (fixtures :relations) (get-references connection))
+        ]
+    {:db/references (index-references references)}))
 
-(defn- columns
-  "Find the column names using the db connection"
-  ([config table table-group]
-   (->> (format
-         "SELECT * FROM information_schema.columns WHERE table_name = '%s' AND table_schema = '%s' "
-         (u/escape table) (u/escape table-group))
-        (u/exec config)
-        (map :column_name)))
-  ([config table]
-   (columns config table "public")))
-
-;; (columns (->> config/config :connections :?) "request" "requests") ;; local test
-;; (columns (->> config/config :connections :?) "user") ;; local test
-
-(defn refs
-  "Find the foreign keys using the db connection"
-  ([config table table-group]
-   (->> (format "
-SELECT kcu.column_name,
-ccu.table_name AS foreign_table_name,
-ccu.column_name AS foreign_column_name,
-ccu.table_schema AS foreign_table_schema
-FROM information_schema.table_constraints AS tc
-JOIN information_schema.key_column_usage AS kcu
-ON tc.constraint_name = kcu.constraint_name
-LEFT JOIN information_schema.constraint_column_usage AS ccu
-ON ccu.constraint_name = tc.constraint_name
-WHERE tc.table_name='%s'
--- AND ccu.foreign_table_schema='%s'
-AND tc.constraint_type = 'FOREIGN KEY'
-" (u/escape table) (u/escape table-group))
-        (u/exec config)
-        (map (juxt :foreign_table_name :column_name :foreign_table_schema)) ;; (["user"  "user_id" "public"])
-        (group-by first)                                                    ;; { "user" ["user" "user_id" "public"]}.. )
-        (reduce (fn [acc [k v]] (assoc acc (keyword k) (map rest v))) {})   ;; { :user  [["user_id" "public"]]}..)
-        ))
-  ([config table]
-   (refs config table "public")))
-
-;; (refs (->> config/config :connections :work) "document")
-
-(defn table-definition
-  "Create table definition using the db connection
-  TODO: also return the table group (postgres schema)"
-  [config table table-group]
-  (prn (format "Loading schema: %s.%s" table-group table))
-  {:db/columns (columns config table table-group)
-   :db/refs (refs config table table-group)})
-;; (table-definition config/config "user_tenant_role") ;; local test
-
-
-(defn- get-tables' [config table-catalog]
-  (->> (u/exec config (format "SELECT table_schema, table_name FROM information_schema.tables WHERE table_catalog = '%s'
- AND table_schema IN ('public', 'types', 'security', 'requests', 'screening', 'questions', 'signatures', 'data_request') " table-catalog))
-       (map (juxt :table_schema :table_name))))
-(def get-tables-memoized (memoize get-tables'))
-
-
+(def get-metadata-memoized (memoize get-metadata))
 
 ;; TODO: can the specs exist on a protocol level?
 ;; https://groups.google.com/g/clojure/c/f068WTgakpk
 
-(s/def :db/columns vector?)
-(s/def :db/refs map?)
-(s/def :db/schema (s/keys :req [:db/columns :db/refs]))
+(s/def :db/schema (s/keys :req [:db/columns :db/foreign-keys]))
 (s/def :db/table string?)
 (s/def :db/references (s/map-of keyword? string?))
-
-(defn get-schema'' [config]
-  (let [db-name     (:dbname config)
-        column-name (format "tables_in_%s" db-name)
-        column      (keyword column-name)
-        tables      (get-tables-memoized config db-name)]
-    (prn (format "Loading schema definition for db: %s" db-name))
-    (reduce (fn [acc [table-group table]]
-              (assoc acc (keyword table) (table-definition config table table-group)))
-            {} tables)))
-
-(def get-schema-memoized (memoize get-schema''))
-
-(defn get-schema'
-  "Get schema for a given config"
-  [config]
-  (or (config :schema)
-      (get-schema-memoized config)))
 
 (defn string->uuid [x]
   (try
@@ -110,32 +119,12 @@ AND tc.constraint_type = 'FOREIGN KEY'
   (get-connection-id [this]
     id)
 
-  (get-schema
-    [this]
-    (get-schema' config))
-
-  (get-tables
-    [this]
-    (if (config :schema)
-      (throw (Exception. "You seem to be using a hard coded schema (used for testing). `get-tables` is not supported in this mode yet."))
-      (get-tables-memoized config (:dbname config)))
-    )
+  (get-metadata [this]
+    (get-metadata-memoized this))
 
   (get-columns
     [this table-name]
-    (let [schema (get-schema' config)]
-      (->> table-name
-           keyword
-           schema
-           :db/columns)))
-
-  (references
-    [this table]
-    (let [schema (get-schema' config)]
-      (->> table
-           keyword
-           schema
-           :db/refs)))
+    (throw (Exception. "Not implemented yet")))
 
   (quote [this x]
     (format "\"%s\"" (name x)))
@@ -162,7 +151,12 @@ AND tc.constraint_type = 'FOREIGN KEY'
       result))
 
   (execute! [this statement]
-    (jdbc/execute! config statement)))
+    (jdbc/execute! config statement))
+
+  (get-config [this]
+    config)
+
+  )
 
 (s/fdef get-columns
   :args (s/cat :schema :db/schema :table :db/table)
@@ -171,7 +165,7 @@ AND tc.constraint_type = 'FOREIGN KEY'
 
 (s/fdef references
   :args (s/cat :schema :db/schema :table :db/table))
-;; (references {:x {:db/columns ["user_id" "something_else"] :db/refs {"user" "user_id"}}} "x") ;; local test
+;; (references {:x {:db/columns ["user_id" "something_else"] :db/foreign-keys {"user" "user_id"}}} "x") ;; local test
 
 
 
