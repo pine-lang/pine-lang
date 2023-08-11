@@ -5,17 +5,13 @@
             [pine.state :as state]
             [clojure.core.match :refer [match]]))
 
-(defn abbreviate [x]
-  (let [parts (s/split x #"_")
-        initials (map first parts)]
-    (s/lower-case (s/join "" initials)))
-  )
-
 (defn candidates [token candidates]
-  (let [abbreviations (map abbreviate candidates)]
-    (set
-     (concat (filter #(s/includes? (s/lower-case %1) token) candidates)
-             (filter #(s/includes? (abbreviate %1) token) candidates)))))
+  (let [xs (filter #(s/includes? (s/lower-case %1) token) candidates)]
+    (->> xs
+         distinct
+         (sort-by count)
+         reverse
+         )))
 
 (defn table-hint-with-context [md op token]
   (when-let [entity (->> op :context :entity)]
