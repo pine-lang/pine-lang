@@ -114,6 +114,17 @@ WHERE tc.constraint_type = 'FOREIGN KEY'
     (java.util.UUID/fromString x)
     (catch Exception e x)))
 
+
+(defn string->number [x]
+  (try
+    (Integer/parseInt x)
+    (catch Exception e x)))
+
+(defn try-conversion [x]
+  (or (string->number x)
+      (string->uuid x)
+      x))
+
 (deftype Postgres [id config]
   Connection
 
@@ -145,7 +156,7 @@ WHERE tc.constraint_type = 'FOREIGN KEY'
           params (->> statement
                       rest
                       (map second)
-                      (map string->uuid) ;; hack: attempt to convert to uuid
+                      (map try-conversion) ;; hack: attempt to convert to the appropriate type
                       )
           s (cons query params)
           result (jdbc/query config s {:as-arrays? true})]

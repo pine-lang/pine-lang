@@ -12,6 +12,9 @@ log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 - Reverted the change for getting all the columns. Instead of listing all the columns, we are relying on the `*` again. The change was a remnant of bug related to the ordering of the columns which had to do nothing with explicitly specifying the columns.
 - The `connection` protocol doesn't expose the `get-schema` method.
 
+### Fixed
+- Numbers as parameters wasn't working e.g. `file version>1`
+
 ### Breaking
 - Dropped support for MySQL.
 - All endpoints are prefixed with `/api/v1`
