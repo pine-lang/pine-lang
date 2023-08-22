@@ -10,7 +10,6 @@
     (->> xs
          distinct
          (sort-by count)
-         reverse
          )))
 
 (defn table-hint-with-context [md op token]
@@ -39,14 +38,15 @@
        ))
 
 (defn table-hint [md op token]
-  (let [candidates (if (-> op :context :entity) (table-hint-with-context md op token)
-                       (table-hint-without-context md op token))
-        schema (op :schema)]
+  (let [xs (if (-> op :context :entity) (table-hint-with-context md op token)
+               (table-hint-without-context md op token))]
     (or
      (when-let [schema (op :schema)]
        ;; TODO: rule#1 for schema
-       (filter (fn [x] (get-in md [:db/references :schema (name schema) :contains x])) candidates))
-     candidates)
+       (->> xs
+            (filter (fn [x] (get-in md [:db/references :schema (name schema) :contains x])))
+            ))
+     xs)
     )
   )
 
@@ -63,7 +63,10 @@
 
 (def hint-fns
   {:schema schema-hint
-   :table table-hint})
+   :table table-hint
+   ;; TODO: generate a hint for qualified tables i.e. [schema table]
+   ;; :qualified-table ???
+   })
 
 (defn generate
   [connection op]

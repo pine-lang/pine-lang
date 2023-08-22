@@ -9,6 +9,7 @@
 
 ;; Eval
 
+;; TODO: maybe we can replace this with `pine-prepare-with-context`
 (defn pine-prepare
   "Using a pine expression, prepare and SQL statements and params"
   [connection expression]
@@ -19,6 +20,22 @@
     {:query sql
      :params params})
   )
+
+(defn pine-prepare-with-context
+  "Using a pine expression, prepare and SQL statements and params"
+  [connection expression]
+  (let [ops (ast/str->operations connection expression)
+        [sql params] (->> ops
+                          (ast/operations->ast connection)
+                          (ast/ast->sql-and-params connection))]
+    {:context
+     (->> ops
+          (map (comp :entity :context))
+          (filter (comp not nil?))
+          (map name) ;; TODO: rule#1
+          )
+     :prepared {:query sql
+                :params params}}))
 
 (defn pine-hint
   "Using a pine expression, generate hints for the last operation given"

@@ -12,7 +12,8 @@
             [clojure.string :as s]
             [cheshire.core :refer [encode]]
             [cheshire.generate :refer [add-encoder encode-str remove-encoder]]
-            [pine.db.connection :as connection]))
+            [pine.db.connection :as connection]
+            ))
 
 (add-encoder org.postgresql.util.PGobject encode-str)
 (add-encoder org.postgresql.jdbc.PgArray encode-str)
@@ -59,13 +60,17 @@
 (defn- api-build-response [expression]
   (let [id (connection-id)]
     (try
-      (let [prepared (pine/pine-prepare @state/c expression)
-            hints (pine/pine-hint @state/c expression)]
+      (let [result (pine/pine-prepare-with-context @state/c expression)
+            prepared (result :prepared)
+            context (result :context)
+            hints (pine/pine-hint @state/c expression)
+            ]
         {
          :connection-id id
          :query (prepared :query)
          :params (prepared :params)
          :hints hints
+         :context context
          })
       (catch Exception e {
                           :connection-id id
@@ -109,13 +114,19 @@
        keys
        (map name)))
 
+(defn- get-connection-metadata []
+  {
+   :connection-id (connection-id)
+   :metadata (connection/get-metadata @state/c)
+   })
+
 (defroutes app-routes
-  (POST "/pine/build" [expression] (->> expression api-build response)) ;; backwads compat
-  (POST "/build" [expression] (->> expression api-build-response response))
-  (POST "/eval" [expression] (->> expression api-eval response))
-  (PUT "/connection" [connection-id] (->> connection-id keyword set-connection response))
-  (GET "/connection" [] (->> (connection-id) (assoc {} :result) response))
-  (GET "/connections" [] (->> (get-connections) (assoc {} :result) response))
+  (POST "/api/v1/build-with-params" [expression] (->> expression api-build response))
+  (POST "/api/v1/build" [expression] (->> expression api-build-response response))
+  (POST "/api/v1/eval" [expression] (->> expression api-eval response))
+  (PUT "/api/v1/connection" [connection-id] (->> connection-id keyword set-connection response))
+  (GET "/api/v1/connection" [] (->> (get-connection-metadata) (assoc {} :result) response))
+  (GET "/api/v1/connections" [] (->> (get-connections) (assoc {} :result) response))
   (route/not-found "Not Found"))
 
 (if (config/config :connect-on-start)

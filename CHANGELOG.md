@@ -14,6 +14,7 @@ log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 
 ### Breaking
 - Dropped support for MySQL.
+- All endpoints are prefixed with `/api/v1`
 
 
 ## [0.4.0] - 2023-07-28

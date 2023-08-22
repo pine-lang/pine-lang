@@ -86,7 +86,8 @@ WHERE tc.constraint_type = 'FOREIGN KEY'
                   ;; Relations between schema and tables
                   ;;
                   (assoc-in [:schema schema   :contains table] true)
-                  (assoc-in [:schema f-schema :contains f-table] true))))
+                  (assoc-in [:schema f-schema :contains f-table] true)
+                  )))
           {}
           references))
 

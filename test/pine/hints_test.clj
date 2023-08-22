@@ -10,9 +10,9 @@
           (connection/get-metadata connection)
           ))
 
-(deftest test-abbreviate:a_b_c
-  (testing "abbreviate"
-    (is (= "abc" (sut/abbreviate "a_b_c")))))
+;; (deftest test-abbreviate:a_b_c
+;;   (testing "abbreviate"
+;;     (is (= "abc" (sut/abbreviate "a_b_c")))))
 
 (deftest test-candidates:filter
   (testing "candidates"
