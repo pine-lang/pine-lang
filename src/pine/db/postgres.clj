@@ -109,16 +109,16 @@ WHERE tc.constraint_type = 'FOREIGN KEY'
 (s/def :db/table string?)
 (s/def :db/references (s/map-of keyword? string?))
 
-(defn string->uuid [x]
-  (try
-    (java.util.UUID/fromString x)
-    (catch Exception e x)))
-
-
 (defn string->number [x]
   (try
     (Integer/parseInt x)
-    (catch Exception e x)))
+    (catch Exception e nil)))
+
+(defn string->uuid [x]
+  (try
+    (java.util.UUID/fromString x)
+    (catch Exception e nil)))
+
 
 (defn try-conversion [x]
   (or (string->number x)
