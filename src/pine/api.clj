@@ -120,6 +120,14 @@
    :metadata (connection/get-metadata @state/c)
    })
 
+(defn wrap-logger
+  [handler]
+  (fn [request]
+    (let [response   (handler request)]
+      (when (= 404 (:status response))
+        (prn (format "Path not found: %s" (:uri request))))
+      response)))
+
 (defroutes app-routes
   (POST "/api/v1/build-with-params" [expression] (->> expression api-build response))
   (POST "/api/v1/build" [expression] (->> expression api-build-response response))
@@ -141,6 +149,7 @@
     (-> app-routes
         wrap-json-params
         wrap-json-response
+        wrap-logger
         (wrap-defaults api-defaults)
         (wrap-cors :access-control-allow-origin [#".*"] :access-control-allow-methods [:get :post])
         )))
