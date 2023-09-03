@@ -3,6 +3,11 @@ All notable changes to this project will be documented in this file. This change
 log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 
 ## [Unreleased]
+### Added
+- The context contains the schema as well.
+
+### Breaking
+- The hints for tables contain and object of schema and table instead of just a string i.e. table.
 
 ## [0.4.1] - 2023-08-11
 ### Added
