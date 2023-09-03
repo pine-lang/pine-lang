@@ -140,7 +140,7 @@
 (if (config/config :connect-on-start)
   (do
     (set-connection (config/config :connection-id))
-    (->> "company | l: 1" api-build)
+    (->> "user | l: 1" api-build)
     )
   )
 

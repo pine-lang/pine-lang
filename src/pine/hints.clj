@@ -29,6 +29,14 @@
             (candidates token))
        ))))
 
+(defn tables->schema-and-tables [md tables]
+  (let [refs (get-in (state/md) [:db/references :table])]
+    (mapcat identity
+            (for [table tables
+                  :let [schemas (->> table refs :in keys)]]
+              (for [schema schemas]
+                {:schema schema :table table})))))
+
 (defn table-hint-without-context [md op token]
   (->> [:db/references :table]
        (get-in md)
@@ -38,17 +46,21 @@
        ))
 
 (defn table-hint [md op token]
+  "Get all the candidates that are related to the context, or just get all the
+  candidates. Conditionally, we also filter the candidates if a schema is
+  specified."
   (let [xs (if (-> op :context :entity) (table-hint-with-context md op token)
-               (table-hint-without-context md op token))]
-    (or
-     (when-let [schema (op :schema)]
-       ;; TODO: rule#1 for schema
-       (->> xs
-            (filter (fn [x] (get-in md [:db/references :schema (name schema) :contains x])))
-            ))
-     xs)
-    )
-  )
+               (table-hint-without-context md op token))
+        schema (op :schema) ;; TODO: rule#1 for schema
+        tables (if schema (filter (fn [x] (get-in md [:db/references :schema (name schema) :contains x])) xs) xs)
+        ]
+    tables))
+
+(defn qualified-table-hint [md op token]
+  "Get all the candidates that are related to the context, or just get all the
+  candidates. Conditionally, we also filter the candidates if a schema is
+  specified."
+  (tables->schema-and-tables md (table-hint md op token)))
 
 (defn schema-hint [md op token]
   (let [tables (table-hint md op "")
@@ -63,9 +75,7 @@
 
 (def hint-fns
   {:schema schema-hint
-   :table table-hint
-   ;; TODO: generate a hint for qualified tables i.e. [schema table]
-   ;; :qualified-table ???
+   :table qualified-table-hint
    })
 
 (defn generate

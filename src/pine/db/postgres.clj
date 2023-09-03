@@ -35,7 +35,8 @@
   (prn (format "Loading all references.."))
   (let [config (connection/get-config connection)
         opts {:as-arrays? true}
-        foreign-keys-sql "SELECT
+        foreign-keys-sql "
+SELECT
   kcu.table_schema,
   kcu.table_name,
   kcu.column_name,

@@ -3,18 +3,13 @@ services:
   app:
     image: "clojure:lein-2.8.3"
     command: "lein trampoline ring server-headless 33333"
-    # command: "lein ring server-headless 33333"
     user: "${UID}:${GID}"
     ports:
       - "33333:33333"
     working_dir: ${PWD}
     volumes:
-      - ./:/mnt
-      - /ssh-agent:/ssh-agent
-      - ~/.ssh:/root/.ssh
       - ~/.m2/repository:/root/.m2/repository
-      - /etc/passwd:/etc/passwd
-      - ~/:/home/${USR}
+      - ~/:${HOME}
     environment:
       TERM: xterm
       # LEIN_FAST_TRAMPOLINE: y

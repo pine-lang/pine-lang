@@ -35,18 +35,16 @@
   [ops]
   (->> ops
    (reduce (fn [acc op]
-             (let [prev-entity  (->> acc
-                                     :context
-                                     :entity)
-                   prev-alias   (->> acc
-                                     :context
-                                     :alias)
+             (let [prev-entity  (->> acc :context :entity)
+                   prev-alias   (->> acc :context :alias)
+                   prev-schema  (->> acc :context :schema)
                    curr-entity  (:entity op)
                    curr-alias   (:alias op)
-                   next      (cond (operation-type? ["condition"] op) {:entity curr-entity :alias curr-alias}
-                                   :else                              {:entity prev-entity :alias prev-alias})]
+                   curr-schema (or (:schema op) "public")
+                   next      (cond (operation-type? ["condition"] op) {:entity curr-entity :alias curr-alias :schema curr-schema }
+                                   :else                              {:entity prev-entity :alias prev-alias :schema prev-schema })]
                {:context next
-                :ops    (cons (assoc op :context {:entity prev-entity :alias prev-alias}) (:ops acc) )}
+                :ops    (cons (assoc op :context {:entity prev-entity :alias prev-alias :schema prev-schema}) (:ops acc) )}
                )
              ) [])
    :ops
@@ -111,16 +109,16 @@
            (parsed-op->indexed-op [op]
              (match op
                     ;; resource/conditions
-                    [:RESOURCE [:entity                 [:partial-token token]] ]                   {:type "condition"                          :entity (keyword token) :partial [token [:schema :table]] :values []}
-                    [:RESOURCE [:entity [:token schema] [:partial-token token]] ]                   {:type "condition" :schema (keyword schema) :entity (keyword token) :partial [token [        :table]] :values []}
-                    [:RESOURCE [:entity                 [:partial-token token]] [:id [:number id]]] {:type "condition"                          :entity (keyword token) :partial [token [:schema :table]] :values [["id" [:number id] "="]]}
-                    [:RESOURCE [:entity [:token schema] [:partial-token token]] [:id [:number id]]] {:type "condition" :schema (keyword schema) :entity (keyword token) :partial [token [        :table]] :values [["id" [:number id] "="]]}
-                    [:RESOURCE [:entity                 [:partial-token token]] [:ids & ids]]       {:type "condition"                          :entity (keyword token) :partial [token [:schema :table]] :values [["id" [:expression (str "(" (s/join "," (map second ids)) ")")] "IN"]]}
-                    [:RESOURCE [:entity [:token schema] [:partial-token token]] [:ids & ids]]       {:type "condition" :schema (keyword schema) :entity (keyword token) :partial [token [        :table]] :values [["id" [:expression (str "(" (s/join "," (map second ids)) ")")] "IN"]]}
-                    [:RESOURCE [:entity                 [:partial-token token]] [:ands & values]]   {:type "condition"                          :entity (keyword token) :partial [token [:schema :table]] :values (map parsed-value->indexed-value values) :or false}
-                    [:RESOURCE [:entity [:token schema] [:partial-token token]] [:ands & values]]   {:type "condition" :schema (keyword schema) :entity (keyword token) :partial [token [        :table]] :values (map parsed-value->indexed-value values) :or false}
-                    [:RESOURCE [:entity                 [:partial-token token]] [:ors & values]]    {:type "condition"                          :entity (keyword token) :partial [token [:schema :table]] :values (map parsed-value->indexed-value values) :or true}
-                    [:RESOURCE [:entity [:token schema] [:partial-token token]] [:ors & values]]    {:type "condition" :schema (keyword schema) :entity (keyword token) :partial [token [        :table]] :values (map parsed-value->indexed-value values) :or true}
+                    [:RESOURCE [:entity                 [:partial-token token]] ]                   {:type "condition"                :entity token :partial [token [:schema :table]] :values []}
+                    [:RESOURCE [:entity [:token schema] [:partial-token token]] ]                   {:type "condition" :schema schema :entity token :partial [token [        :table]] :values []}
+                    [:RESOURCE [:entity                 [:partial-token token]] [:id [:number id]]] {:type "condition"                :entity token :partial [token [:schema :table]] :values [["id" [:number id] "="]]}
+                    [:RESOURCE [:entity [:token schema] [:partial-token token]] [:id [:number id]]] {:type "condition" :schema schema :entity token :partial [token [        :table]] :values [["id" [:number id] "="]]}
+                    [:RESOURCE [:entity                 [:partial-token token]] [:ids & ids]]       {:type "condition"                :entity token :partial [token [:schema :table]] :values [["id" [:expression (str "(" (s/join "," (map second ids)) ")")] "IN"]]}
+                    [:RESOURCE [:entity [:token schema] [:partial-token token]] [:ids & ids]]       {:type "condition" :schema schema :entity token :partial [token [        :table]] :values [["id" [:expression (str "(" (s/join "," (map second ids)) ")")] "IN"]]}
+                    [:RESOURCE [:entity                 [:partial-token token]] [:ands & values]]   {:type "condition"                :entity token :partial [token [:schema :table]] :values (map parsed-value->indexed-value values) :or false}
+                    [:RESOURCE [:entity [:token schema] [:partial-token token]] [:ands & values]]   {:type "condition" :schema schema :entity token :partial [token [        :table]] :values (map parsed-value->indexed-value values) :or false}
+                    [:RESOURCE [:entity                 [:partial-token token]] [:ors & values]]    {:type "condition"                :entity token :partial [token [:schema :table]] :values (map parsed-value->indexed-value values) :or true}
+                    [:RESOURCE [:entity [:token schema] [:partial-token token]] [:ors & values]]    {:type "condition" :schema schema :entity token :partial [token [        :table]] :values (map parsed-value->indexed-value values) :or true}
 
                     ;; select
                     [:SELECT [:specific [:columns & columns]]]               {:type "select" :columns (parsed-cols->indexed-cols columns)}
@@ -164,7 +162,7 @@
           get-parsed-ops     ;; [ [:CONDITION ..                ] ]
           (map index)        ;; [ {:type "condition" ...} ]
           add-aliases        ;; [ {:type "condition" ... :entity :users :alias "u"} ]
-          add-context        ;; [ [:type "condition" ... :context {:entity :users :alias "u"} ] ]
+          add-context        ;; [ [:type "condition" ... :context {:entity :users :alias "u" :schema "public"} ] ]
           )))
 
 ;; Build SQL from the AST

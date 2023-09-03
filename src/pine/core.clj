@@ -30,9 +30,13 @@
                           (ast/ast->sql-and-params connection))]
     {:context
      (->> ops
-          (map (comp :entity :context))
-          (filter (comp not nil?))
-          (map name) ;; TODO: rule#1
+          (map :context)
+          (filter :entity)
+          (map (fn [context]
+                 (-> context
+                     (select-keys [:entity :schema])
+                     (clojure.set/rename-keys {:entity :table})
+                  )))
           )
      :prepared {:query sql
                 :params params}}))
