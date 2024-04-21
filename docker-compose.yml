@@ -1,6 +1,6 @@
 version: "2"
 services:
-  app:
+  server:
     image: "clojure:lein-2.8.3"
     command: "lein trampoline ring server-headless 33333"
     user: "${UID}:${GID}"

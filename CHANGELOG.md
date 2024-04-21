@@ -6,8 +6,11 @@ log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 ### Added
 - The context contains the schema as well.
 
+### Fixed
+- The values for the filters weren't being quoted properly in some cases
+
 ### Breaking
-- The hints for tables contain and object of schema and table instead of just a string i.e. table.
+- The hints for tables contain an object of schema and table instead of just a string i.e. table.
 
 ## [0.4.1] - 2023-08-11
 ### Added

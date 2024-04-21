@@ -451,7 +451,7 @@
 (defn filter->where-condition
   "Convert the filter part of an operation to a where sql"
   [connection entity qualify? [column [type value] op]]
-   (let [col (cond qualify? (qualify (connection/quote connection column) :with (name entity)) :else column)
+  (let [col (cond qualify? (qualify (connection/quote connection column) :with (name entity)) :else (connection/quote connection column))
          operator (cond (= :null value) op
                         (re-find #"\*" value) "LIKE"
                         :else op)
