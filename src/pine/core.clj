@@ -34,7 +34,7 @@
           (filter :entity)
           (map (fn [context]
                  (-> context
-                     (select-keys [:entity :schema])
+                     (select-keys [:entity :schema :alias])
                      (clojure.set/rename-keys {:entity :table})
                   )))
           )

@@ -397,7 +397,7 @@ tables matching `us` e.g. `user`
 public.us
 ```
 
-tables matching `us` in `public` schema.
+tables matching `us` (user) in `public` schema.
 
 ### [x] Join
 
@@ -414,4 +414,4 @@ tables matching `file` related to `user`
 public.user | public.fi
 ```
 
-tables matching `fi` in `public` related to `user` in `public`
+tables matching `fi` (file) in `public` related to `user` in `public`
