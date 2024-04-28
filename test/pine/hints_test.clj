@@ -10,30 +10,27 @@
           (connection/get-metadata connection)
           ))
 
-;; (deftest test-abbreviate:a_b_c
-;;   (testing "abbreviate"
-;;     (is (= "abc" (sut/abbreviate "a_b_c")))))
 
 (deftest test-candidates:filter
   (testing "candidates"
-    (is (= #{"a""ab" "abc"} (sut/candidates "a" ["a" "b" "c" "ab" "bc" "abc"])))))
+    (is (= '( "a""ab" "abc" ) (sut/candidates "a" ["a" "b" "c" "ab" "bc" "abc"])))))
 
 (deftest test-schema-hint
   (testing "schema hint"
-    (is (= #{"public"} (sut/schema-hint md nil "pu")))))
+    (is (= '( "public" ) (sut/schema-hint md {} "pu")))))
 
 (deftest test-table-hint:without-schema
   (testing "table hint without schema"
-    (is (= #{"document" "organization" } (sut/table-hint md {} "o")))))
+    (is (= '( "document" "organization" ) (sut/table-hint md {} "o")))))
 
 (deftest test-table-hint:with-schema
   (testing "table hint with schema"
-    (is (= #{"user"} (sut/table-hint md {:schema "x"} "us")))))
+    (is (= '( "user" ) (sut/table-hint md {:schema "x"} "us")))))
 
 (deftest test-table-hint:without-context
   (testing "table hint without context"
-    (is (= #{"user" "document" "organization"} (sut/table-hint md {} "")))))
+    (is (= '( "user" "document" "organization" ) (sut/table-hint md {} "")))))
 
 (deftest test-table-hint:with-context
   (testing "table hint with context"
-    (is (= #{"user"} (sut/table-hint md {:context {:entity "document"}} "")))))
+    (is (= '( "user" ) (sut/table-hint md {:context {:entity "document"}} "")))))

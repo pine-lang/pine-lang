@@ -9,8 +9,8 @@
   (testing "Build a query using a single resource"
     (is
      (=
-      "\nSELECT customers_0.* FROM `customers` AS customers_0 WHERE (customers_0.`id` = 1);\n"
-      (api/build (cf/create :mysql) {:query "SELECT customers_0.* FROM `customers` AS customers_0 WHERE (customers_0.`id` = ?)"
+      "\nSELECT customers_0.* FROM \"customers\" AS customers_0 WHERE (customers_0.\"id\" = 1);\n"
+      (api/build (cf/create :postgres) {:query "SELECT customers_0.* FROM \"customers\" AS customers_0 WHERE (customers_0.\"id\" = ?)"
               :params [[:number 1]]})
       ))))
 
@@ -18,7 +18,7 @@
   (testing "Build a query using a single resource"
     (is
      (=
-      "\nSELECT customers_0.* FROM `customers` AS customers_0 WHERE (customers_0.`name` = \"Acme Inc\");\n"
-      (api/build (cf/create :mysql) {:query "SELECT customers_0.* FROM `customers` AS customers_0 WHERE (customers_0.`name` = ?)"
+      "\nSELECT customers_0.* FROM \"customers\" AS customers_0 WHERE (customers_0.\"name\" = 'Acme Inc');\n"
+      (api/build (cf/create :postgres) {:query "SELECT customers_0.* FROM \"customers\" AS customers_0 WHERE (customers_0.\"name\" = ?)"
               :params [[:string "Acme Inc"]]})
       ))))

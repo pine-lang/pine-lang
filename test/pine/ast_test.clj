@@ -15,13 +15,13 @@
     (is
      (=
       [{:type    "condition"
-        :entity  :customers
+        :entity  "customers"
         :partial ["customers" [:schema :table]]
         :alias   "customers_0"
         :values  [[ "id" [:number "1"] "="]]
-        :context {:entity nil, :alias nil}
+        :context {:schema nil, :entity nil, :alias nil}
         }]
-      (ast/str->operations (cf/create :mysql) "customers 1")
+      (ast/str->operations (cf/create :postgres) "customers 1")
       ))))
 
 (deftest str->operations:group-explicit-fn
@@ -29,19 +29,19 @@
     (is
      (=
       [{:type    "condition"
-        :entity  :customers
+        :entity  "customers"
         :partial ["customers" [:schema :table]]
         :alias   "customers_0"
         :values  []
-        :context {:entity nil :alias nil}
+        :context {:schema nil, :entity nil :alias nil}
         }
        {:type    "group"
         :column  "status"
         :fn-name "max"
         :fn-column "id"
-        :context {:entity :customers :alias "customers_0"}
+        :context {:schema "public" :entity "customers" :alias "customers_0"}
         }]
-      (ast/str->operations (cf/create :mysql) "customers | group: status max: id")
+      (ast/str->operations (cf/create :postgres) "customers | group: status max: id")
       ))))
 
 (deftest str->operations:one-operation-explicit-id
@@ -49,15 +49,15 @@
     (is
      (=
       [{:type    "condition"
-        :entity  :customers
+        :entity  "customers"
         :partial ["customers" [:schema :table]]
         :alias   "customers_0"
         :values  [[ "id" [:number "1"]  "="]]
-        :context {:entity nil, :alias nil}
+        :context {:schema nil :entity nil :alias nil}
         :or      false
         }
        ]
-      (ast/str->operations (cf/create :mysql) "customers id=1")
+      (ast/str->operations (cf/create :postgres) "customers id=1")
       ))))
 
 (deftest str->operations:one-operation-name-has-number-and-wildcard
@@ -65,14 +65,14 @@
     (is
      (=
       [{:type    "condition"
-        :entity  :customers
+        :entity  "customers"
         :partial ["customers" [:schema :table]]
         :alias   "customers_0"
         :values  [[ "name" [:string "1*"] "="]]
-        :context {:entity nil, :alias nil}
+        :context {:schema nil :entity nil, :alias nil}
         :or      false
         }]
-      (ast/str->operations (cf/create :mysql) "customers name='1*'")
+      (ast/str->operations (cf/create :postgres) "customers name='1*'")
       ))))
 
 (deftest str->operations:two-operations
@@ -80,20 +80,20 @@
     (is
      (=
       [{:type    "condition"
-        :entity  :customers
+        :entity  "customers"
         :partial ["customers" [:schema :table]]
         :alias   "customers_0"
         :values  [[ "id" [:number "1"] "="]]
-        :context {:entity nil, :alias nil}
+        :context {:schema nil :entity nil :alias nil}
         }
        {:type    "condition"
-        :entity  :users
+        :entity  "users"
         :partial ["users" [:schema :table]]
         :alias   "users_1"
         :values  [[ "id" [:number "2"] "="]]
-        :context {:entity :customers, :alias "customers_0"}
+        :context {:schema "public" :entity "customers", :alias "customers_0"}
         }]
-      (ast/str->operations (cf/create :mysql) "customers 1 | users 2")
+      (ast/str->operations (cf/create :postgres) "customers 1 | users 2")
       ))))
 
 (deftest str->operations:three-operations
@@ -101,29 +101,29 @@
     (is
      (=
       [{:type    "condition"
-        :entity  :customers
+        :entity  "customers"
         :partial ["customers" [:schema :table]]
         :alias   "customers_0"
         :values  [[ "id" [:number "1"] "="]]
-        :context {:entity nil, :alias nil}
+        :context {:schema nil :entity nil, :alias nil}
         }
        {:type    "condition"
-        :entity  :users
+        :entity  "users"
         :partial ["users" [:schema :table]]
         :alias   "users_1"
         :values  [[ "name" [:string "John"] "="]]
-        :context {:entity :customers, :alias "customers_0"}
+        :context {:schema "public" :entity "customers" :alias "customers_0"}
         :or      false
         }
        {:type    "condition"
-        :entity  :address
+        :entity  "address"
         :partial ["address" [:schema :table]]
         :alias   "address_2"
         :values  []
-        :context {:entity :users, :alias "users_1"}
+        :context {:schema "public" :entity "users", :alias "users_1"}
         }
        ]
-      (ast/str->operations (cf/create :mysql) "customers 1 | users name='John' | address")
+      (ast/str->operations (cf/create :postgres) "customers 1 | users name='John' | address")
       ))))
 
 ;; Opertations to AST
@@ -134,7 +134,7 @@
      (=
       ["customers_0.id, count(customers_0.id)"]
       (->> "customers 1 | group: id"
-           (ast/str->operations (cf/create :mysql))
+           (ast/str->operations (cf/create :postgres))
        (filter (ast/operation-type? ["group"]))
        ast/operations->group-columns
        )
@@ -144,10 +144,10 @@
   (testing "Create a where condition from an operation"
     (is
      (=
-      { :conditions "(customers_0.`id` = ?)" :params [[:number "1"]] }
-      (->> (ast/str->operations (cf/create :mysql) "customers 1")
+      { :conditions "(customers_0.\"id\" = ?)" :params [[:number "1"]] }
+      (->> (ast/str->operations (cf/create :postgres) "customers 1")
            first
-           (ast/operation->where (cf/create :mysql) true)
+           (ast/operation->where (cf/create :postgres) true)
            )
       ))))
 
@@ -155,20 +155,20 @@
   (testing "Create a where condition from an operation"
     (is
      (=
-      { :conditions "(customers_0.`name` = ?)" :params [[:string "acme"]] }
-      (->> (ast/str->operations (cf/create :mysql) "customers name='acme'")
+      { :conditions "(customers_0.\"name\" = ?)" :params [[:string "acme"]] }
+      (->> (ast/str->operations (cf/create :postgres) "customers name='acme'")
            first
-           (ast/operation->where (cf/create :mysql) true))
+           (ast/operation->where (cf/create :postgres) true))
       ))))
 
 (deftest operation->where:customer-name-is-acme-something
   (testing "Create a where condition from an operation"
     (is
      (=
-      { :conditions "(customers_0.`name` LIKE ?)" :params [[:string "acme%"]] }
-      (->> (ast/str->operations (cf/create :mysql) "customers name='acme*'")
+      { :conditions "(customers_0.\"name\" LIKE ?)" :params [[:string "acme%"]] }
+      (->> (ast/str->operations (cf/create :postgres) "customers name='acme*'")
            first
-           (ast/operation->where (cf/create :mysql) true))
+           (ast/operation->where (cf/create :postgres) true))
       ))))
 
 (deftest operations->where
@@ -176,13 +176,13 @@
     (is
      (=
       {
-       :conditions ["(customers_0.`name` = ?)"
-                    "(users_1.`id` = ?)"]
+       :conditions ["(customers_0.\"name\" = ?)"
+                    "(users_1.\"id\" = ?)"]
        :params [[:string "acme"] [:number "1"]]
        }
       (->> "customers name='acme' | users 1"
-           (ast/str->operations (cf/create :mysql))
-           (ast/operations->where (cf/create :mysql) true)
+           (ast/str->operations (cf/create :postgres))
+           (ast/operations->where (cf/create :postgres) true)
            )
       ))))
 
@@ -190,22 +190,22 @@
   (testing "Create operations for a query"
     (is
      (=
-      ["`documents`" "d" ["d.`caseFileId`" "cf.`id`"]]
+      ["\"organization\"" "o" ["u.\"org_id\"" "o.\"id\""]]
       (ast/operations->join
-       (cf/create :mysql)
-       {:entity :caseFiles, :alias "cf"}
-       {:entity :documents, :alias "d"})
+       (cf/create :postgres)
+       {:entity "user", :alias "u"}
+       {:entity "organization", :alias "o"})
       ))))
 
 (deftest operations->join:entity-owned-by-another-entity
   (testing "Create operations for a query"
     (is
      (=
-      ["`caseFiles`" "cf" ["cf.`id`" "d.`caseFileId`"]]
+      ["\"user\"" "u" ["u.\"org_id\"" "o.\"id\""]]
       (ast/operations->join
-       (cf/create :mysql)
-       {:entity :documents :alias "d"}
-       {:entity :caseFiles :alias "cf"}
+       (cf/create :postgres)
+       {:entity "organization", :alias "o"}
+       {:entity "user", :alias "u"}
        )
       ))))
 
@@ -214,26 +214,25 @@
     (is
      (=
       (ast/operations->joins
-       (cf/create :mysql)
-       [{:entity :customers :alias "c"}
-        {:entity :caseFiles :alias "cf"}
-        {:entity :documents :alias "d"}
+       (cf/create :postgres)
+       [{:entity "organization" :alias "o"}
+        {:entity "user" :alias "u"}
+        {:entity "document" :alias "d"}
         ])
 
-      ["`caseFiles`" "cf" ["cf.`customerId`" "c.`id`"]
-        "`documents`" "d" ["d.`caseFileId`" "cf.`id`"]]
-
+      ["\"user\"" "u" ["u.\"org_id\"" "o.\"id\""]
+       "\"document\"" "d" ["d.\"user_id\"" "u.\"id\""]]
       ))))
 
 (deftest operations->joins:no-filter
   (testing "Create operations for a query"
     (is
      (=
-      ["`caseFiles`" "cf" ["cf.`customerId`" "c.`id`"]]
+      ["\"user\"" "u" ["u.\"org_id\"" "o.\"id\""]]
       (ast/operations->joins
-      (cf/create :mysql)
-       [{:type "condition" :entity :customers :values [] :alias "c"}
-        {:type "condition" :entity :caseFiles :values [] :alias "cf"}
+      (cf/create :postgres)
+       [{:type "condition" :entity "organization" :values [] :alias "o"}
+        {:type "condition" :entity "user" :values [] :alias "u"}
         ])
       ))))
 
@@ -243,7 +242,7 @@
      (=
       nil
       (ast/operations->group
-       [{:type "condition" :entity :customers, :values []}
+       [{:type "condition" :entity "document", :values []}
         ])
       ))))
 
@@ -252,14 +251,14 @@
     (is
      (=
       {
-       :select ["documents_2.`id`" "documents_2.`title`" "documents_2.`caseFileId`"]
-       :from [nil :customers "customers_0"]
-       :joins ["`caseFiles`" "casefiles_1" ["casefiles_1.`customerId`" "customers_0.`id`"]
-               "`documents`" "documents_2" ["documents_2.`caseFileId`" "casefiles_1.`id`"]]
+       :select ["document_2.*"]
+       :from [nil "organization" "organization_0"]
+       :joins ["\"user\"" "user_1" ["user_1.\"org_id\"" "organization_0.\"id\""]
+               "\"document\"" "document_2" ["document_2.\"user_id\"" "user_1.\"id\""]]
        :where {
-               :conditions ["(customers_0.`id` = ?)"
-                            "(casefiles_1.`name` = ?)"
-                            "(documents_2.`name` = ?)"
+               :conditions ["(organization_0.\"id\" = ?)"
+                            "(user_1.\"name\" = ?)"
+                            "(document_2.\"name\" = ?)"
                             ]
                :params     [[:number "1"] [:string "john"] [:string "test"]]
                }
@@ -270,9 +269,9 @@
        :delete nil
        :set nil
        }
-      (->> "customers 1 | caseFiles name='john' | documents name='test'"
-           (ast/str->operations (cf/create :mysql))
-           (ast/operations->ast (cf/create :mysql)))
+      (->> "organization 1 | user name='john' | document name='test'"
+           (ast/str->operations (cf/create :postgres))
+           (ast/operations->ast (cf/create :postgres)))
       ))))
 
 ;; AST to SQL
@@ -281,24 +280,24 @@
   (testing "Create sql from an ast with one operation"
     (is
      (=
-      (ast/ast->sql-and-params (cf/create :mysql) {
+      (ast/ast->sql-and-params (cf/create :postgres) {
                      :select ["c.*"]
-                     :from [nil :customers "c"]
+                     :from [nil :organization "c"]
                      :where {
                              :conditions ["c.id = ?"
                                           ]
                              :params     ["1"]
                              }
                      })
-      ["SELECT c.* FROM `customers` AS c WHERE c.id = ?" ["1"]]
+      ["SELECT c.* FROM \"organization\" AS c WHERE c.id = ?" ["1"]]
       ))))
 
 (deftest ast-join->sql
   (testing "Create sql from a single join from the joins part of the ast"
     (is
      (=
-      (ast/ast-join->sql "`users`" "u" ["u.customerId" "c.id"])
-      "JOIN `users` AS u ON (u.customerId = c.id)"
+      (ast/ast-join->sql "\"users\"" "u" ["u.customerId" "c.id"])
+      "JOIN \"users\" AS u ON (u.customerId = c.id)"
       ))))
 
 (deftest ast-joins->sql:no-join
@@ -313,19 +312,19 @@
   (testing "Create sql from a joins part of the ast"
     (is
      (=
-      (ast/ast-joins->sql ["`users`" "u" ["u.customerId" "c.id"]
-                          "`address`" "a" ["a.userId" "u.id"]])
-      "JOIN `users` AS u ON (u.customerId = c.id) JOIN `address` AS a ON (a.userId = u.id)"
+      (ast/ast-joins->sql ["\"users\"" "u" ["u.customerId" "c.id"]
+                          "\"address\"" "a" ["a.userId" "u.id"]])
+      "JOIN \"users\" AS u ON (u.customerId = c.id) JOIN \"address\" AS a ON (a.userId = u.id)"
       ))))
 
 (deftest ast->sql-and-params:two-operation
   (testing "Create sql from an ast with two operations"
     (is
      (=
-      (ast/ast->sql-and-params (cf/create :mysql) {
+      (ast/ast->sql-and-params (cf/create :postgres) {
                                 :select ["u.*"]
-                                :from [nil :customers "c"]
-                                :joins ["`users`" "u" ["u.customerId" "c.id"]]
+                                :from [nil :organization "c"]
+                                :joins ["\"users\"" "u" ["u.customerId" "c.id"]]
                                 :where {
                                         :conditions ["c.id = ?"
                                                      "u.name = ?"
@@ -333,7 +332,7 @@
                                         :params     ["1" "john"]
                                         }
                      })
-      ["SELECT u.* FROM `customers` AS c JOIN `users` AS u ON (u.customerId = c.id) WHERE c.id = ? AND u.name = ?" ["1" "john"]]
+      ["SELECT u.* FROM \"organization\" AS c JOIN \"users\" AS u ON (u.customerId = c.id) WHERE c.id = ? AND u.name = ?" ["1" "john"]]
       ))))
 
 (deftest str->operations:one-operation-comparison-less-than
@@ -341,15 +340,15 @@
     (is
      (=
       [{:type    "condition"
-        :entity  :customers
-        :partial ["customers" [:schema :table]]
-        :alias   "customers_0"
+        :entity  "organization"
+        :partial ["organization" [:schema :table]]
+        :alias   "organization_0"
         :values  [[ "id" [:number "1"]  "<"]]
-        :context {:entity nil, :alias nil}
+        :context {:schema nil :entity nil, :alias nil}
         :or      false
         }
        ]
-      (ast/str->operations (cf/create :mysql) "customers id<1")
+      (ast/str->operations (cf/create :postgres) "organization id<1")
       ))))
 
 (deftest str->operations:one-operation-comparison-greater-than
@@ -357,14 +356,13 @@
     (is
      (=
       [{:type    "condition"
-        :entity  :customers
-        :partial ["customers" [:schema :table]]
-        :alias   "customers_0"
+        :entity  "organization"
+        :partial ["organization" [:schema :table]]
+        :alias   "organization_0"
         :values  [[ "id" [:number "1"]  ">"]]
-        :context {:entity nil, :alias nil}
+        :context {:schema nil :entity nil, :alias nil}
         :or      false
         }
        ]
-      (ast/str->operations (cf/create :mysql) "customers id>1")
+      (ast/str->operations (cf/create :postgres) "organization id>1")
       ))))
-
