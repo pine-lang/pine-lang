@@ -6,4 +6,4 @@ if [ -z "$1" ]; then
 fi
 PINE_VERSION="$1"
 echo "Pine version: $PINE_VERSION"
-docker build . -t pine:$PINE_VERSION
+docker build . -t ahmadnazir/pine:$PINE_VERSION
