@@ -91,4 +91,4 @@ jobs:
         run: clojure -M:fmt check
 
       - name: Run tests
-        run: clojure -X:test
+        run: clojure -M:test
