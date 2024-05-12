@@ -88,7 +88,7 @@ jobs:
       #   run: zprint --version
 
       - name: Check format
-        run: clj -Tcljfmt check
+        run: clojure -Tcljfmt check
 
       - name: Run tests
-        run: clj -X:test
+        run: clojure -X:test
