@@ -1,15 +1,13 @@
 OPERATIONS := OPERATION <whitespace*> (<"|"> <whitespace*> OPERATION <whitespace*>)*
-OPERATION  := SELECT | RESOURCE | LIMIT | GROUP | ORDER | META | DELETE | SET | FUNCTION
+OPERATION  := SELECT | TABLE | LIMIT | GROUP | ORDER | META | DELETE | SET | FUNCTION
 
-SELECT          := specific | invert-specific
-specific        := <#"s(el(ect)?)?:"> <whitespace+> columns
-invert-specific := <#"u(ns(elect)?)?:"> <whitespace+> columns
+SELECT          := <#"s(el(ect)?)?:"> <whitespace+> columns
 columns         := column (<","> <whitespace*> column)*
 (* TODO: use `token` instead of `string` *)
 column          := string | string <whitespace+> <"as"> <whitespace+> alias
 alias           := string
 
-RESOURCE        := entity | entity <whitespace+> id | entity <whitespace+> ids | entity <whitespace+> ands | entity <whitespace+> ors
+TABLE           := table | table <whitespace+> id | table <whitespace+> ids | table <whitespace+> ands | table <whitespace+> ors
 
 ORDER           := <#"o(rder)?:"> <whitespace*> "+"? column
 
@@ -37,7 +35,7 @@ comparison  := string <whitespace*> <"="> <whitespace*> ids | string <whitespace
 
 number        := #"[0-9]+"
 whitespace    := #"\s+"
-entity        := partial-token | token <"."> partial-token
+table         := partial-token | token <"."> partial-token
 operator      := #"<|>|="
 
 quoted-string := <"'"> space-string? <"'"> | <'"'> space-string? <'"'>

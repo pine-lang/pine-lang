@@ -13,7 +13,7 @@
 
 From emacs:
 
-- Connect: `M-x cider-janck-in`
+- Connect: `M-x cider-jack-in`
 - Disconnect: `M-x  cider-quit`
 
 No need to run the repl manually (i.e. open a terminal and run it).
