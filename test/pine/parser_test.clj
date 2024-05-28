@@ -5,8 +5,10 @@
 (deftest test-parser
 
   (testing "Parse `table` expressions"
-    (is (= (parse-expression "user") [{:type :table, :value "user"}]))
-    (is (= (parse-expression "user_document") [{:type :table, :value "user_document"}])))
+    (is (= (parse-expression "user")             [{:type :table, :value {:schema nil      :table "user" :alias nil}}]))
+    (is (= (parse-expression "public.user")      [{:type :table, :value {:schema "public" :table "user" :alias nil}}]))
+    (is (= (parse-expression "user as u")        [{:type :table, :value {:schema nil      :table "user" :alias "u"}}]))
+    (is (= (parse-expression "public.user as u") [{:type :table, :value {:schema "public" :table "user" :alias "u"}}])))
 
   (testing "Parse `select` expressions"
     (is (= (parse-expression "select: name") [{:type :select, :value ["name"]}]))

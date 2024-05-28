@@ -35,7 +35,7 @@ comparison  := string <whitespace*> <"="> <whitespace*> ids | string <whitespace
 
 number        := #"[0-9]+"
 whitespace    := #"\s+"
-table         := partial-token | token <"."> partial-token
+table         := partial-token | token <"."> partial-token | token <whitespace+> <"as"> <whitespace+> alias | token <"."> token <whitespace+> <"as"> <whitespace+> alias
 operator      := #"<|>|="
 
 quoted-string := <"'"> space-string? <"'"> | <'"'> space-string? <'"'>

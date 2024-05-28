@@ -12,15 +12,18 @@
 (defn- normalize-ops [[_ & ops]]
   (mapv (fn [[_ op]] (-normalize-op op)) ops))
 
-
 ;; -----
 ;; TABLE
 ;; -----
 
 (defmethod -normalize-op :TABLE [[_ payload]]
   (match payload
-    [:table [:partial-token table]] {:type :table, :value table}
-    :else                           (throw (ex-info "Unknown RESOURCE operation" {:_ payload}))))
+    [:table [:partial-token table]]                              {:type :table, :value {:schema nil    :table table :alias nil}}
+    [:table [:token schema] [:partial-token table]]              {:type :table, :value {:schema schema :table table :alias nil}}
+    [:table [:token table] [:alias [:string a]]]                {:type :table, :value {:schema nil :table table :alias a}}
+    [:table [:token schema] [:token table] [:alias [:string a]]] {:type :table, :value {:schema schema :table table :alias a}}
+    :else
+    (throw (ex-info "Unknown RESOURCE operation" {:_ payload}))))
 
 ;; ------
 ;; SELECT
@@ -50,7 +53,6 @@
                            file (format "%s/src/pine/pine.bnf" dir)
                            grammar (slurp file)]
                        (insta/parser grammar)))
-
 
 (defn parse-expression [expression]
   "Parse an expression and return the normalized operations"
