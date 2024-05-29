@@ -5,8 +5,8 @@
 (deftest test-parser
 
   (testing "Parse `table` expressions"
-    (is (= (parse-expression "user")             [{:type :table, :value {:schema nil      :table "user" :alias nil}}]))
-    (is (= (parse-expression "public.user")      [{:type :table, :value {:schema "public" :table "user" :alias nil}}]))
+    (is (= (parse-expression "user")             [{:type :table, :value {:table "user"}}]))
+    (is (= (parse-expression "public.user")      [{:type :table, :value {:schema "public" :table "user"}}]))
     (is (= (parse-expression "user as u")        [{:type :table, :value {:schema nil      :table "user" :alias "u"}}]))
     (is (= (parse-expression "public.user as u") [{:type :table, :value {:schema "public" :table "user" :alias "u"}}])))
 

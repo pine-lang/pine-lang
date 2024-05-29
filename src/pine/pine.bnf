@@ -1,41 +1,38 @@
-OPERATIONS := OPERATION <whitespace*> (<"|"> <whitespace*> OPERATION <whitespace*>)*
-OPERATION  := SELECT | TABLE | LIMIT | GROUP | ORDER | META | DELETE | SET | FUNCTION
+OPERATIONS := OPERATION <ws*> (<"|"> <ws*> OPERATION <ws*>)*
+OPERATION  := SELECT | TABLE | LIMIT | GROUP | ORDER | DELETE | SET | FUNCTION
 
-SELECT          := <#"s(el(ect)?)?:"> <whitespace+> columns
-columns         := column (<","> <whitespace*> column)*
-(* TODO: use `token` instead of `string` *)
-column          := string | string <whitespace+> <"as"> <whitespace+> alias
+SELECT          := <#"s(el(ect)?)?:"> <ws+> columns
+columns         := column (<","> <ws*> column)*
 alias           := string
 
-TABLE           := table | table <whitespace+> id | table <whitespace+> ids | table <whitespace+> ands | table <whitespace+> ors
+column          := qualified-token
 
-ORDER           := <#"o(rder)?:"> <whitespace*> "+"? column
 
-GROUP           := <#"g(roup)?:"> <whitespace*> column (<whitespace+> FUNCTION)?
-FUNCTION        := #"(count|min|max|join)" <":"> <whitespace+> column
+TABLE           := qualified-token | qualified-token <ws+> ands | qualified-token <ws+> ors
 
-LIMIT           := <#"l(imit)?:"> <whitespace*> number
+ORDER           := <#"o(rder)?:"> <ws*> "+"? column
 
-META            := ref
-ref             := <#"ref(erences)?"> <"?">
+GROUP           := <#"g(roup)?:"> <ws*> column (<ws+> FUNCTION)?
+FUNCTION        := #"(count|min|max|join)" <":"> <ws+> column
+
+LIMIT           := <#"l(imit)?:"> <ws*> number
 
 DELETE          := <#"delete!">
 
-SET             := <#"set!"> <whitespace*> assignments
+SET             := <#"set!"> <ws*> assignments
 
-id           := number
-assignments  := assignment (<whitespace*> assignment)*
-assignment   := string <whitespace*> <"="> <whitespace*> (quoted-string|number)
+assignments  := assignment (<ws*> assignment)*
+assignment   := string <ws*> <"="> <ws*> (quoted-string|number)
 
-ids         := number (<whitespace*> <","> <whitespace*> number)*
-ors         := comparison (<whitespace*> <","> <whitespace*> comparison)*
-ands        := comparison (<whitespace+> comparison)*
-comparison  := string <whitespace*> <"="> <whitespace*> ids | string <whitespace*> operator <whitespace*> (quoted-string|number) | string "?"  | "!" string "?"
+ors         := comparison (<ws*> <","> <ws*> comparison)*
+ands        := comparison (<ws+> comparison)*
+comparison  := string <ws*> operator <ws*> (quoted-string|number) | string "?"  | "!" string "?"
 
 
 number        := #"[0-9]+"
-whitespace    := #"\s+"
-table         := partial-token | token <"."> partial-token | token <whitespace+> <"as"> <whitespace+> alias | token <"."> token <whitespace+> <"as"> <whitespace+> alias
+ws    := #"\s+"
+
+qualified-token :=  partial-token | token <"."> partial-token | token <ws+> <"as"> <ws+> alias | token <"."> token <ws+> <"as"> <ws+> alias
 operator      := #"<|>|="
 
 quoted-string := <"'"> space-string? <"'"> | <'"'> space-string? <'"'>

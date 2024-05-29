@@ -18,10 +18,10 @@
 
 (defmethod -normalize-op :TABLE [[_ payload]]
   (match payload
-    [:table [:partial-token table]]                              {:type :table, :value {:schema nil    :table table :alias nil}}
-    [:table [:token schema] [:partial-token table]]              {:type :table, :value {:schema schema :table table :alias nil}}
-    [:table [:token table] [:alias [:string a]]]                {:type :table, :value {:schema nil :table table :alias a}}
-    [:table [:token schema] [:token table] [:alias [:string a]]] {:type :table, :value {:schema schema :table table :alias a}}
+    [:qualified-token [:partial-token table]]                              {:type :table, :value {:table table}}
+    [:qualified-token [:token schema] [:partial-token table]]              {:type :table, :value {:table table :schema schema}}
+    [:qualified-token [:token table] [:alias [:string a]]]                 {:type :table, :value {:schema nil :table table :alias a}}
+    [:qualified-token [:token schema] [:token table] [:alias [:string a]]] {:type :table, :value {:schema schema :table table :alias a}}
     :else
     (throw (ex-info "Unknown RESOURCE operation" {:_ payload}))))
 
@@ -31,7 +31,7 @@
 
 (defn- -normalize-column [column]
   (match column
-    [:column [:string c]] c
+    [:column [:qualified-token [:partial-token c]]] c
     :else                 (throw (ex-info "Unknown COLUMN operation" {:_ column}))))
 
 (defmethod -normalize-op :SELECT [[_ payload]]
