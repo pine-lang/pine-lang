@@ -9,9 +9,6 @@
   operation"
   first)
 
-(defn- normalize-ops [[_ & ops]]
-  (mapv (fn [[_ op]] (-normalize-op op)) ops))
-
 ;; -----
 ;; TABLE
 ;; -----
@@ -20,7 +17,7 @@
   (match payload
     [:qualified-token [:partial-token table]]                              {:type :table, :value {:table table}}
     [:qualified-token [:token schema] [:partial-token table]]              {:type :table, :value {:table table :schema schema}}
-    [:qualified-token [:token table] [:alias [:string a]]]                 {:type :table, :value {:schema nil :table table :alias a}}
+    [:qualified-token [:token table] [:alias [:string a]]]                 {:type :table, :value {:table table :alias a}}
     [:qualified-token [:token schema] [:token table] [:alias [:string a]]] {:type :table, :value {:schema schema :table table :alias a}}
     :else
     (throw (ex-info "Unknown RESOURCE operation" {:_ payload}))))
@@ -54,10 +51,13 @@
                            grammar (slurp file)]
                        (insta/parser grammar)))
 
+(defn- normalize-ops [[_ & ops]]
+  (mapv (fn [[_ op]] (-normalize-op op)) ops))
+
 (defn parse-expression [expression]
   "Parse an expression and return the normalized operations"
-  (let [parsed (parse expression)]
-    (normalize-ops parsed))
+  ;; (let [parsed (parse expression)]
+  ;;   (normalize-ops parsed))
   (->> expression
        parse
        normalize-ops))
