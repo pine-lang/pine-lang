@@ -25,7 +25,6 @@
 ;; Parse
 
 (def parse (let [dir (System/getProperty "user.dir")
-
                   file (format "%s/src/pine/pine.bnf" dir)
                  grammar (slurp file)]
              (insta/parser grammar)))

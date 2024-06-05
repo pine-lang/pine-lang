@@ -37,21 +37,23 @@
         opts {:as-arrays? true}
         foreign-keys-sql "
 SELECT
-  kcu.table_schema,
-  kcu.table_name,
-  kcu.column_name,
-  ccu.table_schema AS foreign_table_schema,
-  ccu.table_name AS foreign_table_name,
-  ccu.column_name AS foreign_column_name
- FROM information_schema.table_constraints AS tc
- JOIN information_schema.key_column_usage AS kcu
-   ON tc.constraint_name = kcu.constraint_name
- LEFT
- JOIN information_schema.constraint_column_usage AS ccu
-   ON ccu.constraint_name = tc.constraint_name
-WHERE tc.constraint_type = 'FOREIGN KEY'
--- AND tc.table_name=?
--- AND ccu.foreign_table_schema=?"]
+  n.nspname AS table_schema,
+  c.relname AS table_name,
+  a.attname AS column_name,
+  fn.nspname AS foreign_table_schema,
+  f.relname AS foreign_table_name,
+  fa.attname AS foreign_column_name
+FROM pg_constraint con
+JOIN pg_class c ON c.oid = con.conrelid
+JOIN pg_namespace n ON n.oid = c.relnamespace
+JOIN pg_attribute a ON a.attnum = ANY(con.conkey) AND a.attrelid = c.oid
+JOIN pg_class f ON f.oid = con.confrelid
+JOIN pg_namespace fn ON fn.oid = f.relnamespace
+JOIN pg_attribute fa ON fa.attnum = ANY(con.confkey) AND fa.attrelid = f.oid
+WHERE con.contype = 'f'
+
+"
+        ]
     (rest (jdbc/query config foreign-keys-sql opts)) ;; skip the first row
     ))
 

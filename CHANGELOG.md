@@ -3,6 +3,8 @@ All notable changes to this project will be documented in this file. This change
 log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 
 ## [Unreleased]
+### Fixed
+- It wasn't possible to get the relations between tables using a readonly user.
 
 ## [0.4.2] - 2024-05-04
 ### Added
