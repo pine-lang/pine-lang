@@ -46,7 +46,7 @@
 
 ;; -----
 
-(def ^:private parse (let [dir (System/getProperty "user.dir")
+(def ^:private parse-expression (let [dir (System/getProperty "user.dir")
                            file (format "%s/src/pine/pine.bnf" dir)
                            grammar (slurp file)]
                        (insta/parser grammar)))
@@ -54,10 +54,8 @@
 (defn- normalize-ops [[_ & ops]]
   (mapv (fn [[_ op]] (-normalize-op op)) ops))
 
-(defn parse-expression [expression]
+(defn parse [expression]
   "Parse an expression and return the normalized operations"
-  ;; (let [parsed (parse expression)]
-  ;;   (normalize-ops parsed))
   (->> expression
-       parse
+       parse-expression
        normalize-ops))

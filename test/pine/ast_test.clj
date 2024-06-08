@@ -6,7 +6,7 @@
 (defn- generate [type expression]
   "Helper function to generate and get the relevant part in the ast"
   (->> expression
-       parser/parse-expression
+       parser/parse
        ast/generate
        type))
 
@@ -24,3 +24,4 @@
            (generate :limit "limit: 10")))
     (is (= 1
            (generate :limit "l: 1")))))
+

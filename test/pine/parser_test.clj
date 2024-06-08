@@ -5,15 +5,15 @@
 (deftest test-parser
 
   (testing "Parse `table` expressions"
-    (is (= (parse-expression "user")             [{:type :table, :value {:table "user"}}]))
-    (is (= (parse-expression "public.user")      [{:type :table, :value {:table "user" :schema "public"}}]))
-    (is (= (parse-expression "user as u")        [{:type :table, :value {:table "user" :alias "u"}}]))
-    (is (= (parse-expression "public.user as u") [{:type :table, :value {:table "user" :schema "public" :alias "u"}}])))
+    (is (= (parse "user")             [{:type :table, :value {:table "user"}}]))
+    (is (= (parse "public.user")      [{:type :table, :value {:table "user" :schema "public"}}]))
+    (is (= (parse "user as u")        [{:type :table, :value {:table "user" :alias "u"}}]))
+    (is (= (parse "public.user as u") [{:type :table, :value {:table "user" :schema "public" :alias "u"}}])))
 
   (testing "Parse `select` expressions"
-    (is (= (parse-expression "select: name") [{:type :select, :value ["name"]}]))
-    (is (= (parse-expression "s: id, name") [{:type :select, :value ["id" "name"]}])))
+    (is (= (parse "select: name") [{:type :select, :value ["name"]}]))
+    (is (= (parse "s: id, name") [{:type :select, :value ["id" "name"]}])))
 
   (testing "Parse `limit` expressions"
-    (is (= (parse-expression "limit: 100") [{:type :limit, :value 100}]))
-    (is (= (parse-expression "l: 10") [{:type :limit, :value 10}]))))
+    (is (= (parse "limit: 100") [{:type :limit, :value 100}]))
+    (is (= (parse "l: 10") [{:type :limit, :value 10}]))))
