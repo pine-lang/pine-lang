@@ -2,13 +2,15 @@
   (:require
    [pine.db.main :as db]))
 
-(defn- join-helper [reference a1 a2]
-  "Using a specific reference and given aliases, we extract the columns and
-  return the pair of alias and columns that will be used for the join"
-  (let [c (-> reference keys first)            ;; This is a map indexed by columns. Get the first (and only) column
-        join (-> (get-in reference [c]) first) ;; There can theoretically be multiple relations - we get the first as `c` is not specified
-        [schema table col _ f-schema f-table f-col] join]
-    [a1 col := a2 f-col]))
+(defn- join-helper [references t1 t2 a1 a2]
+  "Find the references between the tables, get the columns for the first
+  refernece and return the pair of alias and columns that will be used for the
+  join"
+  (when-let [reference (get-in references [:table t1 :of t2 :via])]
+    (let [c (-> reference keys first)            ;; This is a map indexed by columns. Get the first (and only) column
+          join (-> (get-in reference [c]) first) ;; There can theoretically be multiple relations - we get the first as `c` is not specified
+          [schema table col _ f-schema f-table f-col] join]
+      [a1 col := a2 f-col])))
 
 ;; TODO: use spec for the state value i.e. first arg
 (defn- join [{:keys [connection-id aliases]} x y]
@@ -17,10 +19,8 @@
         a2 (y :alias)
         {t1 :table s1 :schema} (aliases a1)
         {t2 :table s2 :schema} (aliases a2)
-        result (or (when-let [reference (get-in references [:table t1 :of t2 :via])]
-                     (join-helper reference a1 a2))
-                   (when-let [reference (get-in references [:table t2 :of t1 :via])]
-                     (join-helper reference a2 a1)))]
+        result (or (join-helper references t1 t2 a1 a2)
+                   (join-helper references t2 t1 a2 a1))]
     result))
 
 (defn- update-joins [state]

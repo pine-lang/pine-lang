@@ -16,12 +16,11 @@
             })
 
 (defn handle [state {:keys [type value]}]
-  (db/init-references (state :connection-id))
-  (case type
-    :table (table/handle state value)
-    :limit (limit/handle state value)
-    (update state :errors conj [type "Unknown type"])))
+  (let [_ (db/init-references (state :connection-id))] ;; TODO: use the updated state with the connection info
+    (case type
+      :table (table/handle state value)
+      :limit (limit/handle state value)
+      (update state :errors conj [type "Unknown type"]))))
 
 (defn generate [parse-tree]
   (reduce handle state parse-tree))
-

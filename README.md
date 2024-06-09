@@ -21,5 +21,11 @@ No need to run the repl manually (i.e. open a terminal and run it).
 ## Run
 
 ```
-clj -X pine.core/run
+clj -M:run # or run-dev
+```
+
+or
+
+```
+./server.sh
 ```
