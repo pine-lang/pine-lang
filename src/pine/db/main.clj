@@ -4,10 +4,10 @@
 ;; TODO: move to a config file
 (def config {:default {;; :host "host.docker.internal" ;; for docker
                        :host "localhost"
-                       :dbtype "postgres"
-                       :dbname "avallone"
-                       :user "postgres"
-                       :password "secret"
+                       :dbtype "?"
+                       :dbname "?"
+                       :user "?"
+                       :password "?"
                        :schema nil}})
 
 (def references (atom {}))

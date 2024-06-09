@@ -1,8 +1,7 @@
 (ns pine.eval.sql
   (:require
    [pine.parser :as parser]
-   [pine.ast.main :as ast]
-   ))
+   [pine.ast.main :as ast]))
 
 (defn generate [ast]
   (let [{:keys [tables joins limit aliases]} ast
@@ -20,8 +19,6 @@
         limit-clause (if limit (str "LIMIT " limit) "")
         select-clause "SELECT *"]
     (str select-clause " " from-clause " " join-clause " " limit-clause ";")))
-
-
 
 ;; (->> "company as c |  tenant as t | user_tenant_role as r "
 ;;      parser/parse

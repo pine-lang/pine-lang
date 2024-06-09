@@ -47,9 +47,9 @@
 ;; -----
 
 (def ^:private parse-expression (let [dir (System/getProperty "user.dir")
-                           file (format "%s/src/pine/pine.bnf" dir)
-                           grammar (slurp file)]
-                       (insta/parser grammar)))
+                                      file (format "%s/src/pine/pine.bnf" dir)
+                                      grammar (slurp file)]
+                                  (insta/parser grammar)))
 
 (defn- normalize-ops [[_ & ops]]
   (mapv (fn [[_ op]] (-normalize-op op)) ops))

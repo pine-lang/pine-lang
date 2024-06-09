@@ -9,15 +9,13 @@
 
    [pine.parser :as parser]
    [pine.ast.main :as ast]
-   [pine.eval.sql :as sql])
-  )
+   [pine.eval.sql :as sql]))
 
 (defn build-response [expression]
   (->> expression
        parser/parse
        ast/generate
-       sql/generate
-       ))
+       sql/generate))
 
 (defn get-connection-metadata []
   ;; Implement this function

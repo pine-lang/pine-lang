@@ -29,3 +29,12 @@ or
 ```
 ./server.sh
 ```
+
+## Dev
+
+Fix clojuare format issues:
+
+
+```
+clj -M:fmt fix
+```

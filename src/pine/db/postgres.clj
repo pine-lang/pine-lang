@@ -1,7 +1,6 @@
 (ns pine.db.postgres
   (:require [clojure.java.jdbc :as jdbc]))
 
-
 (defn- get-references
   "Get the foreign keys from the database."
   [config]
@@ -23,8 +22,7 @@ JOIN pg_namespace fn ON fn.oid = f.relnamespace
 JOIN pg_attribute fa ON fa.attnum = ANY(con.confkey) AND fa.attrelid = f.oid
 WHERE con.contype = 'f'
 "]
-    (rest (jdbc/query config sql opts))
-    ))
+    (rest (jdbc/query config sql opts))))
 
 (defn- index-references
   "Finding forward and inverse relations for the table Example: A 'user' has
@@ -48,7 +46,7 @@ WHERE con.contype = 'f'
                   ;; stored in the context. For now, this is convenient. For
                   ;; consider the 'No ambiguity' approach below
                   ;;
-                  (update-in [:table  table   :of  f-table :via col ] conj join)
+                  (update-in [:table  table   :of  f-table :via col] conj join)
                   ;; (update-in [:table  f-table :has table   :via col ] conj join)                            ;; Not used
                   ;;
                   ;; Case: No Ambiguity / Schema specified
@@ -66,7 +64,6 @@ WHERE con.contype = 'f'
                   )))
           {}
           references))
-
 
 (defn get-indexed-references [config]
   (->> config
