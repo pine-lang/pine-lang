@@ -18,6 +18,8 @@
                  [org.postgresql/postgresql "42.2.24.jre7"]
 
                  [ring-cors "0.1.13"]
+                 [ring/ring-jetty-adapter "1.9.5"]
+                 [ring/ring-core "1.12.1"]
                  ]
   :plugins [[lein-ring "0.9.7"]
             ]
@@ -31,8 +33,9 @@
                     [refactor-nrepl "2.5.1"] ]
           :dependencies [[nrepl/nrepl "0.8.3"]]
           }
+   :uberjar {:aot :all}
    }
-  ;; :aot :all
+  :main pine.api
   ;; https://github.com/technomancy/leiningen/blob/master/sample.project.clj
   :repl-options {
                  :welcome (println "\nRepl for pine :: warming up ... \n")
@@ -40,4 +43,3 @@
                  :port "33333"
                  }
   )
-

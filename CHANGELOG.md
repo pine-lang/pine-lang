@@ -3,8 +3,11 @@ All notable changes to this project will be documented in this file. This change
 log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 
 ## [Unreleased]
+
+## [0.4.3] - 2024-06-11
 ### Fixed
 - It wasn't possible to get the relations between tables using a readonly user.
+- Generating an uberjar so that dependencies are not loaded when the server starts.
 
 ## [0.4.2] - 2024-05-04
 ### Added

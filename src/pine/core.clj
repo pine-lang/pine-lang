@@ -10,6 +10,8 @@
 ;; Eval
 
 ;; TODO: maybe we can replace this with `pine-prepare-with-context`
+;; `pine-prepare-with-context` also returns the :context
+;; From version 1.0.0, we'll rely on the `:ast` instead of `:context`
 (defn pine-prepare
   "Using a pine expression, prepare and SQL statements and params"
   [connection expression]
@@ -21,6 +23,7 @@
      :params params})
   )
 
+;; From version 1.0.0, we'll rely on the `:ast` instead of `:context`
 (defn pine-prepare-with-context
   "Using a pine expression, prepare and SQL statements and params"
   [connection expression]

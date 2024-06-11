@@ -12,7 +12,27 @@
          (sort-by count)
          )))
 
+(defn table-hint-refers-to [md op token]
+  (when-let [entity (->> op :context :entity)]
+    (let [entity (name entity) ;; backward compatibility - see rule#1
+          ]
+      (->> [:db/references :table entity :refers-to]
+           (get-in md)
+           keys
+           (candidates token))
+      )))
+
+(defn table-hint-referred-by [md op token]
+  (when-let [entity (->> op :context :entity)]
+    (let [entity (name entity) ;; backward compatibility - see rule#1
+          ]
+      (->> [:db/references :table entity :referred-by]
+           (get-in md)
+           keys
+           (candidates token)))))
+
 (defn table-hint-with-context [md op token]
+  "deprecated: use 'table-hint-refers-to' or 'table-hint-referred-by' instead"
   (when-let [entity (->> op :context :entity)]
     (let [entity (name entity) ;; backward compatibility - see rule#1
           ]
@@ -45,6 +65,10 @@
        (candidates token)
        ))
 
+;; TODO:
+;; 1. Instead of using the 'table-hint-with-context', use 'table-hint-refers-to' or 'table-hint-referred-by'
+;; 2. Create a helper functio to filter the results using the schema
+;; 3. return separately i.e. tables, refers-to, referred-by (the latter two are for the context)
 (defn table-hint [md op token]
   "Get all the candidates that are related to the context, or just get all the
   candidates. Conditionally, we also filter the candidates if a schema is
@@ -76,6 +100,7 @@
 (def hint-fns
   {:schema schema-hint
    :table qualified-table-hint
+   ;; TODO: here we add 'refers-to' and 'referred-by' hints
    })
 
 (defn generate

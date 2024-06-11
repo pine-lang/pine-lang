@@ -13,7 +13,9 @@
             [cheshire.core :refer [encode]]
             [cheshire.generate :refer [add-encoder encode-str remove-encoder]]
             [pine.db.connection :as connection]
-            ))
+            [ring.adapter.jetty :refer [run-jetty]]
+            )
+  (:gen-class))
 
 (add-encoder org.postgresql.util.PGobject encode-str)
 (add-encoder org.postgresql.jdbc.PgArray encode-str)
@@ -153,3 +155,6 @@
         (wrap-defaults api-defaults)
         (wrap-cors :access-control-allow-origin [#".*"] :access-control-allow-methods [:get :post])
         )))
+
+(defn -main [& args]
+  (run-jetty app {:port 33333 :join? false}))
