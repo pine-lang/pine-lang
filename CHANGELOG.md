@@ -4,6 +4,11 @@ log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [0.4.5] - 2024-06-13
+### Chore
+- Updated configuration to require environment variables: `DB_NAME`, `DB_USER`, `DB_PASSWORD`
+
+
 ## [0.4.4] - 2024-06-13
 ### Fixed
 - Support for multiple architectures i.e. amd64 and arm64
