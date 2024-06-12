@@ -4,6 +4,10 @@ log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [0.4.4] - 2024-06-13
+### Fixed
+- Support for multiple architectures i.e. amd64 and arm64
+
 ## [0.4.3] - 2024-06-11
 ### Fixed
 - It wasn't possible to get the relations between tables using a readonly user.

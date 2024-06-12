@@ -1,4 +1,4 @@
-# Stage 1: Build the Uberjar
+# Stage 1: Build the Uberjar (amd64 and arm64)
 FROM clojure:lein-2.8.3 AS build
 WORKDIR /app
 COPY project.clj .
@@ -8,7 +8,7 @@ RUN rm src/pine/config.*
 COPY src/pine/config.default src/pine/config.clj
 RUN lein uberjar
 
-# Stage 2: Create a minimal runtime image
+# Stage 2: Create a minimal runtime image (amd64 and arm64)
 FROM openjdk:8-jre-slim
 WORKDIR /app
 COPY --from=build /app/target/pine-0.1.0-SNAPSHOT-standalone.jar /app/pine.jar
