@@ -128,11 +128,12 @@ WHERE con.contype = 'f'
       (string->uuid x)
       x))
 
+;; No need to pass the `id`
 (deftype Postgres [id config]
   Connection
 
   (get-connection-id [this]
-    id)
+    (config :host))
 
   (get-metadata [this]
     (get-metadata-memoized this))

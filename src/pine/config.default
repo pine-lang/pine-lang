@@ -8,7 +8,7 @@
    :connection-id :default
    :connections {
                  :default
-                 {:host (get-env "DB_HOST" "host.docker.internal")
+                 {:host (get-env "DB_HOST" nil)
                   :dbtype (get-env "DB_TYPE" "postgres")
                   :dbname (get-env "DB_NAME" nil)
                   :user (get-env "DB_USER" nil)

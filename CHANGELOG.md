@@ -4,8 +4,16 @@ log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [0.4.7] - 2024-06-13
+### Fixed
+- Db host can be configrued using an environment variable: `DB_HOST`
+
+## [0.4.6] - 2024-06-13
+### Changed
+- The host is returned as the connection id instead of an internal identifier.
+
 ## [0.4.5] - 2024-06-13
-### Chore
+### Changed
 - Updated configuration to require environment variables: `DB_NAME`, `DB_USER`, `DB_PASSWORD`
 
 
