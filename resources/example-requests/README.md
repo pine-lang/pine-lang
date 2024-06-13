@@ -21,7 +21,7 @@ Response (content omitted for brevity):
 ```
 {
   "result": {
-    "connection-id": "avallone-local",
+    "connection-id": "default",
     "metadata": {
       "db/references": {
         "table": {
@@ -94,7 +94,7 @@ Response:
 
 ```
 {
-    "connection-id": "avallone-local",
+    "connection-id": "default",
     "query": "SELECT company_1.* FROM \"tenant\" AS tenant_0 JOIN \"company\" AS company_1 ON (company_1.\"tenantId\" = tenant_0.\"id\") WHERE true AND true LIMIT 1",
     "params": [],
     "hints": {},
@@ -126,7 +126,7 @@ Response:
 
 ```
 {
-  "connection-id": "avallone-local",
+  "connection-id": "default",
   "query": "SELECT company_1.* FROM \"tenant\" AS tenant_0 JOIN \"company\" AS company_1 ON (company_1.\"tenantId\" = tenant_0.\"id\") WHERE true AND true LIMIT 1",
   "params": [],
   "result": [
