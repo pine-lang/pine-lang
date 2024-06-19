@@ -25,15 +25,11 @@
     (is (= 1
            (generate :limit "l: 1"))))
 
-
   (testing "Generate ast for `join` where there is no relation"
     (is (= {"a_0" {"b_1" nil}}
-           (generate :joins "a | b")))
-    )
+           (generate :joins "a | b"))))
 
   (testing "Generate ast for `join` where there is a relation"
     (is (= {"company_0" {"employee_1" ["employee_1" "company_id" := "company_0" "id"]}}
-           (generate :joins "company | employee")))
-    )
-  )
+           (generate :joins "company | employee")))))
 

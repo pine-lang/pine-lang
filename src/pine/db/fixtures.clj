@@ -1,6 +1,5 @@
 (ns pine.db.fixtures)
 
-
 ;; Following tables exist:
 ;;
 ;;   `x`.`company`
