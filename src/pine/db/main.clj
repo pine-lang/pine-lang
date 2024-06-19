@@ -1,16 +1,10 @@
 (ns pine.db.main
-  (:require [pine.db.postgres :as postgres]))
+  (:require [pine.db.postgres :as postgres]
+            [pine.db.config :as config]))
 
-;; TODO: move to a config file
-(def config {:default {;; :host "host.docker.internal" ;; for docker
-                       :host "localhost"
-                       :dbtype "?"
-                       :dbname "?"
-                       :user "?"
-                       :password "?"
-                       :schema nil}})
-
-(def references (atom {}))
+;; Application state
+(def connection-id "Currently selected connection" (atom :test))
+(def references "References indexed by the connection id" (atom {}))
 
 (defn init-references
   "Get the references for a given key"
@@ -18,6 +12,6 @@
   (or
    (@references id)
    (do
-     (swap! references assoc id (postgres/get-indexed-references (config id)))
+     (swap! references assoc id (postgres/get-indexed-references id))
      (@references id))))
 
