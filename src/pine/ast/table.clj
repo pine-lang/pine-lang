@@ -13,9 +13,8 @@
       [a1 col := a2 f-col])))
 
 ;; TODO: use spec for the state value i.e. first arg
-(defn- join [{:keys [connection-id aliases]} x y]
-  (let [references (@db/references connection-id)
-        a1 (x :alias)
+(defn- join [{:keys [references aliases]} x y]
+  (let [a1 (x :alias)
         a2 (y :alias)
         {t1 :table s1 :schema} (aliases a1)
         {t2 :table s2 :schema} (aliases a2)
