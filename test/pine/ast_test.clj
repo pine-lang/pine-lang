@@ -5,10 +5,10 @@
 
 (defn- generate [type expression]
   "Helper function to generate and get the relevant part in the ast"
-  (->> expression
-       parser/parse
-       ast/generate
-       type))
+  (-> expression
+      parser/parse
+      (ast/generate :test)
+      type))
 
 (deftest test-ast
   (testing "Generate ast for `tables`"

@@ -29,9 +29,9 @@ WHERE con.contype = 'f'
 (defn- index-references
   "Finding forward and inverse relations for the table Example: A 'user' has
   'document' i.e. the document has a `user_id` column that points to
-  `user`.`id`. Alternatively, 'document' of 'user'.
-  When we find a foreign key, then we index create both forward and inverse
-  relations i.e. `:has` and `:of` relations."
+  `user`.`id`. Alternatively, 'document' of 'user'. When we find a foreign key,
+  then we index create both forward and inverse relations i.e. `:has` and `:of`
+  relations / or `:refered-by` and `:refers-to` relations."
   [references]
   (reduce (fn [acc [schema table col f-schema f-table f-col]]
             (let [join [schema table col := f-schema f-table f-col]]
@@ -48,22 +48,21 @@ WHERE con.contype = 'f'
                   ;; stored in the context. For now, this is convenient. For
                   ;; consider the 'No ambiguity' approach below
                   ;;
-                  (update-in [:table  table   :of  f-table :via col] conj join)
-                  ;; (update-in [:table  f-table :has table   :via col ] conj join)                            ;; Not used
+                  (update-in [:table  table   :refers-to f-table :via col] conj join)
+                  (update-in [:table  f-table :referred-by table :via col] conj join)
                   ;;
                   ;; Case: No Ambiguity / Schema specified
                   ;;
                   ;; - Value is a single a join vector
                   ;;
-                  ;; (assoc-in [:table  table    :in  schema   :refers-to f-table :in f-schema :via col] join) ;; Not used
-                  ;; (assoc-in [:table  f-table  :in  f-schema :referred-by table :in schema :via col] join)   ;; Not used
+                  (assoc-in [:table  table    :in  schema   :refers-to f-table :in f-schema :via col] join)
+                  (assoc-in [:table  f-table  :in  f-schema :referred-by table :in schema :via col] join)
                   ;;
                   ;;
                   ;; Relations between schema and tables
-                  ;;
-                  ;; (assoc-in [:schema schema   :contains table] true)                                        ;; Not used
-                  ;; (assoc-in [:schema f-schema :contains f-table] true)                                      ;; Not used
-                  )))
+                  ;; TODO: check if this is used
+                  (assoc-in [:schema schema   :contains table] true)
+                  (assoc-in [:schema f-schema :contains f-table] true))))
           {}
           references))
 
