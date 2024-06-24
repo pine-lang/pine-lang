@@ -41,7 +41,7 @@ entity        := partial-token | token <"."> partial-token
 operator      := #"<|>|="
 
 quoted-string := <"'"> space-string? <"'"> | <'"'> space-string? <'"'>
-space-string  := #"[A-Za-z0-9-_*.@ ]+"
-string        := #"[A-Za-z0-9-_*.@]+"
+space-string  := #"[A-Za-z0-9-_*.@+ ]+"
+string        := #"[A-Za-z0-9-_*.@+]+"
 token         := #"[A-Za-z0-9-_]+"
 partial-token := #"[A-Za-z0-9-_]*"
