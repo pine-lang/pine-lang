@@ -4,6 +4,10 @@ log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [0.4.8] - 2024-06-24
+### Fixed
+- Strings can contain a `+` character.
+
 ## [0.4.7] - 2024-06-13
 ### Fixed
 - Db host can be configrued using an environment variable: `DB_HOST`
