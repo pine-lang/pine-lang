@@ -1,10 +1,10 @@
 (ns pine.eval)
 
-(defn q [identifier]
-  (str "\"" identifier "\""))
+(defn q [s]
+  (str "\"" s "\""))
 
 (defn build-sql [state]
-  (let [{:keys [tables columns limit joins]} state
+  (let [{:keys [tables columns limit joins where]} state
         from (when (seq tables)
                (let [{:keys [table alias]} (first tables)]
                  (str "FROM " (q table) " AS " (q alias))))
@@ -19,6 +19,12 @@
         select (if (empty? columns)
                  "SELECT *"
                  (str "SELECT " (clojure.string/join ", " (map q columns))))
+        where-clause (when where
+                       (let [[col op val] where]
+                         (str "WHERE " (q col) " " op " ?")))
         limit (when limit
-                (str "LIMIT " limit))]
-    (clojure.string/join " " (filter some? [select from join limit]))))
+                (str "LIMIT " limit))
+        sql (clojure.string/join " " (filter some? [select from join where-clause limit]))
+        params (when where
+                 [(nth where 2)])]
+    {:sql sql :params params}))

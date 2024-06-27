@@ -15,18 +15,26 @@
 (def version "0.5.0")
 
 (defn api-build [expression]
-  (let [state (->> expression
-                   parser/parse
-                   ast/generate)]
-    {:connection-id @db/connection-id
-     :version version
-     :query (eval/build-sql state)
-     :state (dissoc state :references)
-     ;; Backwards compatibility
-     ;; Instead of the following, please use `state`.
-     :deprecation-notice "Properties will be removed in the next major version: `hints`, `context`. Use `state` instead."
-     :hints (state :hints)
-     :context (-> state :tables reverse rest reverse)}))
+  (let [connection-id @db/connection-id]
+    (try
+      (let [state (->> expression
+                       parser/parse
+                       ast/generate)]
+        {:connection-id connection-id
+         :version version
+         :query (eval/build-sql state)
+         :state (dissoc state :references)
+         ;; Backwards compatibility
+         ;; Instead of the following, please use `state`.
+         :deprecation-notice "Properties will be removed in the next major version: `hints`, `context`. Use `state` instead."
+         :hints (state :hints)
+         :context (-> state :tables reverse rest reverse)})
+      (catch Exception e {
+                          :connection-id connection-id
+                          :error (.getMessage e)
+                          })
+
+      )))
 
 (defn api-eval [expression]
   (let [state (->> expression

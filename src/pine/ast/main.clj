@@ -2,7 +2,8 @@
   (:require [pine.parser :as parser]
             [pine.ast.table :as table]
             [pine.ast.limit :as limit]
-            [pine.db.main :as db]))
+            [pine.db.main :as db]
+            [pine.ast.where :as where]))
 
 (def state {;; ast
             :tables        []       ;; e.g. [{ :table "user" :schema "public" :alias "u" }] ;; schema is nilable
@@ -21,7 +22,8 @@
   (case type
     :table (table/handle state value)
     :limit (limit/handle state value)
-    (update state :errors conj [type "Unknown type"])))
+    :where (where/handle state value)
+    (update state :errors conj [type "Unknown operation type in parse tree"])))
 
 (defn generate
   ([parse-tree]
