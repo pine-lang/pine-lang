@@ -29,12 +29,8 @@
          :deprecation-notice "Properties will be removed in the next major version: `hints`, `context`. Use `state` instead."
          :hints (state :hints)
          :context (-> state :tables reverse rest reverse)})
-      (catch Exception e {
-                          :connection-id connection-id
-                          :error (.getMessage e)
-                          })
-
-      )))
+      (catch Exception e {:connection-id connection-id
+                          :error (.getMessage e)}))))
 
 (defn api-eval [expression]
   (let [state (->> expression

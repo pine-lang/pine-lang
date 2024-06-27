@@ -42,13 +42,12 @@
 
 (defmethod -normalize-op :WHERE [[_ payload]]
   (match payload
-         [:condition [:symbol column] [:operator op] [:number value]] {:type :where :value [column op value]}
-         [:condition
-          [:symbol column]
-          [:operator op]
-          [:string & characters]] {:type :where :value [column op (apply str(map second characters))]}
-         :else                (throw (ex-info "Unknown WHERE operation" {:_ payload})))
-  )
+    [:condition [:symbol column] [:operator op] [:number value]] {:type :where :value [column op value]}
+    [:condition
+     [:symbol column]
+     [:operator op]
+     [:string & characters]] {:type :where :value [column op (apply str (map second characters))]}
+    :else                (throw (ex-info "Unknown WHERE operation" {:_ payload}))))
 
 ;; -----
 ;; LIMIT
