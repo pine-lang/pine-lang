@@ -16,4 +16,7 @@
 
   (testing "Parse `limit` expressions"
     (is (= (parse "limit: 100") [{:type :limit, :value 100}]))
-    (is (= (parse "l: 10") [{:type :limit, :value 10}]))))
+    (is (= (parse "l: 10") [{:type :limit, :value 10}])))
+
+  (testing "Parse `where` expressions"
+    (is (= (parse "where: name='John Doe'") [{:type :where, :value ["name" "=" "John Doe"]}]))))

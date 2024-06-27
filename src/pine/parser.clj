@@ -17,8 +17,8 @@
   (match payload
     [:qualified-token [:partial-token table]]                              {:type :table, :value {:table table}}
     [:qualified-token [:token schema] [:partial-token table]]              {:type :table, :value {:table table :schema schema}}
-    [:qualified-token [:token table] [:alias [:string a]]]                 {:type :table, :value {:table table :alias a}}
-    [:qualified-token [:token schema] [:token table] [:alias [:string a]]] {:type :table, :value {:schema schema :table table :alias a}}
+    [:qualified-token [:token table] [:alias [:symbol a]]]                 {:type :table, :value {:table table :alias a}}
+    [:qualified-token [:token schema] [:token table] [:alias [:symbol a]]] {:type :table, :value {:schema schema :table table :alias a}}
     :else
     (throw (ex-info "Unknown RESOURCE operation" {:_ payload}))))
 
@@ -35,6 +35,19 @@
   (match payload
     [:columns & columns] {:type :select :value (mapv -normalize-column columns)}
     :else                (throw (ex-info "Unknown SELECT operation" {:_ payload}))))
+
+;; -----
+;; WHERE
+;; -----
+
+(defmethod -normalize-op :WHERE [[_ payload]]
+  (match payload
+    [:condition [:symbol column] [:operator op] [:number value]] {:type :where :value [column op value]}
+    [:condition
+     [:symbol column]
+     [:operator op]
+     [:string & characters]] {:type :where :value [column op (apply str (map second characters))]}
+    :else                (throw (ex-info "Unknown WHERE operation" {:_ payload}))))
 
 ;; -----
 ;; LIMIT
