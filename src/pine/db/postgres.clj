@@ -66,11 +66,15 @@ WHERE con.contype = 'f'
           {}
           references))
 
-(defn get-references-helper [id]
+(defn get-connection [id]
   (let [connection (config/connections id)]
     (if connection
-      (get-references connection)
+      connection
       (throw (ex-info "Connection not found" {:id id})))))
+
+(defn get-references-helper [id]
+  (let [connection (get-connection id)]
+    (get-references connection)))
 
 (defn get-indexed-references [id]
   (let [references (cond
@@ -78,5 +82,7 @@ WHERE con.contype = 'f'
                      :else (get-references-helper id))]
     (index-references references)))
 
-
-
+(defn run-query [id query]
+  (let [connection (config/connections id)
+        {:keys [query params]} query]
+    (jdbc/query connection (cons query params) {:as-arrays? true :identifiers identity})))

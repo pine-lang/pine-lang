@@ -4,5 +4,5 @@
   (:gen-class))
 
 (defn -main [& args]
-  (run-jetty app {:port 33334 :join? false}))
+  (run-jetty app {:port 33333 :join? false}))
 
