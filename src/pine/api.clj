@@ -22,7 +22,7 @@
                        ast/generate)]
         {:connection-id connection-id
          :version version
-         :query (eval/build-sql state)
+         :query (:query (eval/build-query state))
          :state (dissoc state :references)
          ;; Backwards compatibility
          ;; Instead of the following, please use `state`.
@@ -36,13 +36,11 @@
   (let [state (->> expression
                    parser/parse
                    ast/generate)
-        query (eval/build-sql state)]
+        ]
     {:connection-id @db/connection-id
      :version version
-     :query query
-     :params nil
-     ;; :result (pine/pine-eval @state/c prepared)
-     :result [["id", "name"] ["1", "Alice"] ["2", "Bob"]]}))
+     :result (eval/run-query state)
+     }))
 
 (defn get-connection-metadata []
   {:result

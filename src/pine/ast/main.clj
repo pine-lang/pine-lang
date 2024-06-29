@@ -16,6 +16,7 @@
             :table-count   0
 
             ;; connection
+            :connection-id nil
             :references {}})
 
 (defn handle [state {:keys [type value]}]
@@ -29,5 +30,7 @@
   ([parse-tree]
    (generate parse-tree @db/connection-id))
   ([parse-tree connection-id]
-   (let [state (assoc state :references (db/init-references connection-id))]
+   (let [state (-> state
+                   (assoc :references (db/init-references connection-id))
+                   (assoc :connection-id connection-id))]
      (reduce handle state parse-tree))))

@@ -4,4 +4,4 @@
             [ring.middleware.reload :refer [wrap-reload]]))
 
 (defn -main [& args]
-  (run-jetty (wrap-reload #'app) {:port 33334 :join? false}))
+  (run-jetty (wrap-reload #'app) {:port 33333 :join? false}))

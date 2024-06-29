@@ -10,11 +10,15 @@
   (-> expression
       parser/parse
       (ast/generate :test)
-      eval/build-sql))
+      eval/build-query))
 
 (deftest test-eval
   (testing "Build sql"
-    (is (= {:sql "SELECT * FROM \"company\" AS \"company_0\"  WHERE \"name\" = ?",
+    (is (= {:query "SELECT * FROM \"company\" AS \"company_0\"  WHERE \"name\" = ?",
             :params ["Acme Inc."]}
-           (generate "company | where: name='Acme Inc.'")))))
+           (generate "company | where: name='Acme Inc.'"))))
+  (testing "Joins"
+    (is (= {:query "SELECT * FROM \"company\" AS \"company_0\" JOIN \"employee\" AS \"employee_1\" ON \"company_0\".\"id\" = \"employee_1\".\"company_id\"",
+            :params nil}
+           (generate "company | employee")))))
 
