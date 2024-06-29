@@ -30,13 +30,9 @@
                  [(nth where 2)])]
     {:query query :params params}))
 
-
 (defn run-query [state]
   (let [connection-id (state :connection-id)]
     ;; connection-id
     (->> state
          build-query
-         (db/run-query connection-id)
-         )
-    )
-  )
+         (db/run-query connection-id))))

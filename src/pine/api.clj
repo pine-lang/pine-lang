@@ -35,12 +35,10 @@
 (defn api-eval [expression]
   (let [state (->> expression
                    parser/parse
-                   ast/generate)
-        ]
+                   ast/generate)]
     {:connection-id @db/connection-id
      :version version
-     :result (eval/run-query state)
-     }))
+     :result (eval/run-query state)}))
 
 (defn get-connection-metadata []
   {:result
