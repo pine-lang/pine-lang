@@ -37,4 +37,8 @@
           suggestions (filter-candidates token candidates)]
       (qualify-tables state suggestions))))
 
-
+(defn generate [state value]
+  (let [token                (value :table)
+        hints                (table-hints state token)]
+    hints
+    ))

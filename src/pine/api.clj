@@ -28,7 +28,13 @@
          ;; Instead of the following, please use `state`.
          :deprecation-notice "Properties will be removed in the next major version: `hints`, `context`. Use `state` instead."
          :hints (state :hints)
-         :context (-> state :tables reverse rest reverse)})
+         :context (let [tables (state :tables)
+                        type (-> state :operation :type)]
+                    (if
+                     (= type :table)
+                      (-> tables reverse rest reverse)
+                      tables))})
+
       (catch Exception e {:connection-id connection-id
                           :error (.getMessage e)}))))
 

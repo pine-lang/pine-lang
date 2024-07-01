@@ -6,20 +6,23 @@
 
 (defn build-query [state]
   (let [{:keys [tables columns limit joins where aliases]} state
-        from (when (seq tables)
-               (let [{:keys [table alias]} (first tables)]
-                 (str "FROM " (q table) " AS " (q alias))))
-        join (->> tables
-                  (mapcat (fn [{:keys [alias]}]
-                            (map (fn [[to-table [to-alias to-col _ from-alias from-col]]]
-                                   (str "JOIN " (q (:table (get aliases to-alias))) " AS " (q to-alias)
-                                        " ON " (q from-alias) "." (q from-col)
-                                        " = " (q to-alias) "." (q to-col)))
-                                 (get joins alias))))
-                  (clojure.string/join " "))
+        from (or (when-let [{:keys [table alias]} (first tables)]
+                   (str (q table) " AS " (q alias))) "?")
+        join (when (not-empty (rest tables))
+               (let [table-pairs (partition 2 1 tables)
+                     join-statements (map (fn [[{from-alias :alias} {to-alias :alias to-table :table}]]
+                                            (let [[a1 t1 _ a2 t2] (or
+                                                                   (get-in joins [from-alias to-alias])
+                                                                   (get-in joins [to-alias from-alias]))]
+                                              (str "JOIN " (q to-table) " AS " (q to-alias)
+                                                   " ON " (q a1) "." (q t1)
+                                                   " = " (q a2) "." (q t2))))
+
+                                          table-pairs)]
+                 (clojure.string/join " " join-statements)))
         select (if (empty? columns)
-                 "SELECT *"
-                 (str "SELECT " (clojure.string/join ", " (map q columns))))
+                 "SELECT * FROM"
+                 (str "SELECT " (clojure.string/join ", " (map q columns)) " FROM"))
         where-clause (when where
                        (let [[col op val] where]
                          (str "WHERE " (q col) " " op " ?")))
