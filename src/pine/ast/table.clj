@@ -24,8 +24,8 @@
     result))
 
 (defn- update-joins [state]
-  "This function is called once the state is updated with the value of the new
-  table - which is why we don't need the value to be passed in."
+  "TODO: the value isn't passed in. Instead we are getting the tables from the
+  state. Instead, use the context and the current value"
   (let [{:keys [tables joins]} state]
     (cond
       (< (count tables) 2) state
@@ -34,8 +34,10 @@
             join-result (join state x y)]
         (assoc-in state [:joins (x :alias) (y :alias)] join-result)))))
 
-(defn- update-hints [state token]
-  (let [hints (hints/table-hints state token)]
+(defn- update-hints [state value]
+  (let [hints (if (= (state :pending-count) 1)
+                (hints/generate state value)
+                [])]
     (assoc-in state [:hints :table] hints)))
 
 ;; todo: spec for the :value for a :table
@@ -46,7 +48,7 @@
         (update :tables conj {:table table :alias a})
         (update :aliases assoc a {:table table :schema schema})
         (update-joins)
-        (update-hints table) ;; table is the token here
+        (update-hints value)
         ;;
         ;; TODO: These are metadata - mayebe I should move them to a different
         ;; ns e.g. if the operation is table, then I update the following there

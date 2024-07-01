@@ -1,5 +1,6 @@
 (ns pine.ast-test
   (:require [clojure.test :refer :all]
+            [clojure.test :refer :all]
             [pine.parser :as parser]
             [pine.ast.main :as ast]))
 
