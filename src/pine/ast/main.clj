@@ -35,8 +35,7 @@
   (-> state
       (assoc :references (db/init-references connection-id))
       (assoc :connection-id connection-id)
-      (assoc :pending-count ops-count)
-      ))
+      (assoc :pending-count ops-count)))
 
 (defn handle-op [state {:keys [type value]}]
   (case type
@@ -45,14 +44,11 @@
     :where (where/handle state value)
     (update state :errors conj [type "Unknown operation type in parse tree"])))
 
-
 (defn handle-ops [state ops]
   (reduce (fn [s o] (-> s
                         (handle-op o)
                         (update :pending-count dec)
-                        (assoc :operation o)
-                        )) state ops))
-
+                        (assoc :operation o))) state ops))
 
 (defn post-handle [state]
   (-> state
