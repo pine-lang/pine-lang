@@ -3,7 +3,7 @@
             [pine.db.config :as config]))
 
 ;; Application state
-(def connection-id "Currently selected connection" (atom :dev))
+(def connection-id "Currently selected connection" (atom :default))
 (def references "References indexed by the connection id" (atom {}))
 
 (defn init-references
