@@ -10,7 +10,8 @@
    [pine.parser :as parser]
    [pine.ast.main :as ast]
    [pine.eval :as eval]
-   [pine.db.main :as db]))
+   [pine.db.main :as db]
+   [pine.util :as util]))
 
 (def version "0.5.0")
 
@@ -20,7 +21,7 @@
       (let [state (->> expression
                        parser/parse
                        ast/generate)]
-        {:connection-id connection-id
+        {:connection-id (util/get-connection-name connection-id)
          :version version
          :query (:query (eval/build-query state))
          :state (dissoc state :references)
@@ -42,13 +43,13 @@
   (let [state (->> expression
                    parser/parse
                    ast/generate)]
-    {:connection-id @db/connection-id
+    {:connection-id (util/get-connection-name @db/connection-id)
      :version version
      :result (eval/run-query state)}))
 
 (defn get-connection-metadata []
   {:result
-   {:connection-id @db/connection-id
+   {:connection-id (util/get-connection-name @db/connection-id)
     :version version
     ;; TODO for backwards compatibility wrap the references in the same shape as the old version
     :metadata {:db/references (@db/references @db/connection-id)}}})

@@ -4,7 +4,8 @@
             [pine.ast.limit :as limit]
             [pine.db.main :as db]
             [pine.ast.where :as where]
-            [pine.hints :as hints]))
+            [pine.hints :as hints]
+            [pine.ast.select :as select]))
 
 (def state {;; pre
             ;; - connection
@@ -39,6 +40,7 @@
 
 (defn handle-op [state {:keys [type value]}]
   (case type
+    :select (select/handle state value)
     :table (table/handle state value)
     :limit (limit/handle state value)
     :where (where/handle state value)
@@ -62,3 +64,4 @@
        (pre-handle connection-id (count parse-tree))
        (handle-ops parse-tree)
        post-handle)))
+
