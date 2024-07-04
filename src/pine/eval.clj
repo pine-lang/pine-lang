@@ -22,7 +22,7 @@
                  (clojure.string/join " " join-statements)))
         select (if (empty? columns)
                  "SELECT * FROM"
-                 (str "SELECT " (clojure.string/join ", " (map q columns)) " FROM"))
+                 (str "SELECT " (clojure.string/join ", " (->> columns (map :column) (map q))) " FROM"))
         where-clause (when where
                        (let [[col op val] where]
                          (str "WHERE " (q col) " " op " ?")))

@@ -28,7 +28,7 @@
 
 (defn- -normalize-column [column]
   (match column
-    [:column [:qualified-token [:partial-token c]]] c
+    [:column [:qualified-token [:partial-token c]]] {:column c}
     :else                 (throw (ex-info "Unknown COLUMN operation" {:_ column}))))
 
 (defmethod -normalize-op :SELECT [[_ payload]]

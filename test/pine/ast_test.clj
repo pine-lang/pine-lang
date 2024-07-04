@@ -12,14 +12,18 @@
       type))
 
 (deftest test-ast
-  (testing "Generate ast for `tables`"
-
-    (is (= [{:table "tenant" :alias "t"}]
-           (generate :tables "tenant as t")))
-
+  (testing "Generate ast for `select`"
+    (is (= [{:table "company" :alias "c"}]
+           (generate :tables "company as c | s: id")))
     (is (= [{:table "user" :alias "user_0"}]
            (generate :tables "user"))))
 
+  (testing "Generate ast for `tables`"
+    (is (= [{:table "company" :alias "c"}]
+           (generate :tables "company as c")))
+    (is (= [{:table "user" :alias "user_0"}]
+
+           (generate :tables "user"))))
   (testing "Generate ast for `limit`"
     (is (= 10
            (generate :limit "limit: 10")))
