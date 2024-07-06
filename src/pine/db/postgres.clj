@@ -77,7 +77,13 @@ WHERE con.contype = 'f'
                      :else (get-references-helper id))]
     (index-references references)))
 
+(defn try-cast-to-uuid [x]
+  (try
+    (java.util.UUID/fromString x)
+    (catch Exception e x)))
+
 (defn run-query [id query]
   (let [connection (config/connections id)
-        {:keys [query params]} query]
+        {:keys [query params]} query
+        params (map try-cast-to-uuid params)]
     (jdbc/query connection (cons query params) {:as-arrays? true :identifiers identity})))

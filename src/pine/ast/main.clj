@@ -5,7 +5,8 @@
             [pine.db.main :as db]
             [pine.ast.where :as where]
             [pine.hints :as hints]
-            [pine.ast.select :as select]))
+            [pine.ast.select :as select]
+            [pine.ast.delete :as delete]))
 
 (def state {;; pre
             ;; - connection
@@ -18,6 +19,7 @@
             :limit          nil          ;; number ;; nilable
             :aliases        {}           ;; e.g. [{ :schema "public" :table "user" }] ;; schema is nilable
             :joins          {}           ;; This can be a map or a vector - will decide later
+            :where          []           ;; e.g. [ "name" "=" "john" ]
 
             ;; state
             :operation      {:type  nil
@@ -44,6 +46,7 @@
     :table (table/handle state value)
     :limit (limit/handle state value)
     :where (where/handle state value)
+    :delete (delete/handle state value)
     (update state :errors conj [type "Unknown operation type in parse tree"])))
 
 (defn handle-ops [state ops]
