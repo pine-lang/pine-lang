@@ -7,7 +7,7 @@ alias           := symbol
 
 TABLE           := qualified-token
 
-WHERE           := <#"w(here)?:"> <ws*> condition
+WHERE           := <#"w(here)?:"> <ws*> condition | condition
 condition       := symbol <ws*> operator <ws*> (string|number)
 
 ORDER           := <#"o(rder)?:"> <ws*> "+"? column

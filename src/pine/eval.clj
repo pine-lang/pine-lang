@@ -23,13 +23,14 @@
                  (str "SELECT " context ".* FROM")
                  (str "SELECT " (clojure.string/join ", " (->> columns (map :column) (map q))) " FROM"))
         where-clause (when (not-empty where)
-                       (let [[col op val] where]
-                         (str "WHERE " (q col) " " op " ?")))
+                       (let [[a col op val] where
+                             c (if a (str (q a) "." (q col)) (q col))]
+                         (str "WHERE " c " " op " ?")))
         limit (when limit
                 (str "LIMIT " limit))
         query (clojure.string/join " " (filter some? [select from join where-clause limit]))
         params (when (not-empty where)
-                 [(nth where 2)])]
+                 [(nth where 3)])]
     {:query query :params params}))
 
 (defn build-delete-query [state]
@@ -54,7 +55,6 @@
 
 (defn run-query [state]
   (let [connection-id (state :connection-id)]
-    ;; connection-id
     (->> state
          build-query
          (db/run-query connection-id))))
