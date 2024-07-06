@@ -33,6 +33,14 @@
     (is (= 1
            (generate :limit "l: 1"))))
 
+  (testing "Generate ast for `limit`"
+    (is (= [nil "name" "=" "Acme"]
+           (generate :where "name = 'Acme'")))
+    (is (= ["c_0" "name" "=" "Acme"]
+           (generate :where "company | name = 'Acme'")))
+    (is (= ["c" "name" "=" "Acme"]
+           (generate :where "company as c | name = 'Acme'"))))
+
   (testing "Generate ast for `join` where there is no relation"
     (is (= {"a_0" {"b_1" nil}}
            (generate :joins "a | b"))))

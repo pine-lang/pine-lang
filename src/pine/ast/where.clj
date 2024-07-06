@@ -1,4 +1,5 @@
 (ns pine.ast.where)
 
-(defn handle [acc [column operator value]]
-  (assoc acc :where [column operator value]))
+(defn handle [state [column operator value]]
+  (let [a (state :context)]
+    (assoc state :where [a column operator value])))

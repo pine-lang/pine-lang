@@ -11,7 +11,13 @@
    [pine.ast.main :as ast]
    [pine.eval :as eval]
    [pine.db.main :as db]
-   [pine.util :as util]))
+   [pine.util :as util]
+   ;; Encode arrays and json results in API responses
+   [cheshire.generate :refer [add-encoder encode-str]]))
+
+;; array/json encoding
+(add-encoder org.postgresql.util.PGobject encode-str)
+(add-encoder org.postgresql.jdbc.PgArray encode-str)
 
 (def version "0.5.0")
 
@@ -52,11 +58,13 @@
                           :error (.getMessage e)}))))
 
 (defn get-connection-metadata []
-  {:result
-   {:connection-id @db/connection-id
-    :version version
-    ;; TODO for backwards compatibility wrap the references in the same shape as the old version
-    :metadata {:db/references (@db/references @db/connection-id)}}})
+  (let [connection-id   @db/connection-id
+        connection-name (util/get-connection-name connection-id)]
+    {:result
+     {:connection-id connection-name
+      :version version
+      ;; TODO for backwards compatibility wrap the references in the same shape as the old version
+      :metadata {:db/references (@db/references connection-id)}}}))
 
 (defn wrap-logger
   [handler]
