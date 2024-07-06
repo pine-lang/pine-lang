@@ -1,11 +1,9 @@
 OPERATIONS := OPERATION <ws*> (<"|"> <ws*> OPERATION <ws*>)*
 OPERATION  := SELECT | TABLE | WHERE | LIMIT | GROUP | ORDER | DELETE | SET | FUNCTION
 
-SELECT          := <#"s(el(ect)?)?:"> <ws+> columns
+SELECT          := <#"s(elect)?:"> <ws+> columns
 columns         := column (<","> <ws*> column)*
 alias           := symbol
-
-column          := qualified-token
 
 TABLE           := qualified-token
 
@@ -19,7 +17,9 @@ FUNCTION        := #"(count|min|max|join)" <":"> <ws+> column
 
 LIMIT           := <#"l(imit)?:"> <ws*> number
 
-DELETE          := <#"delete!">
+DELETE          := <#"d(elete)!"> <ws*> <"using"> <ws*> column
+
+column          := qualified-token
 
 SET             := <#"set!"> <ws*> assignments
 

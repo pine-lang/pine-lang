@@ -4,24 +4,27 @@
             [pine.parser :as parser]
             [pine.ast.main :as ast]))
 
-(defn- generate [type expression]
-  "Helper function to generate and get the relevant part in the ast"
-  (-> expression
-      parser/parse
-      (ast/generate :test)
-      type))
+(defn- generate
+  ([expression]
+   (generate identity expression))
+  ([type expression]
+   "Helper function to generate and get the relevant part in the ast"
+   (-> expression
+       parser/parse
+       (ast/generate :test)
+       type)))
 
 (deftest test-ast
   (testing "Generate ast for `select`"
     (is (= [{:table "company" :alias "c"}]
            (generate :tables "company as c | s: id")))
-    (is (= [{:table "user" :alias "user_0"}]
+    (is (= [{:table "user" :alias "u_0"}]
            (generate :tables "user"))))
 
   (testing "Generate ast for `tables`"
     (is (= [{:table "company" :alias "c"}]
            (generate :tables "company as c")))
-    (is (= [{:table "user" :alias "user_0"}]
+    (is (= [{:table "user" :alias "u_0"}]
 
            (generate :tables "user"))))
   (testing "Generate ast for `limit`"
@@ -35,6 +38,10 @@
            (generate :joins "a | b"))))
 
   (testing "Generate ast for `join` where there is a relation"
-    (is (= {"company_0" {"employee_1" ["employee_1" "company_id" := "company_0" "id"]}}
-           (generate :joins "company | employee")))))
+    (is (= {"c_0" {"e_1" ["e_1" "company_id" := "c_0" "id"]}}
+           (generate :joins "company | employee"))))
+
+  (testing "Generate ast for `delete`"
+    (is (= {:column "id"} (generate :delete "company | delete! using id")))))
+
 

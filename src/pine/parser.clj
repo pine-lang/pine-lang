@@ -58,6 +58,16 @@
    :value (Integer/parseInt number)})
 
 ;; -----
+;; DELETE
+;; -----
+
+(defmethod -normalize-op :DELETE [[_ [_ payload]]]
+  (match payload
+    [:qualified-token [:partial-token c]] {:type :delete
+                                           :value {:column c}}
+    :else (throw (ex-info "Unknown DELETE operation" {:_ payload}))))
+
+;; -----
 
 (def ^:private parse-expression (let [dir (System/getProperty "user.dir")
                                       file (format "%s/src/pine/pine.bnf" dir)
@@ -69,6 +79,7 @@
 
 (defn parse [expression]
   "Parse an expression and return the normalized operations"
-  (->> expression
-       parse-expression
-       normalize-ops))
+  (-> expression
+      parse-expression
+      normalize-ops))
+

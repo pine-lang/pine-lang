@@ -40,10 +40,15 @@
                 [])]
     (assoc-in state [:hints :table] hints)))
 
+(defn make-alias [s]
+  (let [words (if (not-empty s) (clojure.string/split s #"_") ["x"])
+        initials (map #(subs % 0 1) words)]
+    (apply str initials)))
+
 ;; todo: spec for the :value for a :table
 (defn handle [state value]
   (let [{:keys [table alias schema]} value
-        a (or alias (str table "_" (state :table-count)))]
+        a (or alias (str (make-alias table) "_" (state :table-count)))]
     (-> state
         (update :tables conj {:table table :alias a})
         (update :aliases assoc a {:table table :schema schema})

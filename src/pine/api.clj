@@ -16,14 +16,14 @@
 (def version "0.5.0")
 
 (defn api-build [expression]
-  (let [connection-id @db/connection-id]
+  (let [connection-name (util/get-connection-name @db/connection-id)]
     (try
       (let [state (->> expression
                        parser/parse
                        ast/generate)]
-        {:connection-id (util/get-connection-name connection-id)
+        {:connection-id connection-name
          :version version
-         :query (:query (eval/build-query state))
+         :query (-> state eval/build-query eval/formatted-query)
          :state (dissoc state :references)
          ;; Backwards compatibility
          ;; Instead of the following, please use `state`.
@@ -36,20 +36,24 @@
                       (-> tables reverse rest reverse)
                       tables))})
 
-      (catch Exception e {:connection-id connection-id
+      (catch Exception e {:connection-id connection-name
                           :error (.getMessage e)}))))
 
 (defn api-eval [expression]
-  (let [state (->> expression
-                   parser/parse
-                   ast/generate)]
-    {:connection-id (util/get-connection-name @db/connection-id)
-     :version version
-     :result (eval/run-query state)}))
+  (let [connection-name (util/get-connection-name @db/connection-id)]
+    (try
+      (let [state (-> expression
+                      parser/parse
+                      ast/generate)]
+        {:connection-id connection-name
+         :version version
+         :result (eval/run-query state)})
+      (catch Exception e {:connection-id connection-name
+                          :error (.getMessage e)}))))
 
 (defn get-connection-metadata []
   {:result
-   {:connection-id (util/get-connection-name @db/connection-id)
+   {:connection-id @db/connection-id
     :version version
     ;; TODO for backwards compatibility wrap the references in the same shape as the old version
     :metadata {:db/references (@db/references @db/connection-id)}}})
@@ -66,6 +70,9 @@
   (POST "/api/v1/build" [expression] (->> expression api-build response))
   (GET "/api/v1/connection" [] (-> (get-connection-metadata) response))
   (POST "/api/v1/eval" [expression] (->> expression api-eval response))
+  ;; pine-mode
+  (POST "/api/v1/build-with-params" [expression] (->> expression api-build :query ((fn [q] (str "\n" q ";")))  response))
+  ;; default case
   (route/not-found "Not Found"))
 
 (db/init-references @db/connection-id)

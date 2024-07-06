@@ -19,4 +19,7 @@
     (is (= (parse "l: 10") [{:type :limit, :value 10}])))
 
   (testing "Parse `where` expressions"
-    (is (= (parse "where: name='John Doe'") [{:type :where, :value ["name" "=" "John Doe"]}]))))
+    (is (= (parse "where: name='John Doe'") [{:type :where, :value ["name" "=" "John Doe"]}])))
+
+  (testing "Parse `delete` expressions"
+    (is (= (parse "delete! using id") [{:type :delete, :value {:column "id"}}]))))
