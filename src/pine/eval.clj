@@ -1,31 +1,38 @@
 (ns pine.eval
   (:require [pine.db.main :as db]))
 
-(defn q [s]
-  (str "\"" s "\""))
+(defn q
+  ([a b]
+   (if a (str (q a) "." (q b)) (q b)))
+  ([a]
+   (str "\"" a "\"")))
+
+(defn- build-join-query [{:keys [tables joins aliases]}]
+  (when (not-empty (rest tables))
+    (let [table-pairs (partition 2 1 tables)
+          join-statements (map (fn [[{from-alias :alias} {to-alias :alias}]]
+                                 (let [{to-table :table to-schema :schema} (get aliases to-alias)
+                                       [a1 t1 _ a2 t2] (or
+                                                        (get-in joins [from-alias to-alias])
+                                                        (get-in joins [to-alias from-alias]))]
+                                   (str "JOIN " (q to-schema to-table) " AS " (q to-alias)
+                                        " ON " (q a1 t1)
+                                        " = " (q a2 t2))))
+                               table-pairs)]
+      (clojure.string/join " " join-statements))))
 
 (defn build-select-query [state]
-  (let [{:keys [tables columns limit joins where aliases context]} state
-        from (or (when-let [{:keys [table alias]} (first tables)]
-                   (str (q table) " AS " (q alias))) "?")
-        join (when (not-empty (rest tables))
-               (let [table-pairs (partition 2 1 tables)
-                     join-statements (map (fn [[{from-alias :alias} {to-alias :alias to-table :table}]]
-                                            (let [[a1 t1 _ a2 t2] (or
-                                                                   (get-in joins [from-alias to-alias])
-                                                                   (get-in joins [to-alias from-alias]))]
-                                              (str "JOIN " (q to-table) " AS " (q to-alias)
-                                                   " ON " (q a1) "." (q t1)
-                                                   " = " (q a2) "." (q t2))))
-                                          table-pairs)]
-                 (clojure.string/join " " join-statements)))
+  (let [{:keys [tables columns limit where context aliases]} state
+        from (let [{a :alias} (first tables)
+                   {table :table schema :schema} (get aliases a)]
+               (str (q schema table) " AS " (q a)))
+        join (build-join-query state)
         select (if (empty? columns)
                  (str "SELECT " context ".* FROM")
                  (str "SELECT " (clojure.string/join ", " (->> columns (map :column) (map q))) " FROM"))
         where-clause (when (not-empty where)
-                       (let [[a col op val] where
-                             c (if a (str (q a) "." (q col)) (q col))]
-                         (str "WHERE " c " " op " ?")))
+                       (let [[a col op val] where]
+                         (str "WHERE " (q a col) " " op " ?")))
         limit (when limit
                 (str "LIMIT " limit))
         query (clojure.string/join " " (filter some? [select from join where-clause limit]))
