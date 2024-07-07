@@ -5,6 +5,7 @@
 (deftest test-parser
 
   (testing "Parse `table` expressions"
+    (is (= (parse "")                 [{:type :table, :value {:table ""}}]))
     (is (= (parse "user")             [{:type :table, :value {:table "user"}}]))
     (is (= (parse "public.user")      [{:type :table, :value {:table "user" :schema "public"}}]))
     (is (= (parse "user as u")        [{:type :table, :value {:table "user" :alias "u"}}]))
@@ -16,7 +17,8 @@
 
   (testing "Parse `limit` expressions"
     (is (= (parse "limit: 100") [{:type :limit, :value 100}]))
-    (is (= (parse "l: 10") [{:type :limit, :value 10}])))
+    (is (= (parse "l: 10") [{:type :limit, :value 10}]))
+    (is (= (parse "10") [{:type :limit, :value 10}])))
 
   (testing "Parse `where` expressions"
     (is (= (parse "where: name='John Doe'") [{:type :where, :value ["name" "=" "John Doe"]}]))

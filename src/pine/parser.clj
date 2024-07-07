@@ -15,10 +15,11 @@
 
 (defmethod -normalize-op :TABLE [[_ payload]]
   (match payload
-    [:qualified-token [:partial-token table]]                              {:type :table, :value {:table table}}
-    [:qualified-token [:token schema] [:partial-token table]]              {:type :table, :value {:table table :schema schema}}
-    [:qualified-token [:token table] [:alias [:symbol a]]]                 {:type :table, :value {:table table :alias a}}
-    [:qualified-token [:token schema] [:token table] [:alias [:symbol a]]] {:type :table, :value {:schema schema :table table :alias a}}
+    [:qualified-symbol [:partial-symbol [:symbol table]]]                     {:type :table, :value {:table table}}
+    [:qualified-symbol [:partial-symbol]]                                     {:type :table, :value {:table ""}}
+    [:qualified-symbol [:symbol schema] [:partial-symbol [:symbol table]]]    {:type :table, :value {:table table :schema schema}}
+    [:qualified-symbol [:symbol table] [:alias [:symbol a]]]                  {:type :table, :value {:table table :alias a}}
+    [:qualified-symbol [:symbol schema] [:symbol table] [:alias [:symbol a]]] {:type :table, :value {:schema schema :table table :alias a}}
     :else
     (throw (ex-info "Unknown RESOURCE operation" {:_ payload}))))
 
@@ -28,7 +29,7 @@
 
 (defn- -normalize-column [column]
   (match column
-    [:column [:qualified-token [:partial-token c]]] {:column c}
+    [:column [:qualified-symbol [:partial-symbol [:symbol c]]]] {:column c}
     :else                 (throw (ex-info "Unknown COLUMN operation" {:_ column}))))
 
 (defmethod -normalize-op :SELECT [[_ payload]]
@@ -63,8 +64,8 @@
 
 (defmethod -normalize-op :DELETE [[_ [_ payload]]]
   (match payload
-    [:qualified-token [:partial-token c]] {:type :delete
-                                           :value {:column c}}
+    [:qualified-symbol [:partial-symbol [:symbol c]]] {:type :delete
+                                                       :value {:column c}}
     :else (throw (ex-info "Unknown DELETE operation" {:_ payload}))))
 
 ;; -----
