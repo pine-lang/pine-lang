@@ -12,11 +12,15 @@
       (ast/generate :test)
       eval/build-query))
 
+(generate "company")
+
 (deftest test-build--query
+
   (testing "qualify table"
     (is (= "\"x\"" (q "x")))
     (is (= "\"x\".\"y\"" (q "x" "y"))))
-  (testing "Build sql"
+
+  (testing "Select"
     (is (= {:query "SELECT c_0.* FROM \"company\" AS \"c_0\" WHERE \"c_0\".\"name\" = ?",
             :params ["Acme Inc."]}
            (generate "company | where: name='Acme Inc.'"))))
@@ -35,7 +39,7 @@
             :params nil}
            (generate "x.company | y.employee | z.document"))))
 
-  (testing "Build delete query"
+  (testing "delete"
     (is (= {:query "DELETE FROM x WHERE \"id\" IN ( SELECT c_0.* FROM \"company\" AS \"c_0\" ) as x",
             :params nil}
            (generate "company | delete! using id")))))

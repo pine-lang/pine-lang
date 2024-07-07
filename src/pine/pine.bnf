@@ -5,7 +5,7 @@ SELECT          := <#"s(elect)?:"> <ws+> columns
 columns         := column (<","> <ws*> column)*
 alias           := symbol
 
-TABLE           := qualified-token
+TABLE           := qualified-symbol
 
 WHERE           := <#"w(here)?:"> <ws*> condition | condition
 condition       := symbol <ws*> operator <ws*> (string|number)
@@ -15,29 +15,25 @@ ORDER           := <#"o(rder)?:"> <ws*> "+"? column
 GROUP           := <#"g(roup)?:"> <ws*> column (<ws+> FUNCTION)?
 FUNCTION        := #"(count|min|max|join)" <":"> <ws+> column
 
-LIMIT           := <#"l(imit)?:"> <ws*> number
+LIMIT           := <#"l(imit)?:"> <ws*> number | number
 
 DELETE          := <#"d(elete)!"> <ws*> <"using"> <ws*> column
 
-column          := qualified-token
+column          := qualified-symbol
 
 SET             := <#"set!"> <ws*> assignments
 
 assignments  := assignment (<ws*> assignment)*
 assignment   := symbol <ws*> <"="> <ws*> (string|number)
 
+qualified-symbol :=  partial-symbol | symbol <"."> partial-symbol | symbol <ws+> <"as"> <ws+> alias | symbol <"."> symbol <ws+> <"as"> <ws+> alias
+
+partial-symbol   := symbol*
+symbol           := #"[A-Za-z][A-Za-z0-9-_]*"
 
 
-number        := #"[0-9]+"
-ws    := #"\s+"
-
-qualified-token :=  partial-token | token <"."> partial-token | token <ws+> <"as"> <ws+> alias | token <"."> token <ws+> <"as"> <ws+> alias
-operator      := #"<|>|="
-
-string        := <"'"> char* <"'">
-symbol        := #"[A-Za-z0-9-_*.@]+"
-token         := #"[A-Za-z0-9-_]+"
-partial-token := #"[A-Za-z0-9-_]*"
-
-
-char = #'[^\']'
+string   := <"'"> char* <"'">
+number   := #"[0-9]+"
+ws       := #"\s+"
+char     := #'[^\']'
+operator := #"="
