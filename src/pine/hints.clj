@@ -1,17 +1,19 @@
 (ns pine.hints)
 
-;; In the current version, I'll only support suggestions for table names and the schema will be autocompleted
-;; In the coming versions, I'll add support for alias suggestion
+(defn- filter-relations [token candidates]
+  "Given a partial token (which can be completed to a table) and all the
+  candidate relations, we filter out the unrelated candidates"
+  (filter #(-> %1
+               first
+               clojure.string/lower-case
+               (clojure.string/includes? token)) candidates))
 
-(defn- filter-candidates [token candidates]
-  "Given a list of a partial token (which can be completed to a table) and all
-  the candidates, we filter out only the relevant candidates"
-  (let [xs (filter #(clojure.string/includes? (clojure.string/lower-case %1) token) candidates)]
-    (->> xs
-         distinct
-         (sort-by count))))
 
-(defn qualify-tables [state tables]
+;; ---------------------------------------------------------------------------
+;; Table Hints
+;; ---------------------------------------------------------------------------
+
+(defn create-hint-from-table [state tables]
   (let [refs (-> state :references :table)]
     (mapcat identity
             (for [table tables
@@ -20,24 +22,49 @@
                 {:schema schema :table table})))))
 
 (defn table-hints [state token]
-  "Update the suggestions based on the candidate for the table name"
+  "No context - get all the tables matching the token"
+  (let [candidates (-> state :references :table)
+        suggestions (filter-relations token candidates)]
+    (create-hint-from-table state (->> suggestions keys distinct (sort-by count)))))
+
+;; ---------------------------------------------------------------------------
+;; Relation Hints
+;; ---------------------------------------------------------------------------
+
+(defn- filter-candidates [token candidates]
+  "Given a partial token (which can be completed to a table) and all the
+  candidates, we filter out only the unrelated candidates"
+  (let [xs (filter #(clojure.string/includes? (clojure.string/lower-case %1) token) candidates)]
+    (->> xs
+         distinct
+         (sort-by count))))
+
+(defn create-hint-from-relations [relations]
+  (map (fn [relation]
+         (let [table (first relation)
+               via (get-in relation [1 :via])
+               via-details (first (first (vals via)))
+               schema (nth via-details 0)
+               column (nth via-details 2)]
+           {:schema schema
+            :table table
+            :column column}))
+       relations))
+
+(defn relation-hints [state token]
+  (let [from-alias (state :context)
+        from-table (-> state :aliases (get from-alias) :table)
+        parents (-> state :references :table (get from-table) :refers-to)
+        children (-> state :references :table (get from-table) :referred-by)
+        suggestions (filter-relations token (concat parents children))
+        ]
+    (create-hint-from-relations suggestions)))
+
+(defn generate [state {token :table}]
   (if (nil? (state :context))
 
     ;; This is the first table - get all the tables matching the token
-    (let [candidates (-> state :references :table keys)
-          suggestions (filter-candidates token candidates)]
-      (qualify-tables state suggestions))
+    (table-hints state token)
 
-;; This is not the first table, then filter out the related tables
-    (let [from-alias (state :context)
-          from-table (-> state :aliases (get from-alias) :table)
-          left-candidates (-> state :references :table (get from-table) :refers-to keys)
-          right-candidates (-> state :references :table (get from-table) :referred-by keys)
-          candidates (concat left-candidates right-candidates)
-          suggestions (filter-candidates token candidates)]
-      (qualify-tables state suggestions))))
-
-(defn generate [state value]
-  (let [token                (value :table)
-        hints                (table-hints state token)]
-    hints))
+    ;; This is not the first table, then filter out the related tables
+    (relation-hints state token)))
