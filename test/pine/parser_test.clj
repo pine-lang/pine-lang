@@ -21,10 +21,10 @@
     (is (= (parse "10") [{:type :limit, :value 10}])))
 
   (testing "Parse `where` expressions"
-    (is (= (parse "where: name='John Doe'") [{:type :where, :value ["name" "like" "John Doe"]}]))
-    (is (= (parse "name = 'John Doe'") [{:type :where, :value ["name" "like" "John Doe"]}]))
-    (is (= (parse "name='John Doe'") [{:type :where, :value ["name" "like" "John Doe"]}]))
-    (is (= (parse "name = 'John%'") [{:type :where, :value ["name" "like" "John%"]}]))
+    (is (= (parse "where: name='John Doe'") [{:type :where, :value ["name" "=" "John Doe"]}]))
+    (is (= (parse "name = 'John Doe'") [{:type :where, :value ["name" "=" "John Doe"]}]))
+    (is (= (parse "name='John Doe'") [{:type :where, :value ["name" "=" "John Doe"]}]))
+    (is (= (parse "name like 'John%'") [{:type :where, :value ["name" "like" "John%"]}]))
     (is (= (parse "age = 24") [{:type :where, :value ["age" "=" "24"]}])))
 
   (testing "Parse `delete` expressions"
