@@ -31,13 +31,15 @@
                  (str "SELECT " context ".* FROM")
                  (str "SELECT " (clojure.string/join ", " (->> columns (map :column) (map q))) " FROM"))
         where-clause (when (not-empty where)
-                       (let [[a col op val] where]
-                         (str "WHERE " (q a col) " " op " ?")))
+                       (str "WHERE "
+                            (clojure.string/join " AND "
+                                                 (for [[a col op val] where]
+                                                   (str (q a col) " " op " ?")))))
         limit (when limit
                 (str "LIMIT " limit))
         query (clojure.string/join " " (filter some? [select from join where-clause limit]))
         params (when (not-empty where)
-                 [(nth where 3)])]
+                 (mapv (fn [[a col op val]] val) where))]
     {:query query :params params}))
 
 (defn build-delete-query [state]
