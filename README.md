@@ -32,7 +32,7 @@ or
 
 ## Dev
 
-Fix clojuare format issues:
+Fix clojure format issues:
 
 
 ```

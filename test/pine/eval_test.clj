@@ -20,10 +20,13 @@
     (is (= "\"x\"" (q "x")))
     (is (= "\"x\".\"y\"" (q "x" "y"))))
 
-  (testing "Select"
-    (is (= {:query "SELECT c_0.* FROM \"company\" AS \"c_0\" WHERE \"c_0\".\"name\" = ?",
+  (testing "Condition"
+    (is (= {:query "SELECT c_0.* FROM \"company\" AS \"c_0\" WHERE \"c_0\".\"name\" like ?",
             :params ["Acme Inc."]}
-           (generate "company | where: name='Acme Inc.'"))))
+           (generate "company | where: name='Acme Inc.'")))
+    (is (= {:query "SELECT c_0.* FROM \"company\" AS \"c_0\" WHERE \"c_0\".\"name\" like ?",
+            :params ["Acme%"]}
+           (generate "company | where: name = 'Acme%'"))))
 
   (testing "Joins"
     (is (= {:query "SELECT e_1.* FROM \"company\" AS \"c_0\" JOIN \"employee\" AS \"e_1\" ON \"e_1\".\"company_id\" = \"c_0\".\"id\"",

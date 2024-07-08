@@ -47,7 +47,7 @@
     [:condition
      [:symbol column]
      [:operator op]
-     [:string & characters]] {:type :where :value [column op (apply str (map second characters))]}
+     [:string & characters]] {:type :where :value [column (if (= op "=") "like" op) (apply str (map second characters))]}
     :else                (throw (ex-info "Unknown WHERE operation" {:_ payload}))))
 
 ;; -----
