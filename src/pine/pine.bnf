@@ -36,4 +36,4 @@ string   := <"'"> char* <"'">
 number   := #"[0-9]+"
 ws       := #"\s+"
 char     := #'[^\']'
-operator := #"="
+operator := "like" | #"="
