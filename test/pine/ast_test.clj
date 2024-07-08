@@ -34,11 +34,11 @@
            (generate :limit "l: 1"))))
 
   (testing "Generate ast for `limit`"
-    (is (= [nil "name" "=" "Acme"]
+    (is (= [nil "name" "like" "Acme"]
            (generate :where "name = 'Acme'")))
-    (is (= ["c_0" "name" "=" "Acme"]
+    (is (= ["c_0" "name" "like" "Acme"]
            (generate :where "company | name = 'Acme'")))
-    (is (= ["c" "name" "=" "Acme"]
+    (is (= ["c" "name" "like" "Acme"]
            (generate :where "company as c | name = 'Acme'"))))
 
   (testing "Generate ast for `join` where there is no relation"
