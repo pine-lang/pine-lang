@@ -15,6 +15,7 @@
        type)))
 
 (deftest test-ast
+
   (testing "Generate ast for `select`"
     (is (= [{:table "company" :alias "c"}]
            (generate :tables "company as c | s: id")))
@@ -25,8 +26,8 @@
     (is (= [{:table "company" :alias "c"}]
            (generate :tables "company as c")))
     (is (= [{:table "user" :alias "u_0"}]
-
            (generate :tables "user"))))
+
   (testing "Generate ast for `limit`"
     (is (= 10
            (generate :limit "limit: 10")))
@@ -45,11 +46,18 @@
 
   (testing "Generate ast for `join` where there is no relation"
     (is (= {"a_0" {"b_1" nil}}
-           (generate :joins "a | b"))))
+           (generate :joins "a | b")))
+    (is (= {"a_0" {"b_1" nil}}
+           (generate :joins "a | b .a_id"))))
 
   (testing "Generate ast for `join` where there is a relation"
     (is (= {"c_0" {"e_1" ["e_1" "company_id" := "c_0" "id"]}}
-           (generate :joins "company | employee"))))
+           (generate :joins "company | employee")))
+    (is (= {"c_0" {"e_1" ["e_1" "company_id" := "c_0" "id"]}}
+           (generate :joins "company | employee .company_id")))
+    (is (= {"c_0" {"e_1" ["e_1" nil := "c_0" nil]}}
+           (generate :joins "company | employee .employee_id"))) ;; trying with incorrect id
+    )
 
   (testing "Generate ast for `delete`"
     (is (= {:column "id"} (generate :delete "company | delete! using id")))))

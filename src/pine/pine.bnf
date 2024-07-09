@@ -5,7 +5,7 @@ SELECT          := <#"s(elect)?:"> <ws+> columns
 columns         := column (<","> <ws*> column)*
 alias           := symbol
 
-TABLE           := qualified-symbol
+TABLE           := qualified-symbol | qualified-symbol <ws*> join-column
 
 WHERE           := <#"w(here)?:"> <ws*> condition | condition
 condition       := symbol <ws*> operator <ws*> (string|number)
@@ -31,6 +31,7 @@ qualified-symbol :=  partial-symbol | symbol <"."> partial-symbol | symbol <ws+>
 partial-symbol   := symbol*
 symbol           := #"[A-Za-z][A-Za-z0-9-_]*"
 
+join-column := <"."> symbol
 
 string   := <"'"> char* <"'">
 number   := #"[0-9]+"
