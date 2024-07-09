@@ -60,6 +60,6 @@
     )
 
   (testing "Generate ast for `delete`"
-    (is (= {:column "id"} (generate :delete "company | delete! using id")))))
+    (is (= {:column "id"} (generate :delete "company | delete! .id")))))
 
 

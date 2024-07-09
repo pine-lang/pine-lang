@@ -21,7 +21,7 @@
     [:TABLE [:qualified-symbol [:symbol table] [:alias [:symbol a]]]]                  {:type :table, :value {:table table :alias a}}
     [:TABLE [:qualified-symbol [:symbol schema] [:symbol table] [:alias [:symbol a]]]] {:type :table, :value {:schema schema :table table :alias a}}
     [:TABLE [:qualified-symbol [:partial-symbol [:symbol table]]]
-     [:join-column [:symbol column]]]                                                  {:type :table, :value {:table table :join-column column}}
+     [:hint-column [:symbol column]]]                                                  {:type :table, :value {:table table :join-column column}}
     :else
     (throw (ex-info "Unknown RESOURCE operation" {:_ payload}))))
 
@@ -66,8 +66,7 @@
 
 (defmethod -normalize-op :DELETE [[_ [_ payload]]]
   (match payload
-    [:qualified-symbol [:partial-symbol [:symbol c]]] {:type :delete
-                                                       :value {:column c}}
+    [:symbol c] {:type :delete :value {:column c}}
     :else (throw (ex-info "Unknown DELETE operation" {:_ payload}))))
 
 ;; -----
@@ -85,4 +84,3 @@
   (-> expression
       parse-expression
       normalize-ops))
-

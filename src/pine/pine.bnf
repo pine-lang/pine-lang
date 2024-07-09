@@ -5,7 +5,7 @@ SELECT          := <#"s(elect)?:"> <ws+> columns
 columns         := column (<","> <ws*> column)*
 alias           := symbol
 
-TABLE           := qualified-symbol | qualified-symbol <ws*> join-column
+TABLE           := qualified-symbol | qualified-symbol <ws+> hint-column
 
 WHERE           := <#"w(here)?:"> <ws*> condition | condition
 condition       := symbol <ws*> operator <ws*> (string|number)
@@ -17,13 +17,13 @@ FUNCTION        := #"(count|min|max|join)" <":"> <ws+> column
 
 LIMIT           := <#"l(imit)?:"> <ws*> number | number
 
-DELETE          := <#"d(elete)!"> <ws*> <"using"> <ws*> column
+DELETE          := <#"d(elete)!"> <ws+> hint-column
 
 column          := qualified-symbol
 
 SET             := <#"set!"> <ws*> assignments
 
-assignments  := assignment (<ws*> assignment)*
+assignments  := assignment (<ws+> assignment)*
 assignment   := symbol <ws*> <"="> <ws*> (string|number)
 
 qualified-symbol :=  partial-symbol | symbol <"."> partial-symbol | symbol <ws+> <"as"> <ws+> alias | symbol <"."> symbol <ws+> <"as"> <ws+> alias
@@ -31,7 +31,7 @@ qualified-symbol :=  partial-symbol | symbol <"."> partial-symbol | symbol <ws+>
 partial-symbol   := symbol*
 symbol           := #"[A-Za-z][A-Za-z0-9-_]*"
 
-join-column := <"."> symbol
+hint-column := <"."> symbol
 
 string   := <"'"> char* <"'">
 number   := #"[0-9]+"

@@ -29,7 +29,7 @@
         join (build-join-query state)
         select (if (empty? columns)
                  (str "SELECT " context ".* FROM")
-                 (str "SELECT " (clojure.string/join ", " (->> columns (map :column) (map q))) " FROM"))
+                 (str "SELECT " (clojure.string/join ", " (map (fn [{:keys [column alias]}] (q alias column)) columns)) " FROM"))
         where-clause (when (not-empty where)
                        (str "WHERE "
                             (clojure.string/join " AND "
@@ -43,9 +43,12 @@
     {:query query :params params}))
 
 (defn build-delete-query [state]
-  (let [{:keys [column]} (state :delete)
-        {:keys [query params]} (build-select-query state)]
-    {:query (str "DELETE FROM x WHERE " (q column) " IN ( "  query " ) as x")
+  (let [{:keys [delete context aliases]} state
+        {table :table schema :schema}     (get aliases context)
+        {:keys [column]}                  delete
+        state                             (assoc state :columns [{:column column :alias context}])
+        {:keys [query params]}            (build-select-query state)]
+    {:query (str "DELETE FROM " (q schema table) " WHERE " (q column) " IN ( "  query " )")
      :params params}))
 
 (defn build-query [state]
@@ -60,7 +63,7 @@
                                      (str "'" param "'")
                                      (str param))]
                      (clojure.string/replace-first s "?" param-str)))]
-    (reduce replacer query params)))
+    (str "\n" (reduce replacer query params) ";\n")))
 
 (defn run-query [state]
   (let [connection-id (state :connection-id)]
