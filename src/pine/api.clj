@@ -79,7 +79,7 @@
   (GET "/api/v1/connection" [] (-> (get-connection-metadata) response))
   (POST "/api/v1/eval" [expression] (->> expression api-eval response))
   ;; pine-mode
-  (POST "/api/v1/build-with-params" [expression] (->> expression api-build :query ((fn [q] (str "\n" q ";")))  response))
+  (POST "/api/v1/build-with-params" [expression] (->> expression api-build :query response))
   ;; default case
   (route/not-found "Not Found"))
 

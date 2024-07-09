@@ -29,4 +29,4 @@
     (is (= (parse "age = 24") [{:type :where, :value ["age" "=" "24"]}])))
 
   (testing "Parse `delete` expressions"
-    (is (= (parse "delete! using id") [{:type :delete, :value {:column "id"}}]))))
+    (is (= (parse "delete! .id") [{:type :delete, :value {:column "id"}}]))))

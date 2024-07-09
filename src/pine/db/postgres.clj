@@ -85,5 +85,8 @@ WHERE con.contype = 'f'
 (defn run-query [id query]
   (let [connection (config/connections id)
         {:keys [query params]} query
-        params (map try-cast-to-uuid params)]
-    (jdbc/query connection (cons query params) {:as-arrays? true :identifiers identity})))
+        params (map try-cast-to-uuid params)
+        _ (prn (format "Running query: %s" query))
+        result (jdbc/query connection (cons query params) {:as-arrays? true :identifiers identity})
+        _ (prn "Done!")]
+    result))

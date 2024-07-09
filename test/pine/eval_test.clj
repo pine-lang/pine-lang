@@ -41,6 +41,7 @@
            (generate "x.company | y.employee | z.document"))))
 
   (testing "delete"
-    (is (= {:query "DELETE FROM x WHERE \"id\" IN ( SELECT c_0.* FROM \"company\" AS \"c_0\" ) as x",
+    (is (= {:query "DELETE FROM \"company\" WHERE \"id\" IN ( SELECT \"c_0\".\"id\" FROM \"company\" AS \"c_0\" )",
             :params nil}
-           (generate "company | delete! using id")))))
+           (generate "company | delete! .id")))))
+
