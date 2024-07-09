@@ -8,7 +8,6 @@
                clojure.string/lower-case
                (clojure.string/includes? token)) candidates))
 
-
 ;; ---------------------------------------------------------------------------
 ;; Table Hints
 ;; ---------------------------------------------------------------------------
@@ -56,8 +55,7 @@
         from-table (-> state :aliases (get from-alias) :table)
         parents (-> state :references :table (get from-table) :refers-to)
         children (-> state :references :table (get from-table) :referred-by)
-        suggestions (filter-relations token (concat parents children))
-        ]
+        suggestions (filter-relations token (concat parents children))]
     (create-hint-from-relations suggestions)))
 
 (defn generate [state {token :table}]

@@ -5,11 +5,12 @@
 (deftest test-parser
 
   (testing "Parse `table` expressions"
-    (is (= (parse "")                 [{:type :table, :value {:table ""}}]))
-    (is (= (parse "user")             [{:type :table, :value {:table "user"}}]))
-    (is (= (parse "public.user")      [{:type :table, :value {:table "user" :schema "public"}}]))
-    (is (= (parse "user as u")        [{:type :table, :value {:table "user" :alias "u"}}]))
-    (is (= (parse "public.user as u") [{:type :table, :value {:table "user" :schema "public" :alias "u"}}])))
+    (is (= [{:type :table, :value {:table ""}}]                                 (parse "")))
+    (is (= [{:type :table, :value {:table "user"}}]                             (parse "user")))
+    (is (= [{:type :table, :value {:table "user" :schema "public"}}]            (parse "public.user")))
+    (is (= [{:type :table, :value {:table "user" :alias "u"}}]                  (parse "user as u")))
+    (is (= [{:type :table, :value {:table "user" :schema "public" :alias "u"}}] (parse "public.user as u")))
+    (is (= [{:type :table, :value {:table "user" :join-column "id"}}]           (parse "user .id"))))
 
   (testing "Parse `select` expressions"
     (is (= (parse "select: name") [{:type :select, :value [{:column  "name"}]}]))

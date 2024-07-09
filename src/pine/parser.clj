@@ -13,13 +13,15 @@
 ;; TABLE
 ;; -----
 
-(defmethod -normalize-op :TABLE [[_ payload]]
+(defmethod -normalize-op :TABLE [payload]
   (match payload
-    [:qualified-symbol [:partial-symbol [:symbol table]]]                     {:type :table, :value {:table table}}
-    [:qualified-symbol [:partial-symbol]]                                     {:type :table, :value {:table ""}}
-    [:qualified-symbol [:symbol schema] [:partial-symbol [:symbol table]]]    {:type :table, :value {:table table :schema schema}}
-    [:qualified-symbol [:symbol table] [:alias [:symbol a]]]                  {:type :table, :value {:table table :alias a}}
-    [:qualified-symbol [:symbol schema] [:symbol table] [:alias [:symbol a]]] {:type :table, :value {:schema schema :table table :alias a}}
+    [:TABLE [:qualified-symbol [:partial-symbol [:symbol table]]]]                     {:type :table, :value {:table table}}
+    [:TABLE [:qualified-symbol [:partial-symbol]]]                                     {:type :table, :value {:table ""}}
+    [:TABLE [:qualified-symbol [:symbol schema] [:partial-symbol [:symbol table]]]]    {:type :table, :value {:table table :schema schema}}
+    [:TABLE [:qualified-symbol [:symbol table] [:alias [:symbol a]]]]                  {:type :table, :value {:table table :alias a}}
+    [:TABLE [:qualified-symbol [:symbol schema] [:symbol table] [:alias [:symbol a]]]] {:type :table, :value {:schema schema :table table :alias a}}
+    [:TABLE [:qualified-symbol [:partial-symbol [:symbol table]]]
+     [:join-column [:symbol column]]]                                                  {:type :table, :value {:table table :join-column column}}
     :else
     (throw (ex-info "Unknown RESOURCE operation" {:_ payload}))))
 

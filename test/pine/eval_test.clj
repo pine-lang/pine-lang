@@ -12,8 +12,6 @@
       (ast/generate :test)
       eval/build-query))
 
-(generate "company")
-
 (deftest test-build--query
 
   (testing "qualify table"
