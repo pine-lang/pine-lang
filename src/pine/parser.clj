@@ -22,6 +22,8 @@
     [:TABLE [:qualified-symbol [:symbol schema] [:symbol table] [:alias [:symbol a]]]] {:type :table, :value {:schema schema :table table :alias a}}
     [:TABLE [:qualified-symbol [:partial-symbol [:symbol table]]]
      [:hint-column [:symbol column]]]                                                  {:type :table, :value {:table table :join-column column}}
+    [:TABLE [:qualified-symbol [:symbol schema] [:partial-symbol [:symbol table]]]
+     [:hint-column [:symbol column]]]                                                  {:type :table, :value {:schema schema :table table :join-column column}}
     :else
     (throw (ex-info "Unknown RESOURCE operation" {:_ payload}))))
 
