@@ -59,7 +59,8 @@
 
 (defn get-connection-metadata []
   (let [connection-id   @db/connection-id
-        connection-name (util/get-connection-name connection-id)]
+        connection-name (util/get-connection-name connection-id)
+        _               (db/init-references @db/connection-id)]
     {:result
      {:connection-id connection-name
       :version version
@@ -82,8 +83,6 @@
   (POST "/api/v1/build-with-params" [expression] (->> expression api-build :query response))
   ;; default case
   (route/not-found "Not Found"))
-
-(db/init-references @db/connection-id)
 
 (def app
   (-> app-routes

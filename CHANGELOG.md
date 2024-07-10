@@ -4,6 +4,44 @@ log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [0.5.0] - 2024-07-10
+
+## Added
+- Hints can be provided to resolve ambigious joins e.g. instead of `company | employee`, you can explicitly specify the join column i.e. `column | employee .company_id`
+- The delete operation uses a nested query. The column used for deletes must be specified:
+
+```pine
+public.company | delete! .id
+```
+
+evaluates to:
+
+```sql
+DELETE FROM
+  "public"."company"
+WHERE
+  "id" IN (
+    SELECT
+      "c_0"."id"
+    FROM
+      "public"."company" AS "c_0"
+  );
+```
+- Conditions can be composed. Following are allowed:
+
+```pine
+company | where: id='xxx'
+company | w: id='xxx'
+company | id='xxx'
+```
+
+## Changed
+- Conditions can't be combined with the tables e.g. `company id='xxx'`. Instead compose them using pipes: `company | id='xxx'`
+- Double quotes around strings aren't supported anymore. Use single quotes i.e. instead of `id="xxx"`, use `id='xxx'`
+
+## Removed
+- Support for `group`, `order`, is dropped. It will be added soon in the up coming versions.
+
 ## [0.4.8] - 2024-06-24
 ### Fixed
 - Strings can contain a `+` character.
