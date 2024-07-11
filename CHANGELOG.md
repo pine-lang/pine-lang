@@ -4,6 +4,10 @@ log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [0.5.1] - 2024-07-11
+## Added
+- Context sensitive columns selection e.g. `company | s: id | employee | s: id`
+
 ## [0.5.0] - 2024-07-10
 
 ## Added
@@ -40,7 +44,8 @@ company | id='xxx'
 - Double quotes around strings aren't supported anymore. Use single quotes i.e. instead of `id="xxx"`, use `id='xxx'`
 
 ## Removed
-- Support for `group`, `order`, is dropped. It will be added soon in the up coming versions.
+- Support for `group`, `order`, `set!` is dropped. It will be added soon in the up coming versions.
+- Context sensitive columns selection
 
 ## [0.4.8] - 2024-06-24
 ### Fixed

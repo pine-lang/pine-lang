@@ -1,5 +1,7 @@
 (ns pine.ast.select)
 
 (defn handle [state value]
-  (-> state
-      (assoc :columns value)))
+  (let [context (state :context)
+        columns (map #(assoc %1 :alias context) value)]
+    (-> state
+        (update :columns into columns))))

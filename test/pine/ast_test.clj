@@ -16,17 +16,21 @@
 
 (deftest test-ast
 
-  (testing "Generate ast for `select`"
-    (is (= [{:table "company" :alias "c"}]
-           (generate :tables "company as c | s: id")))
-    (is (= [{:table "user" :alias "u_0"}]
-           (generate :tables "user"))))
-
   (testing "Generate ast for `tables`"
     (is (= [{:table "company" :alias "c"}]
            (generate :tables "company as c")))
     (is (= [{:table "user" :alias "u_0"}]
            (generate :tables "user"))))
+
+  (testing "Generate ast for `select`"
+    (is (= [{:alias "c_0" :column "id"}]
+           (generate :columns "company | s: id")))
+    (is (= [{:alias "c_0" :column "id"} {:alias "e_1" :column "id"}]
+           (generate :columns "company | s: id | employee | s: id")))
+    (is (= [{:alias "c" :column "id"}]
+           (generate :columns "company as c | s: id")))
+    (is (= []
+           (generate :columns "user"))))
 
   (testing "Generate ast for `limit`"
     (is (= 10
