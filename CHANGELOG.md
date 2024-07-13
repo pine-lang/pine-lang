@@ -4,6 +4,9 @@ log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 
 ## [Unreleased]
 
+## Fixed
+- All columns weren't being select in some cases e.g. `company | s: id | employee`
+
 ## [0.5.1] - 2024-07-11
 ## Added
 - Context sensitive columns selection e.g. `company | s: id | employee | s: id`

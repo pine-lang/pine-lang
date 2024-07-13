@@ -40,13 +40,19 @@
             :params nil}
            (generate "x.company | y.employee | z.document"))))
 
-  (testing "select"
+  (testing "columns"
     (is (= {:query "SELECT \"c\".\"id\" FROM \"company\" AS \"c\"",
             :params nil}
            (generate "company as c | select: id")))
     (is (= {:query "SELECT \"c_0\".\"id\" FROM \"company\" AS \"c_0\"",
             :params nil}
-           (generate "company | select: id"))))
+           (generate "company | select: id")))
+    (is (= {:query "SELECT \"c_0\".\"id\", e_1.* FROM \"company\" AS \"c_0\" JOIN \"employee\" AS \"e_1\" ON \"e_1\".\"company_id\" = \"c_0\".\"id\"",
+            :params nil}
+           (generate "company | select: id | employee")))
+    (is (= {:query "SELECT \"c_0\".\"id\", \"e_1\".\"id\" FROM \"company\" AS \"c_0\" JOIN \"employee\" AS \"e_1\" ON \"e_1\".\"company_id\" = \"c_0\".\"id\"",
+            :params nil}
+           (generate "company | s: id | employee | s: id"))))
 
   (testing "delete"
     (is (= {:query "DELETE FROM \"company\" WHERE \"id\" IN ( SELECT \"c_0\".\"id\" FROM \"company\" AS \"c_0\" )",
