@@ -7,7 +7,7 @@
   ([a]
    (str "\"" a "\"")))
 
-(defn- build-join-query [{:keys [tables joins aliases]}]
+(defn- build-join-clause [{:keys [tables joins aliases]}]
   (when (not-empty (rest tables))
     (let [table-pairs (partition 2 1 tables)
           join-statements (map (fn [[{from-alias :alias} {to-alias :alias}]]
@@ -21,15 +21,25 @@
                                table-pairs)]
       (clojure.string/join " " join-statements))))
 
-(defn build-select-query [state]
+(defn- build-columns-clause [{:keys [columns context]}]
+  (let [column-context (if (empty? columns) nil (-> columns last :alias))
+        select-all (cond
+                     (nil? column-context) (str context ".*")
+                     (= context column-context) ""
+                     :else (str ", " context ".*"))]
+    (str
+     "SELECT "
+     (clojure.string/join ", " (map (fn [{:keys [column alias]}] (q alias column)) columns))
+     select-all
+     " FROM")))
+
+(defn build-select-clause [state]
   (let [{:keys [tables columns limit where context aliases]} state
         from (let [{a :alias} (first tables)
                    {table :table schema :schema} (get aliases a)]
                (str (q schema table) " AS " (q a)))
-        join (build-join-query state)
-        select (if (empty? columns)
-                 (str "SELECT " context ".* FROM")
-                 (str "SELECT " (clojure.string/join ", " (map (fn [{:keys [column alias]}] (q alias column)) columns)) " FROM"))
+        join (build-join-clause state)
+        select (build-columns-clause state)
         where-clause (when (not-empty where)
                        (str "WHERE "
                             (clojure.string/join " AND "
@@ -47,7 +57,7 @@
         {table :table schema :schema}     (get aliases context)
         {:keys [column]}                  delete
         state                             (assoc state :columns [{:column column :alias context}])
-        {:keys [query params]}            (build-select-query state)]
+        {:keys [query params]}            (build-select-clause state)]
     {:query (str "DELETE FROM " (q schema table) " WHERE " (q column) " IN ( "  query " )")
      :params params}))
 
@@ -55,7 +65,7 @@
   (let [{:keys [type]} (state :operation)]
     (cond
       (= type :delete) (build-delete-query state)
-      :else (build-select-query state))))
+      :else (build-select-clause state))))
 
 (defn formatted-query [{:keys [query params]}]
   (let [replacer (fn [s param]
