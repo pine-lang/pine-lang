@@ -25,6 +25,8 @@
   (testing "Generate ast for `select`"
     (is (= [{:alias "c_0" :column "id"}]
            (generate :columns "company | s: id")))
+    (is (= [{:alias "c_0" :column "id" :column-alias "c_id"}]
+           (generate :columns "company | s: id as c_id")))
     (is (= [{:alias "c_0" :column "id"} {:alias "e_1" :column "id"}]
            (generate :columns "company | s: id | employee | s: id")))
     (is (= [{:alias "c" :column "id"}]
