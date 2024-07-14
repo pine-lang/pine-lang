@@ -4,6 +4,9 @@ log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 
 ## [Unreleased]
 
+## Changed
+- Default `limit` is `250` if not specified
+
 ## Fixed
 - All columns weren't being select in some cases e.g. using `company | s: id | employee`, the columns from `employee` table weren't being selected
 
