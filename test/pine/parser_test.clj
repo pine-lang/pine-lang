@@ -17,7 +17,8 @@
 
   (testing "Parse `select` expressions"
     (is (= [{:type :select, :value [{:column  "name"}]}]                (parse "select: name")))
-    (is (= [{:type :select, :value [{:column "id"} {:column  "name"}]}] (parse "s: id, name"))))
+    (is (= [{:type :select, :value [{:column "id"} {:column  "name"}]}] (parse "s: id, name")))
+    (is (= [{:type :select, :value [{:column-alias "t_id" :column "id"}]}] (parse "s: id as t_id"))))
 
   (testing "Parse `limit` expressions"
     (is (= [{:type :limit, :value 100}] (parse "limit: 100")))

@@ -33,7 +33,8 @@
 
 (defn- -normalize-column [column]
   (match column
-    [:column [:qualified-symbol [:partial-symbol [:symbol c]]]] {:column c}
+    [:column [:qualified-symbol [:partial-symbol [:symbol c]]]]     {:column c}
+    [:column [:qualified-symbol [:symbol c] [:alias [:symbol ca]]]] {:column c :column-alias ca}
     :else                 (throw (ex-info "Unknown COLUMN operation" {:_ column}))))
 
 (defmethod -normalize-op :SELECT [[_ payload]]

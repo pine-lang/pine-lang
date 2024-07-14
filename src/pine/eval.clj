@@ -29,7 +29,11 @@
                      :else (str ", " context ".*"))]
     (str
      "SELECT "
-     (clojure.string/join ", " (map (fn [{:keys [column alias]}] (q alias column)) columns))
+     (clojure.string/join
+      ", "
+      (map (fn [{:keys [column alias column-alias]}]
+             (let [c (q alias column)]
+               (if column-alias (str c " AS " (q column-alias)) c))) columns))
      select-all
      " FROM")))
 

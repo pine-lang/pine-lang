@@ -47,6 +47,9 @@
     (is (= {:query "SELECT \"c_0\".\"id\" FROM \"company\" AS \"c_0\"",
             :params nil}
            (generate "company | select: id")))
+    (is (= {:query "SELECT \"c_0\".\"id\" AS \"c_id\" FROM \"company\" AS \"c_0\"",
+            :params nil}
+           (generate "company | select: id as c_id")))
     (is (= {:query "SELECT \"c_0\".\"id\", e_1.* FROM \"company\" AS \"c_0\" JOIN \"employee\" AS \"e_1\" ON \"e_1\".\"company_id\" = \"c_0\".\"id\"",
             :params nil}
            (generate "company | select: id | employee")))
