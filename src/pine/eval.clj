@@ -49,8 +49,7 @@
                             (clojure.string/join " AND "
                                                  (for [[a col op val] where]
                                                    (str (q a col) " " op " ?")))))
-        limit (when limit
-                (str "LIMIT " limit))
+        limit (str "LIMIT " (or limit 250))
         query (clojure.string/join " " (filter some? [select from join where-clause limit]))
         params (when (not-empty where)
                  (mapv (fn [[a col op val]] val) where))]
