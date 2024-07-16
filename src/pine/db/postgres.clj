@@ -35,7 +35,8 @@ WHERE con.contype = 'f'
   relations / or `:refered-by` and `:refers-to` relations."
   [references]
   (reduce (fn [acc [schema table col f-schema f-table f-col]]
-            (let [join [schema table col := f-schema f-table f-col]]
+            (let [of  [schema table col :refers-to f-schema f-table f-col]
+                  has [schema table col :referred-by f-schema f-table f-col]]
               (-> acc
                   ;; Case: Ambiguity / Schema not specified
                   ;;
@@ -49,15 +50,15 @@ WHERE con.contype = 'f'
                   ;; stored in the context. For now, this is convenient. For
                   ;; consider the 'No ambiguity' approach below
                   ;;
-                  (update-in [:table  table   :refers-to f-table :via col] conj join)
-                  (update-in [:table  f-table :referred-by table :via col] conj join)
+                  (update-in [:table  table   :refers-to f-table :via col] conj of)
+                  (update-in [:table  f-table :referred-by table :via col] conj has)
                   ;;
                   ;; Case: No Ambiguity / Schema specified
                   ;;
                   ;; - Value is a single a join vector
                   ;;
-                  (assoc-in [:table  table    :in  schema   :refers-to f-table :in f-schema :via col] join)
-                  (assoc-in [:table  f-table  :in  f-schema :referred-by table :in schema :via col] join)
+                  (assoc-in [:table  table    :in  schema   :refers-to f-table :in f-schema :via col] of)
+                  (assoc-in [:table  f-table  :in  f-schema :referred-by table :in schema :via col] has)
                   ;;
                   ;;
                   ;; Relations between schema and tables

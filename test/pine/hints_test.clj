@@ -18,7 +18,10 @@
            (gen "co")))
 
     (is (= {:table [{:schema "y", :table "employee" :column "company_id"}]}
-           (gen "company | ")))
+           (gen "company | e")))
+
+    (is (= {:table [{:schema "x", :table "company" :column "company_id"}]}
+           (gen "employee | co")))
 
     (is (= {:table []}
            (gen "company as c | s: id")))

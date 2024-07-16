@@ -38,12 +38,13 @@
          distinct
          (sort-by count))))
 
-(defn create-hint-from-relations [relations]
+(defn- create-hint-from-relations [relations direction]
   (map (fn [relation]
          (let [table (first relation)
                via (get-in relation [1 :via])
                via-details (first (first (vals via)))
-               schema (nth via-details 0)
+               direction (nth via-details 3)
+               schema (nth via-details (if (= direction :refers-to) 4 0))
                column (nth via-details 2)]
            {:schema schema
             :table table
@@ -56,7 +57,7 @@
         parents (-> state :references :table (get from-table) :refers-to)
         children (-> state :references :table (get from-table) :referred-by)
         suggestions (filter-relations token (concat parents children))]
-    (create-hint-from-relations suggestions)))
+    (create-hint-from-relations suggestions :parent)))
 
 (defn generate [state {token :table}]
   (if (nil? (state :context))
