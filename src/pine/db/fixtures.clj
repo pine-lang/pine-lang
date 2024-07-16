@@ -24,8 +24,10 @@
 ;;                          |       |                        |
 ;;                          |       |      id (PK)           |
 ;;                          +-------|     employee_id (FK)   |
+;;                                  |     created_by  (FK)   |
 ;;                                  +------------------------+
 
 (def references [["y"  "employee"      "company_id"    "x"  "company"  "id"]
-                 ["z"  "document"      "employee_id"   "y"  "employee" "id"]])
+                 ["z"  "document"      "employee_id"   "y"  "employee" "id"]
+                 ["z"  "document"      "created_by"    "y"  "employee" "id"]])
 
