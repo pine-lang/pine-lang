@@ -4,6 +4,10 @@ log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [0.5.4] - 2024-07-16
+## Fixed
+- Incorrect hints were generated in case of ambiguity
+
 ## [0.5.3] - 2024-07-16
 ## Fixed
 - Incorrect schema being returned in hints when joining from child to parent

@@ -19,7 +19,7 @@
 (add-encoder org.postgresql.util.PGobject encode-str)
 (add-encoder org.postgresql.jdbc.PgArray encode-str)
 
-(def version "0.5.3")
+(def version "0.5.4")
 
 (defn api-build [expression]
   (let [connection-name (util/get-connection-name @db/connection-id)]

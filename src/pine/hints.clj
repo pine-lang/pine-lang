@@ -38,18 +38,24 @@
          distinct
          (sort-by count))))
 
-(defn- create-hint-from-relations [relations direction]
-  (map (fn [relation]
-         (let [table (first relation)
-               via (get-in relation [1 :via])
-               via-details (first (first (vals via)))
-               direction (nth via-details 3)
-               schema (nth via-details (if (= direction :refers-to) 4 0))
-               column (nth via-details 2)]
+;; via-details look like:
+;; ["z"  "document"      "created_by"  :refers-to   "y"  "employee" "id"]
+(defn- create-hint-from-relation-array [table via-details]
+  (map (fn [vd]
+         (let [direction (nth vd 3)
+               schema (nth vd (if (= direction :refers-to) 4 0))
+               column (nth vd 2)]
            {:schema schema
             :table table
-            :column column}))
-       relations))
+            :column column})) via-details))
+
+(defn- create-hint-from-relations [relations]
+  (mapcat (fn [relation]
+            (let [table (first relation)
+                  via (get-in relation [1 :via])
+                  via-details (mapcat identity (vals via))]
+              (create-hint-from-relation-array table via-details)))
+          relations))
 
 (defn relation-hints [state token]
   (let [from-alias (state :context)
@@ -57,7 +63,11 @@
         parents (-> state :references :table (get from-table) :refers-to)
         children (-> state :references :table (get from-table) :referred-by)
         suggestions (filter-relations token (concat parents children))]
-    (create-hint-from-relations suggestions :parent)))
+    (-> suggestions
+        create-hint-from-relations
+        ;; TODO: instead of doing a distinct, we can do a reduce and keep track
+        ;; of duplicates
+        distinct)))
 
 (defn generate [state {token :table}]
   (if (nil? (state :context))

@@ -30,4 +30,9 @@
     ;;
     ;; (is (= {:table []}
     ;;        (gen "company as c")))
-    ))
+    )
+
+  (testing "Generate hints in ambiguity"
+    (is (= {:table [{:schema "z", :table "document" :column "employee_id"}
+                    {:schema "z", :table "document" :column "created_by"}]}
+           (gen "employee | doc")))))
