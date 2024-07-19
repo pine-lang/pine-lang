@@ -1,12 +1,20 @@
 {
     "connection-id": "localhost",
     "version": "0.5.4",
-    "query": "\nSELECT c_1.* FROM \"tenant\" AS \"t_0\" JOIN \"company\" AS \"c_1\" ON \"c_1\".\"tenantId\" = \"t_0\".\"id\" WHERE \"c_1\".\"name\" = 'Acme Inc' LIMIT 2;\n",
+    "query": "\nSELECT a_2.* FROM \"tenant\" AS \"t_0\" JOIN \"company\" AS \"c_1\" ON \"c_1\".\"tenantId\" = \"t_0\".\"id\" JOIN \"atta\" AS \"a_2\" ON \"\" = \"\" WHERE \"c_1\".\"name\" = 'Acme Inc' LIMIT 1;\n",
     "state": {
         "hints": {
-            "table": []
+            "table": [
+                {
+                    "schema": "public",
+                    "table": "attachment",
+                    "column": "attachment_id",
+                    "child": true,
+                    "pine": "public.attachment .attachment_id"
+                }
+            ]
         },
-        "table-count": 2,
+        "table-count": 3,
         "where": [
             [
                 "c_1",
@@ -27,12 +35,14 @@
                 "alias": "c_1"
             }
         ],
-        "limit": 2,
+        "limit": 1,
         "pending-count": 0,
         "columns": [],
         "operation": {
-            "type": "limit",
-            "value": 2
+            "type": "table",
+            "value": {
+                "table": "atta"
+            }
         },
         "joins": {
             "t_0": {
@@ -43,6 +53,9 @@
                     "t_0",
                     "id"
                 ]
+            },
+            "c_1": {
+                "a_2": null
             }
         },
         "tables": [
@@ -55,9 +68,14 @@
                 "schema": null,
                 "table": "company",
                 "alias": "c_1"
+            },
+            {
+                "schema": null,
+                "table": "atta",
+                "alias": "a_2"
             }
         ],
-        "context": "c_1",
+        "context": "a_2",
         "connection-id": "default",
         "aliases": {
             "t_0": {
@@ -67,12 +85,24 @@
             "c_1": {
                 "table": "company",
                 "schema": null
+            },
+            "a_2": {
+                "table": "atta",
+                "schema": null
             }
         }
     },
     "deprecation-notice": "Properties will be removed in the next major version: `hints`, `context`. Use `state` (`hints`, `selected-tables`) instead.",
     "hints": {
-        "table": []
+        "table": [
+            {
+                "schema": "public",
+                "table": "attachment",
+                "column": "attachment_id",
+                "child": true,
+                "pine": "public.attachment .attachment_id"
+            }
+        ]
     },
     "context": [
         {
