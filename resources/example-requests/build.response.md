@@ -1,3 +1,14 @@
+# Example
+
+Pine Expression:
+
+```pine
+tenant | s: title | public.company .tenantId | where: name like 'Acme Inc%' | 10 | atta
+```
+
+Response to `api/v1/build`:
+
+```json
 {
     "connection-id": "localhost",
     "version": "0.5.4",
@@ -122,3 +133,4 @@
         }
     ]
 }
+```
