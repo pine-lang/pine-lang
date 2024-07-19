@@ -32,15 +32,10 @@
          :query (-> state eval/build-query eval/formatted-query)
          :state (dissoc state :references)
          ;; Backwards compatibility
-         ;; Instead of the following, please use `state`.
-         :deprecation-notice "Properties will be removed in the next major version: `hints`, `context`. Use `state` instead."
-         :hints (state :hints)
-         :context (let [tables (state :tables)
-                        type (-> state :operation :type)]
-                    (if
-                     (= type :table)
-                      (-> tables reverse rest reverse)
-                      tables))})
+         :deprecation-notice
+         "Properties will be removed in the next major version: `hints`, `context`. Use `state` (`hints`, `selected-tables`) instead."
+         :hints {:table (-> state :hints :table)}
+         :context (state :selected-tables)})
 
       (catch Exception e {:connection-id connection-name
                           :error (.getMessage e)}))))

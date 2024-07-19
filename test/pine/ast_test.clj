@@ -17,10 +17,12 @@
 (deftest test-ast
 
   (testing "Generate ast for `tables`"
-    (is (= [{:table "company" :alias "c"}]
+    (is (= [{:schema nil :table "company" :alias "c"}]
            (generate :tables "company as c")))
-    (is (= [{:table "user" :alias "u_0"}]
-           (generate :tables "user"))))
+    (is (= [{:schema nil :table "user" :alias "u_0"}]
+           (generate :tables "user")))
+    (is (= [{:schema "public" :table "user" :alias "u_0"}]
+           (generate :tables "public.user"))))
 
   (testing "Generate ast for `select`"
     (is (= [{:alias "c_0" :column "id"}]

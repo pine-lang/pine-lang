@@ -14,12 +14,13 @@
             :references {}
 
             ;; ast
-            :tables         []           ;; e.g. [{ :table "user" :schema "public" :alias "u" }] ;; schema is nilable
-            :columns        []           ;; e.g. [{ :alias "u" :column "name" }]
-            :limit          nil          ;; number ;; nilable
-            :aliases        {}           ;; e.g. [{ :schema "public" :table "user" }] ;; schema is nilable
-            :joins          {}           ;; This can be a map or a vector - will decide later
-            :where          []           ;; e.g. [ "name" "=" "john" ]
+            :tables          []           ;; e.g. [{ :table "user" :schema "public" :alias "u" }] ;; schema is nilable
+            :selected-tables []           ;; e.g. [{ :table "user" :schema "public" :alias "u" }] ;; schema is nilable
+            :columns         []           ;; e.g. [{ :alias "u" :column "name" }]
+            :limit           nil          ;; number ;; nilable
+            :aliases         {}           ;; e.g. [{ :schema "public" :table "user" }] ;; schema is nilable
+            :joins           {}           ;; This can be a map or a vector - will decide later
+            :where           []           ;; e.g. [ "name" "=" "john" ]
 
             ;; state
             :operation      {:type  nil
@@ -57,6 +58,13 @@
 
 (defn post-handle [state]
   (-> state
+      (assoc :selected-tables (let [tables (state :tables)
+                                    type (-> state :operation :type)]
+                                (if
+                                 (= type :table)
+                                  (-> tables reverse rest reverse)
+                                  tables)))
+
       (dissoc :references)))
 
 (defn generate
