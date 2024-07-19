@@ -1,7 +1,7 @@
 {
     "connection-id": "localhost",
     "version": "0.5.4",
-    "query": "\nSELECT a_2.* FROM \"tenant\" AS \"t_0\" JOIN \"company\" AS \"c_1\" ON \"c_1\".\"tenantId\" = \"t_0\".\"id\" JOIN \"atta\" AS \"a_2\" ON \"\" = \"\" WHERE \"c_1\".\"name\" = 'Acme Inc' LIMIT 1;\n",
+    "query": "\nSELECT \"t_0\".\"title\", a_2.* FROM \"tenant\" AS \"t_0\" JOIN \"public\".\"company\" AS \"c_1\" ON \"c_1\".\"tenantId\" = \"t_0\".\"id\" JOIN \"atta\" AS \"a_2\" ON \"\" = \"\" WHERE \"c_1\".\"name\" like 'Acme Inc%' LIMIT 10;\n",
     "state": {
         "hints": {
             "table": [
@@ -19,8 +19,8 @@
             [
                 "c_1",
                 "name",
-                "=",
-                "Acme Inc"
+                "like",
+                "Acme Inc%"
             ]
         ],
         "selected-tables": [
@@ -30,14 +30,19 @@
                 "alias": "t_0"
             },
             {
-                "schema": null,
+                "schema": "public",
                 "table": "company",
                 "alias": "c_1"
             }
         ],
-        "limit": 1,
+        "limit": 10,
         "pending-count": 0,
-        "columns": [],
+        "columns": [
+            {
+                "column": "title",
+                "alias": "t_0"
+            }
+        ],
         "operation": {
             "type": "table",
             "value": {
@@ -65,7 +70,7 @@
                 "alias": "t_0"
             },
             {
-                "schema": null,
+                "schema": "public",
                 "table": "company",
                 "alias": "c_1"
             },
@@ -84,7 +89,7 @@
             },
             "c_1": {
                 "table": "company",
-                "schema": null
+                "schema": "public"
             },
             "a_2": {
                 "table": "atta",
@@ -111,7 +116,7 @@
             "alias": "t_0"
         },
         {
-            "schema": null,
+            "schema": "public",
             "table": "company",
             "alias": "c_1"
         }
