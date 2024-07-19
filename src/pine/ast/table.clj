@@ -39,8 +39,8 @@
 (defn- update-hints [state value]
   (let [hints (if (= (state :pending-count) 1)
                 (hints/generate state value)
-                [])]
-    (assoc-in state [:hints :table] hints)))
+                {:table []})]
+    (assoc-in state [:hints] hints)))
 
 (defn make-alias [s]
   (let [words (if (not-empty s) (clojure.string/split s #"_") ["x"])
@@ -52,7 +52,7 @@
   (let [{:keys [table alias schema]} value
         a (or alias (str (make-alias table) "_" (state :table-count)))]
     (-> state
-        (update :tables conj {:table table :alias a})
+        (update :tables conj {:schema schema :table table :alias a})
         (update :aliases assoc a {:table table :schema schema})
         (update-joins value)
         (update-hints value)

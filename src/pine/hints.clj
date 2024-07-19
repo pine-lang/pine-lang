@@ -38,16 +38,26 @@
          distinct
          (sort-by count))))
 
+(defn- generate-expression [{:keys [schema table column]}]
+  (str (if schema (str schema ".") "") table (if column (str " ." column) "")))
+
 ;; via-details look like:
 ;; ["z"  "document"      "created_by"  :refers-to   "y"  "employee" "id"]
 (defn- create-hint-from-relation-array [table via-details]
   (map (fn [vd]
          (let [direction (nth vd 3)
-               schema (nth vd (if (= direction :refers-to) 4 0))
-               column (nth vd 2)]
+               child? (= direction :refers-to)
+               schema (nth vd (if child? 4 0))
+               column (nth vd 2)
+               ;; child? (= column "tenant_id")
+               ]
            {:schema schema
             :table table
-            :column column})) via-details))
+            :column column
+            ;; TODO: We need directionality here!
+            ;; :child child?
+            }))
+       via-details))
 
 (defn- create-hint-from-relations [relations]
   (mapcat (fn [relation]
@@ -70,10 +80,15 @@
         distinct)))
 
 (defn generate [state {token :table}]
-  (if (nil? (state :context))
+  (let [table-hints         (if (nil? (state :context))
 
-    ;; This is the first table - get all the tables matching the token
-    (table-hints state token)
+                              ;; This is the first table - get all the tables matching the token
+                              (table-hints state token)
 
-    ;; This is not the first table, then filter out the related tables
-    (relation-hints state token)))
+                              ;; This is not the first table, then filter out the related tables
+                              (relation-hints state token))
+        add-pine-expression (fn [h] (assoc h :pine (generate-expression h)))]
+    {:table (->>  table-hints
+                  (map add-pine-expression)
+                  ;; (map-indexed (fn [i x] (assoc x :child (if (< i 8) true false))))
+                  )}))
