@@ -9,21 +9,21 @@
   operation"
   first)
 
-;; -----
-;; TABLE
-;; -----
+;; ----
+;; FROM
+;; ----
 
-(defmethod -normalize-op :TABLE [payload]
+(defmethod -normalize-op :FROM [payload]
   (match payload
-    [:TABLE [:qualified-symbol [:symbol table]]]                     {:type :table, :value {:table table}}
-    [:TABLE [:qualified-symbol]]                                     {:type :table, :value {:table ""}}
-    [:TABLE [:qualified-symbol [:symbol schema] [:symbol table]]]    {:type :table, :value {:table table :schema schema}}
-    [:TABLE [:qualified-symbol [:symbol table] [:alias [:symbol a]]]]                  {:type :table, :value {:table table :alias a}}
-    [:TABLE [:qualified-symbol [:symbol schema] [:symbol table] [:alias [:symbol a]]]] {:type :table, :value {:schema schema :table table :alias a}}
-    [:TABLE [:qualified-symbol [:symbol table]]
-     [:hint-column [:symbol column]]]                                                  {:type :table, :value {:table table :join-column column}}
-    [:TABLE [:qualified-symbol [:symbol schema] [:symbol table]]
-     [:hint-column [:symbol column]]]                                                  {:type :table, :value {:schema schema :table table :join-column column}}
+    [:FROM [:symbol table]]                                        {:type :table, :value {:table table}}
+    [:FROM [:symbol schema] [:symbol table]]                       {:type :table, :value {:table table :schema schema}}
+    [:FROM [:symbol table] [:alias [:symbol a]]]                   {:type :table, :value {:table table :alias a}}
+    [:FROM  [:symbol schema] [:symbol table] [:alias [:symbol a]]] {:type :table, :value {:schema schema :table table :alias a}}
+    [:FROM  [:symbol table]
+     [:hint-column [:symbol column]]]                               {:type :table, :value {:table table :join-column column}}
+    [:FROM  [:symbol schema] [:symbol table]
+     [:hint-column [:symbol column]]]                               {:type :table, :value {:schema schema :table table :join-column column}}
+    [:FROM]                                                        {:type :table, :value {:table ""}}
     :else
     (throw (ex-info "Unknown RESOURCE operation" {:_ payload}))))
 
@@ -33,8 +33,8 @@
 
 (defn- -normalize-column [column]
   (match column
-    [:column [:qualified-symbol [:symbol c]]]     {:column c}
-    [:column [:qualified-symbol [:symbol c] [:alias [:symbol ca]]]] {:column c :column-alias ca}
+    [:column [:symbol c]]                       {:column c}
+    [:column [:symbol c] [:alias [:symbol ca]]] {:column c :column-alias ca}
     :else                 (throw (ex-info "Unknown COLUMN operation" {:_ column}))))
 
 (defmethod -normalize-op :SELECT [[_ payload]]
@@ -91,10 +91,15 @@
       result
       (normalize-ops result))))
 
+(defn parse-or-fail [expression]
+  (-> expression parser normalize-ops))
+
 (defn parse [expression]
   "Parse an expression and return the normalized operations or failure as a string"
   (let [result (parser expression)
         failure? (insta/failure? result)]
     (if failure?
-      {:error (with-out-str (println (insta/get-failure result)))}
+      (let [failure (insta/get-failure result)
+            error (with-out-str (println (insta/get-failure result)))]
+        {:error error :failure failure})
       {:result (normalize-ops result)})))

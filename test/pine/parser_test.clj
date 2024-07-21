@@ -3,11 +3,11 @@
             [pine.parser :refer :all]))
 
 (defn- p [e]
-  (-> e parse :result))
+  (-> e parse-or-fail))
 
 (deftest test-parser
 
-  (testing "Parse `table` expressions"
+  (testing "Parse `from` expressions"
     (is (= [{:type :table, :value {:table ""}}]                                 (p "")))
     (is (= [{:type :table, :value {:table "user"}}]                             (p "user")))
     (is (= [{:type :table, :value {:table "user" :schema "public"}}]            (p "public.user")))
@@ -34,6 +34,7 @@
 
   (testing "Parse `where` expressions"
     (is (= [{:type :where, :value ["name" "=" "John Doe"]}] (p "where: name='John Doe'")))
+    (is (= [{:type :where, :value ["name" "=" "John Doe"]}] (p "w: name='John Doe'")))
     (is (= [{:type :where, :value ["name" "=" "John Doe"]}] (p "name = 'John Doe'")))
     (is (= [{:type :where, :value ["name" "=" "John Doe"]}] (p "name='John Doe'")))
     (is (= [{:type :where, :value ["name" "like" "John%"]}] (p "name like 'John%'")))
