@@ -1,38 +1,24 @@
 OPERATIONS := OPERATION <ws*> (<"|"> <ws*> OPERATION <ws*>)*
-OPERATION  := SELECT | TABLE | WHERE | LIMIT | GROUP | ORDER | DELETE | SET | FUNCTION
-
-SELECT          := <#"s(elect)?:"> <ws+> columns
-columns         := column (<","> <ws*> column)*
-alias           := symbol
+OPERATION  := SELECT | TABLE | WHERE | LIMIT | DELETE
 
 TABLE           := qualified-symbol | qualified-symbol <ws+> hint-column
 
+SELECT          := <#"s(elect)?:"> <ws+> columns
 WHERE           := <#"w(here)?:"> <ws*> condition | condition
-condition       := symbol <ws*> operator <ws*> (string|number)
-
-ORDER           := <#"o(rder)?:"> <ws*> "+"? column
-
-GROUP           := <#"g(roup)?:"> <ws*> column (<ws+> FUNCTION)?
-FUNCTION        := #"(count|min|max|join)" <":"> <ws+> column
-
 LIMIT           := <#"l(imit)?:"> <ws*> number | number
-
 DELETE          := <#"d(elete)!"> <ws+> hint-column
 
+condition       := symbol <ws*> operator <ws*> (string|number)
+columns         := column (<","> <ws*> column)*
 column          := qualified-symbol
+hint-column     := <"."> symbol
+alias           := symbol
 
-SET             := <#"set!"> <ws*> assignments
 
-assignments  := assignment (<ws+> assignment)*
-assignment   := symbol <ws*> <"="> <ws*> (string|number)
+qualified-symbol :=  symbol* | symbol+ <ws*> "^" |
+                     symbol <"."> symbol* | symbol <ws+> <"as"> <ws+> alias | symbol <"."> symbol <ws+> <"as"> <ws+> alias
 
-qualified-symbol :=  partial-symbol | symbol <"."> partial-symbol | symbol <ws+> <"as"> <ws+> alias | symbol <"."> symbol <ws+> <"as"> <ws+> alias
-
-partial-symbol   := symbol*
-symbol           := #"[A-Za-z][A-Za-z0-9-_]*"
-
-hint-column := <"."> symbol
-
+symbol   := #"[A-Za-z][A-Za-z0-9-_]*"
 string   := <"'"> char* <"'">
 number   := #"[0-9]+"
 ws       := #"\s+"

@@ -9,6 +9,7 @@
   "Helper function to generate the sql"
   (-> expression
       parser/parse
+      :result
       (ast/generate :test)
       eval/build-query))
 

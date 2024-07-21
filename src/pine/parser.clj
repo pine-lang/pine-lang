@@ -15,14 +15,14 @@
 
 (defmethod -normalize-op :TABLE [payload]
   (match payload
-    [:TABLE [:qualified-symbol [:partial-symbol [:symbol table]]]]                     {:type :table, :value {:table table}}
-    [:TABLE [:qualified-symbol [:partial-symbol]]]                                     {:type :table, :value {:table ""}}
-    [:TABLE [:qualified-symbol [:symbol schema] [:partial-symbol [:symbol table]]]]    {:type :table, :value {:table table :schema schema}}
+    [:TABLE [:qualified-symbol [:symbol table]]]                     {:type :table, :value {:table table}}
+    [:TABLE [:qualified-symbol]]                                     {:type :table, :value {:table ""}}
+    [:TABLE [:qualified-symbol [:symbol schema] [:symbol table]]]    {:type :table, :value {:table table :schema schema}}
     [:TABLE [:qualified-symbol [:symbol table] [:alias [:symbol a]]]]                  {:type :table, :value {:table table :alias a}}
     [:TABLE [:qualified-symbol [:symbol schema] [:symbol table] [:alias [:symbol a]]]] {:type :table, :value {:schema schema :table table :alias a}}
-    [:TABLE [:qualified-symbol [:partial-symbol [:symbol table]]]
+    [:TABLE [:qualified-symbol [:symbol table]]
      [:hint-column [:symbol column]]]                                                  {:type :table, :value {:table table :join-column column}}
-    [:TABLE [:qualified-symbol [:symbol schema] [:partial-symbol [:symbol table]]]
+    [:TABLE [:qualified-symbol [:symbol schema] [:symbol table]]
      [:hint-column [:symbol column]]]                                                  {:type :table, :value {:schema schema :table table :join-column column}}
     :else
     (throw (ex-info "Unknown RESOURCE operation" {:_ payload}))))
@@ -33,7 +33,7 @@
 
 (defn- -normalize-column [column]
   (match column
-    [:column [:qualified-symbol [:partial-symbol [:symbol c]]]]     {:column c}
+    [:column [:qualified-symbol [:symbol c]]]     {:column c}
     [:column [:qualified-symbol [:symbol c] [:alias [:symbol ca]]]] {:column c :column-alias ca}
     :else                 (throw (ex-info "Unknown COLUMN operation" {:_ column}))))
 
@@ -74,16 +74,27 @@
 
 ;; -----
 
-(def ^:private parse-expression (let [dir (System/getProperty "user.dir")
-                                      file (format "%s/src/pine/pine.bnf" dir)
-                                      grammar (slurp file)]
-                                  (insta/parser grammar)))
+(def ^:private parser
+  (let [dir (System/getProperty "user.dir")
+        file (format "%s/src/pine/pine.bnf" dir)
+        grammar (slurp file)]
+    (insta/parser grammar)))
 
 (defn- normalize-ops [[_ & ops]]
   (mapv (fn [[_ op]] (-normalize-op op)) ops))
 
 (defn parse [expression]
   "Parse an expression and return the normalized operations"
-  (-> expression
-      parse-expression
-      normalize-ops))
+  (let [result (parser expression)
+        failure? (insta/failure? result)]
+    (if failure?
+      result
+      (normalize-ops result))))
+
+(defn parse [expression]
+  "Parse an expression and return the normalized operations or failure as a string"
+  (let [result (parser expression)
+        failure? (insta/failure? result)]
+    (if failure?
+      {:error (with-out-str (println (insta/get-failure result)))}
+      {:result (normalize-ops result)})))

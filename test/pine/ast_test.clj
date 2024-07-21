@@ -11,6 +11,7 @@
    "Helper function to generate and get the relevant part in the ast"
    (-> expression
        parser/parse
+       :result
        (ast/generate :test)
        type)))
 
