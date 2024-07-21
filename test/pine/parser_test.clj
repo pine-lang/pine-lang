@@ -11,6 +11,7 @@
     (is (= [{:type :table, :value {:table ""}}]                                 (p "")))
     (is (= [{:type :table, :value {:table "user"}}]                             (p "user")))
     (is (= [{:type :table, :value {:table "user" :schema "public"}}]            (p "public.user")))
+    (is (= [{:type :table, :value {:table "user" :schema "public"}}]            (p "public.user")))
     (is (= [{:type :table, :value {:table "user" :alias "u"}}]                  (p "user as u")))
     (is (= [{:type :table, :value {:table "user" :schema "public" :alias "u"}}] (p "public.user as u")))
     (is (= [{:type :table, :value {:table "user" :join-column "id"}}]           (p "user .id")))
@@ -18,9 +19,19 @@
                                    :table "user"
                                    :join-column "id"}}]                         (p "public.user .id"))))
 
-  ;; (testing "Parse `table` expressions with directionality"
-  ;;   (is (= [{:type :table, :value {:table ""}}]                                 (p "!")))
-  ;;   )
+  (testing "Parse `from` expressions with directionality"
+    (is (= [{:type :table, :value {:table "user" :parent true}}]                  (p "user^")))
+    (is (= [{:type :table, :value {:table "user" :schema "public" :parent true}}] (p "public.user^")))
+    (is (= [{:type :table, :value {:table "user" :schema "public" :parent true :alias "u"}}] (p "public.user^ as u")))
+    (is (= [{:type :table, :value {:schema "public"
+                                   :table "user"
+                                   :parent true
+                                   :join-column "other_id"}}]                         (p "public.user^ .other_id")))
+    (is (= [{:type :table, :value {:schema "public"
+                                   :table "user"
+                                   :parent true
+                                   :alias "u"
+                                   :join-column "other_id"}}]                         (p "public.user^ .other_id as u "))))
 
   (testing "Parse `select` expressions"
     (is (= [{:type :select, :value [{:column  "name"}]}]                (p "select: name")))

@@ -16,13 +16,30 @@
 (defmethod -normalize-op :FROM [payload]
   (match payload
     [:FROM [:symbol table]]                                        {:type :table, :value {:table table}}
+    [:FROM [:symbol table] "^"]                                    {:type :table, :value {:table table :parent true}}
     [:FROM [:symbol schema] [:symbol table]]                       {:type :table, :value {:table table :schema schema}}
+    [:FROM [:symbol schema] [:symbol table] "^"]                   {:type :table, :value {:table table :schema schema :parent true}}
     [:FROM [:symbol table] [:alias [:symbol a]]]                   {:type :table, :value {:table table :alias a}}
     [:FROM  [:symbol schema] [:symbol table] [:alias [:symbol a]]] {:type :table, :value {:schema schema :table table :alias a}}
+    [:FROM
+     [:symbol schema] [:symbol table] "^" [:alias [:symbol a]]]    {:type :table, :value {:schema schema :table table :alias a :parent true}}
     [:FROM  [:symbol table]
-     [:hint-column [:symbol column]]]                               {:type :table, :value {:table table :join-column column}}
-    [:FROM  [:symbol schema] [:symbol table]
-     [:hint-column [:symbol column]]]                               {:type :table, :value {:schema schema :table table :join-column column}}
+     [:hint-column [:symbol column]]]                              {:type :table, :value {:table table :join-column column}}
+    [:FROM
+     [:symbol schema]
+     [:symbol table]
+     [:hint-column [:symbol column]]]                              {:type :table, :value {:schema schema :table table :join-column column}}
+    [:FROM
+     [:symbol schema]
+     [:symbol table]
+     "^"
+     [:hint-column [:symbol column]]]                              {:type :table, :value {:schema schema :table table :parent true :join-column column}}
+    [:FROM
+     [:symbol schema]
+     [:symbol table]
+     "^"
+     [:hint-column [:symbol column]]
+     [:alias [:symbol a]]]                                         {:type :table, :value {:schema schema :table table :parent true :join-column column :alias a}}
     [:FROM]                                                        {:type :table, :value {:table ""}}
     :else
     (throw (ex-info "Unknown RESOURCE operation" {:_ payload}))))
