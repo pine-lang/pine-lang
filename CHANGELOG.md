@@ -4,6 +4,19 @@ log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [0.6.0] - 2024-07-22
+## Added
+- Support for diretional joins:
+```
+employee | has: employee
+employee | of: employee
+employee | employee^
+```
+- Columns can be qualified by table aliases:
+```
+employee as e | s: e.name
+```
+
 ## [0.5.4] - 2024-07-16
 ## Fixed
 - Incorrect hints were generated in case of ambiguity
