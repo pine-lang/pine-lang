@@ -2,6 +2,6 @@
 
 (defn handle [state value]
   (let [context (state :context)
-        columns (map #(assoc %1 :alias context) value)]
+        columns (map #(if (:alias %1) %1 (assoc %1 :alias context)) value)]
     (-> state
         (update :columns into columns))))

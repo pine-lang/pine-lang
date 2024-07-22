@@ -21,12 +21,16 @@
 
 (def version "0.5.4")
 
+(defn- generate-state [expression]
+  (let [{:keys [result error]} (->> expression
+                                    parser/parse)]
+    (if result (-> result ast/generate)
+        (throw (ex-info error {})))))
+
 (defn api-build [expression]
   (let [connection-name (util/get-connection-name @db/connection-id)]
     (try
-      (let [state (->> expression
-                       parser/parse
-                       ast/generate)]
+      (let [state (generate-state expression)]
         {:connection-id connection-name
          :version version
          :query (-> state eval/build-query eval/formatted-query)
@@ -43,9 +47,7 @@
 (defn api-eval [expression]
   (let [connection-name (util/get-connection-name @db/connection-id)]
     (try
-      (let [state (-> expression
-                      parser/parse
-                      ast/generate)]
+      (let [state (generate-state expression)]
         {:connection-id connection-name
          :version version
          :result (eval/run-query state)})

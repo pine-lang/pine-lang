@@ -1,38 +1,31 @@
 OPERATIONS := OPERATION <ws*> (<"|"> <ws*> OPERATION <ws*>)*
-OPERATION  := SELECT | TABLE | WHERE | LIMIT | GROUP | ORDER | DELETE | SET | FUNCTION
+OPERATION  := SELECT | FROM | WHERE | LIMIT | DELETE
 
-SELECT          := <#"s(elect)?:"> <ws+> columns
-columns         := column (<","> <ws*> column)*
-alias           := symbol
+FROM            := table (<ws+> hint-column)? (<ws+> as-alias)?
 
-TABLE           := qualified-symbol | qualified-symbol <ws+> hint-column
+SELECT          := <"select:"> <ws*> columns     | <"s:"> <ws*> columns
+WHERE           := <"where:"> <ws*> condition    | <"w:"> <ws*> condition    | condition
+LIMIT           := <"limit:"> <ws*> number       | <"l:"> <ws*> number       | number
+DELETE          := <"delete!"> <ws*> hint-column | <"d!"> <ws*> hint-column
 
-WHERE           := <#"w(here)?:"> <ws*> condition | condition
+<table>         := child | parent | symbol* | symbol <"."> symbol*
+<child>         := "has:" <ws*> symbol+ | "has:" <ws*> symbol <"."> symbol+
+<parent>        := "of:"  <ws*> symbol+ | "of:"  <ws*> symbol <"."> symbol+ | symbol+ "^" | symbol <"."> symbol+ "^"
+
+
+
 condition       := symbol <ws*> operator <ws*> (string|number)
+columns         := column (<","> <ws*> column)*
+column          := qualified-column
+hint-column     := <"."> symbol
 
-ORDER           := <#"o(rder)?:"> <ws*> "+"? column
+<qualified-column>        := qualified-symbol | qualified-symbol <ws+> as-alias
+<qualified-symbol>        := symbol* | symbol <"."> symbol*
+<as-alias>                := <"as"> <ws+> alias
 
-GROUP           := <#"g(roup)?:"> <ws*> column (<ws+> FUNCTION)?
-FUNCTION        := #"(count|min|max|join)" <":"> <ws+> column
+alias    := symbol
 
-LIMIT           := <#"l(imit)?:"> <ws*> number | number
-
-DELETE          := <#"d(elete)!"> <ws+> hint-column
-
-column          := qualified-symbol
-
-SET             := <#"set!"> <ws*> assignments
-
-assignments  := assignment (<ws+> assignment)*
-assignment   := symbol <ws*> <"="> <ws*> (string|number)
-
-qualified-symbol :=  partial-symbol | symbol <"."> partial-symbol | symbol <ws+> <"as"> <ws+> alias | symbol <"."> symbol <ws+> <"as"> <ws+> alias
-
-partial-symbol   := symbol*
-symbol           := #"[A-Za-z][A-Za-z0-9-_]*"
-
-hint-column := <"."> symbol
-
+symbol   := #"[A-Za-z][A-Za-z0-9-_]*"
 string   := <"'"> char* <"'">
 number   := #"[0-9]+"
 ws       := #"\s+"
