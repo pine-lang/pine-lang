@@ -15,32 +15,49 @@
 
 (defmethod -normalize-op :FROM [payload]
   (match payload
+
+         ;; table
     [:FROM [:symbol table]]                                        {:type :table, :value {:table table}}
+    [:FROM "has:" [:symbol table]]                                 {:type :table, :value {:table table :parent false}}
+    [:FROM "of:" [:symbol table]]                                  {:type :table, :value {:table table :parent true}}
     [:FROM [:symbol table] "^"]                                    {:type :table, :value {:table table :parent true}}
+
+    ;; schema.table
     [:FROM [:symbol schema] [:symbol table]]                       {:type :table, :value {:table table :schema schema}}
+    [:FROM "has:" [:symbol schema] [:symbol table]]                {:type :table, :value {:table table :schema schema :parent false}}
+    [:FROM "of:" [:symbol schema] [:symbol table]]                 {:type :table, :value {:table table :schema schema :parent true}}
     [:FROM [:symbol schema] [:symbol table] "^"]                   {:type :table, :value {:table table :schema schema :parent true}}
+
+    ;; table aliaas
     [:FROM [:symbol table] [:alias [:symbol a]]]                   {:type :table, :value {:table table :alias a}}
-    [:FROM  [:symbol schema] [:symbol table] [:alias [:symbol a]]] {:type :table, :value {:schema schema :table table :alias a}}
-    [:FROM
-     [:symbol schema] [:symbol table] "^" [:alias [:symbol a]]]    {:type :table, :value {:schema schema :table table :alias a :parent true}}
-    [:FROM  [:symbol table]
-     [:hint-column [:symbol column]]]                              {:type :table, :value {:table table :join-column column}}
-    [:FROM
-     [:symbol schema]
-     [:symbol table]
-     [:hint-column [:symbol column]]]                              {:type :table, :value {:schema schema :table table :join-column column}}
-    [:FROM
-     [:symbol schema]
-     [:symbol table]
-     "^"
-     [:hint-column [:symbol column]]]                              {:type :table, :value {:schema schema :table table :parent true :join-column column}}
-    [:FROM
-     [:symbol schema]
-     [:symbol table]
-     "^"
-     [:hint-column [:symbol column]]
-     [:alias [:symbol a]]]                                         {:type :table, :value {:schema schema :table table :parent true :join-column column :alias a}}
+
+    ;; schema.table alias
+    [:FROM  [:symbol schema] [:symbol table] [:alias [:symbol a]]]        {:type :table, :value {:schema schema :table table :alias a}}
+    [:FROM  "has:" [:symbol schema] [:symbol table] [:alias [:symbol a]]] {:type :table, :value {:schema schema :table table :alias a :parent false}}
+    [:FROM  "of:" [:symbol schema] [:symbol table] [:alias [:symbol a]]]  {:type :table, :value {:schema schema :table table :alias a :parent true}}
+    [:FROM [:symbol schema] [:symbol table] "^" [:alias [:symbol a]]]     {:type :table, :value {:schema schema :table table :alias a :parent true}}
+
+    ;; table .column
+    [:FROM [:symbol table] [:hint-column [:symbol column]]]              {:type :table, :value {:table table :join-column column}}
+    [:FROM "has:" [:symbol table] [:hint-column [:symbol column]]]       {:type :table, :value {:table table :join-column column :parent false}}
+    [:FROM "of:" [:symbol table] [:hint-column [:symbol column]]]        {:type :table, :value {:table table :join-column column :parent true}}
+    [:FROM [:symbol table] "^" [:hint-column [:symbol column]]]          {:type :table, :value {:table table :join-column column :parent true}}
+
+;; schema.table .column
+    [:FROM [:symbol schema] [:symbol table] [:hint-column [:symbol column]]]         {:type :table, :value {:schema schema :table table :join-column column}}
+    [:FROM "has:" [:symbol schema] [:symbol table] [:hint-column [:symbol column]]]  {:type :table, :value {:schema schema :table table :join-column column :parent false}}
+    [:FROM "of:" [:symbol schema] [:symbol table] [:hint-column [:symbol column]]]   {:type :table, :value {:schema schema :table table :join-column column :parent true}}
+    [:FROM [:symbol schema] [:symbol table] "^" [:hint-column [:symbol column]]]     {:type :table, :value {:schema schema :table table :join-column column :parent true}}
+
+    ;; schema.table .column alias
+    [:FROM [:symbol schema] [:symbol table] [:hint-column [:symbol column]] [:alias [:symbol a]]]         {:type :table, :value {:schema schema :table table :join-column column :alias a}}
+    [:FROM "has:" [:symbol schema] [:symbol table] [:hint-column [:symbol column]] [:alias [:symbol a]]]  {:type :table, :value {:schema schema :table table :join-column column :alias a :parent false}}
+    [:FROM "of:" [:symbol schema] [:symbol table] [:hint-column [:symbol column]] [:alias [:symbol a]]]   {:type :table, :value {:schema schema :table table :join-column column :alias a :parent true}}
+    [:FROM [:symbol schema] [:symbol table] "^" [:hint-column [:symbol column]] [:alias [:symbol a]]]     {:type :table, :value {:schema schema :table table :join-column column :alias a :parent true}}
+
+    ;; Empty table
     [:FROM]                                                        {:type :table, :value {:table ""}}
+
     :else
     (throw (ex-info "Unknown RESOURCE operation" {:_ payload}))))
 
@@ -50,8 +67,12 @@
 
 (defn- -normalize-column [column]
   (match column
-    [:column [:symbol c]]                       {:column c}
-    [:column [:symbol c] [:alias [:symbol ca]]] {:column c :column-alias ca}
+    [:column [:symbol c]]                                   {:column c}
+    [:column [:symbol a] [:symbol c]]                       {:alias a :column c}
+    [:column [:symbol c]]                                   {:column c}
+    [:column [:symbol c] [:alias [:symbol ca]]]             {:column c :column-alias ca}
+    [:column [:symbol a] [:symbol c] [:alias [:symbol ca]]] {:alias a :column c :column-alias ca}
+
     :else                 (throw (ex-info "Unknown COLUMN operation" {:_ column}))))
 
 (defmethod -normalize-op :SELECT [[_ payload]]

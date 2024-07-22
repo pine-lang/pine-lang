@@ -20,23 +20,43 @@
                                    :join-column "id"}}]                         (p "public.user .id"))))
 
   (testing "Parse `from` expressions with directionality"
+
+    ;; table
+    (is (= [{:type :table, :value {:table "user" :parent false}}]                 (p "has: user")))
+    (is (= [{:type :table, :value {:table "user" :parent true}}]                  (p "of: user")))
     (is (= [{:type :table, :value {:table "user" :parent true}}]                  (p "user^")))
-    (is (= [{:type :table, :value {:table "user" :schema "public" :parent true}}] (p "public.user^")))
-    (is (= [{:type :table, :value {:table "user" :schema "public" :parent true :alias "u"}}] (p "public.user^ as u")))
-    (is (= [{:type :table, :value {:schema "public"
-                                   :table "user"
-                                   :parent true
-                                   :join-column "other_id"}}]                         (p "public.user^ .other_id")))
-    (is (= [{:type :table, :value {:schema "public"
-                                   :table "user"
-                                   :parent true
-                                   :alias "u"
-                                   :join-column "other_id"}}]                         (p "public.user^ .other_id as u "))))
+
+    ;; schema.table
+    (is (= [{:type :table, :value {:table "user" :schema "public" :parent false}}] (p "has: public.user")))
+    (is (= [{:type :table, :value {:table "user" :schema "public" :parent true}}]  (p "of: public.user")))
+    (is (= [{:type :table, :value {:table "user" :schema "public" :parent true}}]  (p "public.user^")))
+
+    ;; schema.table alias
+    (is (= [{:type :table, :value {:table "user" :schema "public" :parent false :alias "u"}}] (p "has: public.user as u")))
+    (is (= [{:type :table, :value {:table "user" :schema "public" :parent true :alias "u"}}]  (p "of: public.user as u")))
+    (is (= [{:type :table, :value {:table "user" :schema "public" :parent true :alias "u"}}]  (p "public.user^ as u")))
+
+    ;; table .column
+    (is (= [{:type :table, :value {:table "user" :parent false :join-column "other_id"}}]     (p "has: user .other_id")))
+    (is (= [{:type :table, :value {:table "user" :parent true :join-column "other_id"}}]      (p "of: user .other_id")))
+    (is (= [{:type :table, :value {:table "user" :parent true :join-column "other_id"}}]      (p "user^ .other_id")))
+
+;; schema.table .column
+    (is (= [{:type :table, :value {:schema "public" :table "user" :join-column "other_id" :parent false}}]           (p "has: public.user .other_id")))
+    (is (= [{:type :table, :value {:schema "public" :table "user" :join-column "other_id" :parent true}}]            (p "of: public.user .other_id")))
+    (is (= [{:type :table, :value {:schema "public" :table "user" :join-column "other_id" :parent true}}]            (p "public.user^ .other_id")))
+
+    ;; schema.table alias .column
+    (is (= [{:type :table, :value {:schema "public" :table "user" :alias "u" :join-column "other_id" :parent false}}] (p "has: public.user .other_id as u ")))
+    (is (= [{:type :table, :value {:schema "public" :table "user" :alias "u" :join-column "other_id" :parent true}}]  (p "of: public.user .other_id as u ")))
+    (is (= [{:type :table, :value {:schema "public" :table "user" :alias "u" :join-column "other_id" :parent true}}]  (p "public.user^ .other_id as u "))))
 
   (testing "Parse `select` expressions"
-    (is (= [{:type :select, :value [{:column  "name"}]}]                (p "select: name")))
-    (is (= [{:type :select, :value [{:column "id"} {:column  "name"}]}] (p "s: id, name")))
-    (is (= [{:type :select, :value [{:column-alias "t_id" :column "id"}]}] (p "s: id as t_id"))))
+    (is (= [{:type :select, :value [{:column  "name"}]}]                               (p "select: name")))
+    (is (= [{:type :select, :value [{:alias "u" :column  "name"}]}]                    (p "select: u.name")))
+    (is (= [{:type :select, :value [{:column "id"} {:column  "name"}]}]                (p "s: id, name")))
+    (is (= [{:type :select, :value [{:column-alias "t_id" :column "id"}]}]             (p "s: id as t_id")))
+    (is (= [{:type :select, :value [{:alias "u" :column "id" :column-alias "t_id"}]}] (p "s: u.id as t_id"))))
 
   (testing "Parse `limit` expressions"
     (is (= [{:type :limit, :value 100}] (p "limit: 100")))

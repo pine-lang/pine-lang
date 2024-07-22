@@ -8,7 +8,9 @@ WHERE           := <"where:"> <ws*> condition    | <"w:"> <ws*> condition    | c
 LIMIT           := <"limit:"> <ws*> number       | <"l:"> <ws*> number       | number
 DELETE          := <"delete!"> <ws*> hint-column | <"d!"> <ws*> hint-column
 
-<table>         := symbol* | symbol <"."> symbol* | symbol+ "^" | symbol <"."> symbol+ "^"
+<table>         := child | parent | symbol* | symbol <"."> symbol*
+<child>         := "has:" <ws*> symbol+ | "has:" <ws*> symbol <"."> symbol+
+<parent>        := "of:"  <ws*> symbol+ | "of:"  <ws*> symbol <"."> symbol+ | symbol+ "^" | symbol <"."> symbol+ "^"
 
 
 
