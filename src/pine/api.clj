@@ -22,24 +22,28 @@
 (def version "0.6.0")
 
 (defn- generate-state [expression]
-  (let [{:keys [result error]} (->> expression
-                                    parser/parse)]
-    (if result (-> result ast/generate)
-        (throw (ex-info error {})))))
+  (let [{:keys [result error]} (->> expression parser/parse)]
+    (if result {:result (-> result ast/generate)}
+        {:error-type "parse"
+         :error error})))
 
 (defn api-build [expression]
   (let [connection-name (util/get-connection-name @db/connection-id)]
     (try
-      (let [state (generate-state expression)]
-        {:connection-id connection-name
-         :version version
-         :query (-> state eval/build-query eval/formatted-query)
-         :state (dissoc state :references)
-         ;; Backwards compatibility
-         :deprecation-notice
-         "Properties will be removed in the next major version: `hints`, `context`. Use `state` (`hints`, `selected-tables`) instead."
-         :hints {:table (-> state :hints :table)}
-         :context (state :selected-tables)})
+      (let [result (generate-state expression)
+            {state :result error :error} result]
+        (if error result
+            {:connection-id connection-name
+             :version version
+             :query (-> state eval/build-query eval/formatted-query)
+             :state (dissoc state :references)
+             ;; Backwards compatibility
+             :deprecation-notice
+             "Properties will be removed in the next major version: `hints`, `context`. Use `state` (`hints`, `selected-tables`) instead."
+             :hints {:table (-> state :hints :table)}
+             :context (state :selected-tables)}
+            )
+        )
 
       (catch Exception e {:connection-id connection-name
                           :error (.getMessage e)}))))
@@ -47,10 +51,12 @@
 (defn api-eval [expression]
   (let [connection-name (util/get-connection-name @db/connection-id)]
     (try
-      (let [state (generate-state expression)]
-        {:connection-id connection-name
-         :version version
-         :result (eval/run-query state)})
+      (let [result (generate-state expression)
+            {state :result error :error} result]
+        (if error result
+            {:connection-id connection-name
+             :version version
+             :result (eval/run-query state)}))
       (catch Exception e {:connection-id connection-name
                           :error (.getMessage e)}))))
 

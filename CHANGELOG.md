@@ -4,8 +4,12 @@ log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [0.6.1] - 2024-07-25
+### Changed
+- Error type is returned. It is either nothing or `parse`.
+
 ## [0.6.0] - 2024-07-22
-## Added
+### Added
 - Support for diretional joins:
 ```
 employee | has: employee
@@ -18,27 +22,27 @@ employee as e | s: e.name
 ```
 
 ## [0.5.4] - 2024-07-16
-## Fixed
+### Fixed
 - Incorrect hints were generated in case of ambiguity
 
 ## [0.5.3] - 2024-07-16
-## Fixed
+### Fixed
 - Incorrect schema being returned in hints when joining from child to parent
 
 ## [0.5.2] - 2024-07-14
-## Changed
+### Changed
 - Default `limit` is `250` if not specified
 
-## Fixed
+### Fixed
 - All columns weren't being select in some cases e.g. using `company | s: id | employee`, the columns from `employee` table weren't being selected
 
 ## [0.5.1] - 2024-07-11
-## Added
+### Added
 - Context sensitive columns selection e.g. `company | s: id | employee | s: id`
 
 ## [0.5.0] - 2024-07-10
 
-## Added
+### Added
 - Hints can be provided to resolve ambigious joins e.g. instead of `company | employee`, you can explicitly specify the join column i.e. `column | employee .company_id`
 - The delete operation uses a nested query. The column used for deletes must be specified:
 
@@ -67,11 +71,11 @@ company | w: id='xxx'
 company | id='xxx'
 ```
 
-## Changed
+### Changed
 - Conditions can't be combined with the tables e.g. `company id='xxx'`. Instead compose them using pipes: `company | id='xxx'`
 - Double quotes around strings aren't supported anymore. Use single quotes i.e. instead of `id="xxx"`, use `id='xxx'`
 
-## Removed
+### Removed
 - Support for `group`, `order`, `set!` is dropped. It will be added soon in the up coming versions.
 - Context sensitive columns selection
 
