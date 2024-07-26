@@ -43,7 +43,7 @@
     [:FROM "of:" [:symbol table] [:hint-column [:symbol column]]]        {:type :table, :value {:table table :join-column column :parent true}}
     [:FROM [:symbol table] "^" [:hint-column [:symbol column]]]          {:type :table, :value {:table table :join-column column :parent true}}
 
-;; schema.table .column
+    ;; schema.table .column
     [:FROM [:symbol schema] [:symbol table] [:hint-column [:symbol column]]]         {:type :table, :value {:schema schema :table table :join-column column}}
     [:FROM "has:" [:symbol schema] [:symbol table] [:hint-column [:symbol column]]]  {:type :table, :value {:schema schema :table table :join-column column :parent false}}
     [:FROM "of:" [:symbol schema] [:symbol table] [:hint-column [:symbol column]]]   {:type :table, :value {:schema schema :table table :join-column column :parent true}}
@@ -86,11 +86,9 @@
 
 (defmethod -normalize-op :WHERE [[_ payload]]
   (match payload
-    [:condition [:symbol column] [:operator op] [:number value]] {:type :where :value [column op value]}
-    [:condition
-     [:symbol column]
-     [:operator op]
-     [:string & characters]] {:type :where :value [column op (apply str (map second characters))]}
+    [:condition [:symbol column] [:operator op] [:number value]]                {:type :where :value [column op value]}
+    [:condition [:symbol column] [:operator op] [:string & characters]]         {:type :where :value [column op (apply str characters)]}
+    [:condition [:symbol column] op  & strings]                         {:type :where :value [column op (map #(apply str (rest %1)) strings)]}
     :else                (throw (ex-info "Unknown WHERE operation" {:_ payload}))))
 
 ;; -----

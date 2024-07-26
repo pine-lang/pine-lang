@@ -19,7 +19,7 @@
 (add-encoder org.postgresql.util.PGobject encode-str)
 (add-encoder org.postgresql.jdbc.PgArray encode-str)
 
-(def version "0.6.0")
+(def version "0.7.0")
 
 (defn- generate-state [expression]
   (let [{:keys [result error]} (->> expression parser/parse)]
@@ -41,9 +41,7 @@
              :deprecation-notice
              "Properties will be removed in the next major version: `hints`, `context`. Use `state` (`hints`, `selected-tables`) instead."
              :hints {:table (-> state :hints :table)}
-             :context (state :selected-tables)}
-            )
-        )
+             :context (state :selected-tables)}))
 
       (catch Exception e {:connection-id connection-name
                           :error (.getMessage e)}))))

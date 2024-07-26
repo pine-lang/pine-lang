@@ -4,7 +4,10 @@ log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 
 ## [Unreleased]
 
-## [0.6.1] - 2024-07-25
+## [0.7.0] - 2024-07-25
+### Added
+- Support for `in` operator
+
 ### Changed
 - Error type is returned. It is either nothing or `parse`.
 

@@ -48,11 +48,13 @@
                        (str "WHERE "
                             (clojure.string/join " AND "
                                                  (for [[a col op val] where]
-                                                   (str (q a col) " " op " ?")))))
+                                                   (if (= op "in")
+                                                     (str (q a col) " IN (" (clojure.string/join ", " (repeat (count val) "?"))  ")")
+                                                     (str (q a col) " " op " ?"))))))
         limit (str "LIMIT " (or limit 250))
         query (clojure.string/join " " (filter some? [select from join where-clause limit]))
         params (when (not-empty where)
-                 (mapv (fn [[a col op val]] val) where))]
+                 (mapcat (fn [[a col op val]] (if (coll? val) val [val])) where))]
     {:query query :params params}))
 
 (defn build-delete-query [state]

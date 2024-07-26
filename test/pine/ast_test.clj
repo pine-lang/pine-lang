@@ -56,7 +56,9 @@
     (is (= [["c" "name" "=" "Acme"]]
            (generate :where "company as c | name = 'Acme'")))
     (is (= [["c" "name" "=" "Acme"] ["c" "country" "=" "PK"]]
-           (generate :where "company as c | name = 'Acme' | country = 'PK'"))))
+           (generate :where "company as c | name = 'Acme' | country = 'PK'")))
+    (is (= [["c" "country" "in" ["PK" "DK"]]]
+           (generate :where "company as c | country in ('PK', 'DK')"))))
 
   (testing "Generate ast for `join` where there is no relation"
     (is (= {"a_0" {"b_1" nil}}

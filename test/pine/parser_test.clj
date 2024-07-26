@@ -41,7 +41,7 @@
     (is (= [{:type :table, :value {:table "user" :parent true :join-column "other_id"}}]      (p "of: user .other_id")))
     (is (= [{:type :table, :value {:table "user" :parent true :join-column "other_id"}}]      (p "user^ .other_id")))
 
-;; schema.table .column
+    ;; schema.table .column
     (is (= [{:type :table, :value {:schema "public" :table "user" :join-column "other_id" :parent false}}]           (p "has: public.user .other_id")))
     (is (= [{:type :table, :value {:schema "public" :table "user" :join-column "other_id" :parent true}}]            (p "of: public.user .other_id")))
     (is (= [{:type :table, :value {:schema "public" :table "user" :join-column "other_id" :parent true}}]            (p "public.user^ .other_id")))
@@ -70,6 +70,12 @@
     (is (= [{:type :where, :value ["name" "=" "John Doe"]}] (p "name='John Doe'")))
     (is (= [{:type :where, :value ["name" "like" "John%"]}] (p "name like 'John%'")))
     (is (= [{:type :where, :value ["age" "=" "24"]}]        (p "age = 24"))))
+
+  (testing "Parse `where` `in` expressions"
+    (is (= [{:type :where, :value ["age" "in" ["24"]]}]        (p "age in ('24')")))
+    (is (= [{:type :where, :value ["age" "in" ["24"]]}]        (p "age in ('24' ) ")))
+    (is (= [{:type :where, :value ["age" "in" ["24" "36"]]}]   (p "age in (  '24' ,'36' )")))
+    (is (= [{:type :where, :value ["age" "in" ["24" "36"]]}]   (p "age in ('24' '36')"))))
 
   (testing "Parse `delete` expressions"
     (is (= [{:type :delete, :value {:column "id"}}] (p "delete! .id")))))
