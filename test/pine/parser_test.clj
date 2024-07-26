@@ -9,7 +9,7 @@
 
   (testing "Parse `from` expressions"
     (is (= [{:type :table, :value {:table ""}}]                                 (p "")))
-    (is (= [{:type :table, :value {:table "user"}}]                             (p "user")))
+    (is (= [{:type :table, :value {:table "user"}}]                             (p " user")))
     (is (= [{:type :table, :value {:table "user" :schema "public"}}]            (p "public.user")))
     (is (= [{:type :table, :value {:table "user" :schema "public"}}]            (p "public.user")))
     (is (= [{:type :table, :value {:table "user" :alias "u"}}]                  (p "user as u")))

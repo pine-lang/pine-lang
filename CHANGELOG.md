@@ -4,7 +4,11 @@ log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 
 ## [Unreleased]
 
-## [0.7.0] - 2024-07-25
+## [0.7.1] - 2024-07-26
+### Fixed
+- Allow spaces in the start of a pine expression
+
+## [0.7.0] - 2024-07-26
 ### Added
 - Support for `in` operator
 
