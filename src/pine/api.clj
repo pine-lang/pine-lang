@@ -19,7 +19,7 @@
 (add-encoder org.postgresql.util.PGobject encode-str)
 (add-encoder org.postgresql.jdbc.PgArray encode-str)
 
-(def version "0.7.1")
+(def version "0.7.2")
 
 (defn- generate-state [expression]
   (let [{:keys [result error]} (->> expression parser/parse)]
@@ -36,13 +36,7 @@
             {:connection-id connection-name
              :version version
              :query (-> state eval/build-query eval/formatted-query)
-             :state (dissoc state :references)
-             ;; Backwards compatibility
-             :deprecation-notice
-             "Properties will be removed in the next major version: `hints`, `context`. Use `state` (`hints`, `selected-tables`) instead."
-             :hints {:table (-> state :hints :table)}
-             :context (state :selected-tables)}))
-
+             :state (dissoc state :references)}))
       (catch Exception e {:connection-id connection-name
                           :error (.getMessage e)}))))
 
@@ -58,15 +52,13 @@
       (catch Exception e {:connection-id connection-name
                           :error (.getMessage e)}))))
 
-(defn get-connection-metadata []
+(defn get-connection []
   (let [connection-id   @db/connection-id
         connection-name (util/get-connection-name connection-id)
         _               (db/init-references @db/connection-id)]
     {:result
      {:connection-id connection-name
-      :version version
-      ;; TODO for backwards compatibility wrap the references in the same shape as the old version
-      :metadata {:db/references (@db/references connection-id)}}}))
+      :version version}}))
 
 (defn wrap-logger
   [handler]
@@ -78,9 +70,9 @@
 
 (defroutes app-routes
   (POST "/api/v1/build" [expression] (->> expression api-build response))
-  (GET "/api/v1/connection" [] (-> (get-connection-metadata) response))
+  (GET "/api/v1/connection" [] (-> (get-connection) response))
   (POST "/api/v1/eval" [expression] (->> expression api-eval response))
-  ;; pine-mode
+  ;; pine-mode.el
   (POST "/api/v1/build-with-params" [expression] (->> expression api-build :query response))
   ;; default case
   (route/not-found "Not Found"))

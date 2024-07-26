@@ -4,6 +4,11 @@ log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 
 ## [Unreleased]
 
+
+## [0.7.2] - 2024-07-26
+### Changed
+- No difference in functionality. Removed a lot of deprecated code - only keeping the code for reborn.
+
 ## [0.7.1] - 2024-07-26
 ### Fixed
 - Allow spaces in the start of a pine expression
