@@ -13,50 +13,50 @@
 ;; FROM
 ;; ----
 
-(defmethod -normalize-op :FROM [payload]
+(defmethod -normalize-op :TABLE [payload]
   (match payload
 
          ;; table
-    [:FROM [:symbol table]]                                        {:type :table, :value {:table table}}
-    [:FROM "has:" [:symbol table]]                                 {:type :table, :value {:table table :parent false}}
-    [:FROM "of:" [:symbol table]]                                  {:type :table, :value {:table table :parent true}}
-    [:FROM [:symbol table] "^"]                                    {:type :table, :value {:table table :parent true}}
+    [:TABLE [:symbol table]]                                        {:type :table, :value {:table table}}
+    [:TABLE "has:" [:symbol table]]                                 {:type :table, :value {:table table :parent false}}
+    [:TABLE "of:" [:symbol table]]                                  {:type :table, :value {:table table :parent true}}
+    [:TABLE [:symbol table] "^"]                                    {:type :table, :value {:table table :parent true}}
 
     ;; schema.table
-    [:FROM [:symbol schema] [:symbol table]]                       {:type :table, :value {:table table :schema schema}}
-    [:FROM "has:" [:symbol schema] [:symbol table]]                {:type :table, :value {:table table :schema schema :parent false}}
-    [:FROM "of:" [:symbol schema] [:symbol table]]                 {:type :table, :value {:table table :schema schema :parent true}}
-    [:FROM [:symbol schema] [:symbol table] "^"]                   {:type :table, :value {:table table :schema schema :parent true}}
+    [:TABLE [:symbol schema] [:symbol table]]                       {:type :table, :value {:table table :schema schema}}
+    [:TABLE "has:" [:symbol schema] [:symbol table]]                {:type :table, :value {:table table :schema schema :parent false}}
+    [:TABLE "of:" [:symbol schema] [:symbol table]]                 {:type :table, :value {:table table :schema schema :parent true}}
+    [:TABLE [:symbol schema] [:symbol table] "^"]                   {:type :table, :value {:table table :schema schema :parent true}}
 
     ;; table aliaas
-    [:FROM [:symbol table] [:alias [:symbol a]]]                   {:type :table, :value {:table table :alias a}}
+    [:TABLE [:symbol table] [:alias [:symbol a]]]                   {:type :table, :value {:table table :alias a}}
 
     ;; schema.table alias
-    [:FROM  [:symbol schema] [:symbol table] [:alias [:symbol a]]]        {:type :table, :value {:schema schema :table table :alias a}}
-    [:FROM  "has:" [:symbol schema] [:symbol table] [:alias [:symbol a]]] {:type :table, :value {:schema schema :table table :alias a :parent false}}
-    [:FROM  "of:" [:symbol schema] [:symbol table] [:alias [:symbol a]]]  {:type :table, :value {:schema schema :table table :alias a :parent true}}
-    [:FROM [:symbol schema] [:symbol table] "^" [:alias [:symbol a]]]     {:type :table, :value {:schema schema :table table :alias a :parent true}}
+    [:TABLE  [:symbol schema] [:symbol table] [:alias [:symbol a]]]        {:type :table, :value {:schema schema :table table :alias a}}
+    [:TABLE  "has:" [:symbol schema] [:symbol table] [:alias [:symbol a]]] {:type :table, :value {:schema schema :table table :alias a :parent false}}
+    [:TABLE  "of:" [:symbol schema] [:symbol table] [:alias [:symbol a]]]  {:type :table, :value {:schema schema :table table :alias a :parent true}}
+    [:TABLE [:symbol schema] [:symbol table] "^" [:alias [:symbol a]]]     {:type :table, :value {:schema schema :table table :alias a :parent true}}
 
     ;; table .column
-    [:FROM [:symbol table] [:hint-column [:symbol column]]]              {:type :table, :value {:table table :join-column column}}
-    [:FROM "has:" [:symbol table] [:hint-column [:symbol column]]]       {:type :table, :value {:table table :join-column column :parent false}}
-    [:FROM "of:" [:symbol table] [:hint-column [:symbol column]]]        {:type :table, :value {:table table :join-column column :parent true}}
-    [:FROM [:symbol table] "^" [:hint-column [:symbol column]]]          {:type :table, :value {:table table :join-column column :parent true}}
+    [:TABLE [:symbol table] [:hint-column [:symbol column]]]              {:type :table, :value {:table table :join-column column}}
+    [:TABLE "has:" [:symbol table] [:hint-column [:symbol column]]]       {:type :table, :value {:table table :join-column column :parent false}}
+    [:TABLE "of:" [:symbol table] [:hint-column [:symbol column]]]        {:type :table, :value {:table table :join-column column :parent true}}
+    [:TABLE [:symbol table] "^" [:hint-column [:symbol column]]]          {:type :table, :value {:table table :join-column column :parent true}}
 
     ;; schema.table .column
-    [:FROM [:symbol schema] [:symbol table] [:hint-column [:symbol column]]]         {:type :table, :value {:schema schema :table table :join-column column}}
-    [:FROM "has:" [:symbol schema] [:symbol table] [:hint-column [:symbol column]]]  {:type :table, :value {:schema schema :table table :join-column column :parent false}}
-    [:FROM "of:" [:symbol schema] [:symbol table] [:hint-column [:symbol column]]]   {:type :table, :value {:schema schema :table table :join-column column :parent true}}
-    [:FROM [:symbol schema] [:symbol table] "^" [:hint-column [:symbol column]]]     {:type :table, :value {:schema schema :table table :join-column column :parent true}}
+    [:TABLE [:symbol schema] [:symbol table] [:hint-column [:symbol column]]]         {:type :table, :value {:schema schema :table table :join-column column}}
+    [:TABLE "has:" [:symbol schema] [:symbol table] [:hint-column [:symbol column]]]  {:type :table, :value {:schema schema :table table :join-column column :parent false}}
+    [:TABLE "of:" [:symbol schema] [:symbol table] [:hint-column [:symbol column]]]   {:type :table, :value {:schema schema :table table :join-column column :parent true}}
+    [:TABLE [:symbol schema] [:symbol table] "^" [:hint-column [:symbol column]]]     {:type :table, :value {:schema schema :table table :join-column column :parent true}}
 
     ;; schema.table .column alias
-    [:FROM [:symbol schema] [:symbol table] [:hint-column [:symbol column]] [:alias [:symbol a]]]         {:type :table, :value {:schema schema :table table :join-column column :alias a}}
-    [:FROM "has:" [:symbol schema] [:symbol table] [:hint-column [:symbol column]] [:alias [:symbol a]]]  {:type :table, :value {:schema schema :table table :join-column column :alias a :parent false}}
-    [:FROM "of:" [:symbol schema] [:symbol table] [:hint-column [:symbol column]] [:alias [:symbol a]]]   {:type :table, :value {:schema schema :table table :join-column column :alias a :parent true}}
-    [:FROM [:symbol schema] [:symbol table] "^" [:hint-column [:symbol column]] [:alias [:symbol a]]]     {:type :table, :value {:schema schema :table table :join-column column :alias a :parent true}}
+    [:TABLE [:symbol schema] [:symbol table] [:hint-column [:symbol column]] [:alias [:symbol a]]]         {:type :table, :value {:schema schema :table table :join-column column :alias a}}
+    [:TABLE "has:" [:symbol schema] [:symbol table] [:hint-column [:symbol column]] [:alias [:symbol a]]]  {:type :table, :value {:schema schema :table table :join-column column :alias a :parent false}}
+    [:TABLE "of:" [:symbol schema] [:symbol table] [:hint-column [:symbol column]] [:alias [:symbol a]]]   {:type :table, :value {:schema schema :table table :join-column column :alias a :parent true}}
+    [:TABLE [:symbol schema] [:symbol table] "^" [:hint-column [:symbol column]] [:alias [:symbol a]]]     {:type :table, :value {:schema schema :table table :join-column column :alias a :parent true}}
 
     ;; Empty table
-    [:FROM]                                                        {:type :table, :value {:table ""}}
+    [:TABLE]                                                        {:type :table, :value {:table ""}}
 
     :else
     (throw (ex-info "Unknown RESOURCE operation" {:_ payload}))))
@@ -98,6 +98,15 @@
 (defmethod -normalize-op :LIMIT [[_ [_ number]]]
   {:type :limit
    :value (Integer/parseInt number)})
+
+;; -----
+;; FROM
+;; -----
+
+(defmethod -normalize-op :FROM [[_ payload]]
+  (match payload
+    [:alias [:symbol c]] {:type :from :value {:alias c}}
+    :else (throw (ex-info "Unknown FROM operation" {:_ payload}))))
 
 ;; -----
 ;; DELETE
