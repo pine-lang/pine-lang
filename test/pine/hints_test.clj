@@ -27,7 +27,9 @@
            (gen "co")))
 
     (is (= {:table [{:schema "y", :table "employee" :column "company_id" :parent false
-                     :pine "y.employee .company_id"}]}
+                     :pine "y.employee .company_id"}
+                    {:schema "z", :table "document", :column "company_id", :parent false,
+                     :pine "z.document .company_id"}]}
            (gen "company | e")))
 
     (is (= {:table [{:schema "x", :table "company" :column "company_id" :parent true

@@ -21,13 +21,13 @@
 (deftest test-ast
 
   (testing "Generate ast for `tables`"
-    (is (= [{:schema nil :table "company" :alias "c" :parent nil}]
+    (is (= [{:schema nil :table "company" :alias "c" :parent nil :join-column nil}]
            (generate :tables "company as c")))
-    (is (= [{:schema nil :table "user" :alias "u_0" :parent nil}]
+    (is (= [{:schema nil :table "user" :alias "u_0" :parent nil  :join-column nil}]
            (generate :tables "user")))
-    (is (= [{:schema "public" :table "user" :alias "u_0" :parent nil}]
+    (is (= [{:schema "public" :table "user" :alias "u_0" :parent nil  :join-column nil}]
            (generate :tables "public.user")))
-    (is (= [{:schema "public" :table "user" :alias "u_0" :parent true}]
+    (is (= [{:schema "public" :table "user" :alias "u_0" :parent true  :join-column nil}]
            (generate :tables "public.user^"))))
 
   (testing "Generate ast for `from`"
@@ -80,9 +80,15 @@
            (generate-joins "company | employee")))
     (is (= {:join-map {"c_0" {"e_1" ["c_0" "id" :has "e_1" "company_id"]}} :joins [["c_0" "e_1" ["c_0" "id" :has "e_1" "company_id"]]]}
            (generate-joins "company | employee .company_id")))
-    (is (= {:join-map {"c_0" {"e_1" ["c_0" "id" :has "e_1" "company_id"]}} :joins [["c_0" "e_1" ["c_0" "id" :has "e_1" "company_id"]]]}
+    (is (= {:join-map {"c_0" {"e_1" ["c_0" nil :has "e_1" nil]}}, :joins [["c_0" "e_1" ["c_0" nil :has "e_1" nil]]]}
            (generate-joins "company | employee .employee_id"))) ;; trying with incorrect id
     )
+  (testing "Generate ast for `join` where there is ambiguity"
+    (is (= {:join-map {"e_0" {"d_1" ["e_0" "id" :has "d_1" "created_by"]}}, :joins [["e_0" "d_1" ["e_0" "id" :has "d_1" "created_by"]]]}
+           (generate-joins "employee | document .created_by")))
+    (is (= {:join-map {"e_0" {"d_1" ["e_0" "id" :has "d_1" "employee_id"]}}, :joins [["e_0" "d_1" ["e_0" "id" :has "d_1" "employee_id"]]]}
+           (generate-joins "employee | document .employee_id"))))
+
   (testing "Generate ast for `join` using self join"
     ;; By default, we narrow the results
     ;; i.e. we join with the child

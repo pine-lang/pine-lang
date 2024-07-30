@@ -5,6 +5,11 @@ log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 ## [Unreleased]
 
 
+## [0.8.1] - 2024-07-30
+### Fixed
+
+- Specifying the join column in case of ambigious relations wasn't working.
+
 ## [0.8.0] - 2024-07-30
 ### Added
 - Change the context using the `from:` keyword. This is helpful when the tables relations are not linear and look like a tree.
