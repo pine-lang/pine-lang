@@ -1,4 +1,4 @@
-(ns pine.hints)
+(ns pine.ast.hints)
 
 (defn- filter-relations [token candidates]
   "Given a partial token (which can be completed to a table) and all the
@@ -76,18 +76,23 @@
         distinct)))
 
 (defn generate [state {token :table parent :parent}]
-  (let [table-hints         (if (nil? (state :context))
-
-                              ;; This is the first table - get all the tables matching the token
-                              (table-hints state token)
+  (let [candidate         (-> state :tables reverse first)
+        from-alias        (state :context)
+        table-hints         (if from-alias
 
                               ;; This is not the first table, then filter out the related tables
-                              (relation-hints state token))
+                              (relation-hints state token)
+
+                              ;; This is the first table - get all the tables matching the token
+                              (table-hints state token))
         table-hints         (if parent
                               (filter #(= (:parent %) true) table-hints)
                               table-hints)
         add-pine-expression (fn [h] (assoc h :pine (generate-expression h)))]
-    {:table (->>  table-hints
-                  (map add-pine-expression)
-                  ;; (map-indexed (fn [i x] (assoc x :child (if (< i 8) true false))))
-                  )}))
+    (map add-pine-expression table-hints)))
+
+(defn handle [state]
+  (let [type (-> state :operation :type)
+        candidate (-> state :tables reverse first)
+        hints (if (and (= type :table) candidate) (generate state candidate) [])]
+    (assoc-in state [:hints] {:table hints})))

@@ -44,6 +44,11 @@
             :params nil}
            (generate "x.company | y.employee | z.document"))))
 
+  (testing "Joins with a context"
+    (is (= {:query "SELECT d_2.* FROM \"x\".\"company\" AS \"c\" JOIN \"y\".\"employee\" AS \"e_1\" ON \"c\".\"id\" = \"e_1\".\"company_id\" JOIN \"z\".\"document\" AS \"d_2\" ON \"c\".\"id\" = \"d_2\".\"company_id\" LIMIT 250",
+            :params nil}
+           (generate "x.company as c | y.employee | from: c | z.document"))))
+
   (testing "columns"
     (is (= {:query "SELECT \"c\".\"id\" FROM \"company\" AS \"c\" LIMIT 250",
             :params nil}
@@ -65,4 +70,3 @@
     (is (= {:query "DELETE FROM \"company\" WHERE \"id\" IN ( SELECT \"c_0\".\"id\" FROM \"company\" AS \"c_0\" LIMIT 250 )",
             :params nil}
            (generate "company | delete! .id")))))
-

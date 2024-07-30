@@ -19,7 +19,7 @@
 (add-encoder org.postgresql.util.PGobject encode-str)
 (add-encoder org.postgresql.jdbc.PgArray encode-str)
 
-(def version "0.7.2")
+(def version "0.8.0")
 
 (defn- generate-state [expression]
   (let [{:keys [result error]} (->> expression parser/parse)]
@@ -36,7 +36,7 @@
             {:connection-id connection-name
              :version version
              :query (-> state eval/build-query eval/formatted-query)
-             :state (dissoc state :references)}))
+             :state (dissoc state :references :join-map)}))
       (catch Exception e {:connection-id connection-name
                           :error (.getMessage e)}))))
 

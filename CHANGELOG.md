@@ -5,6 +5,19 @@ log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 ## [Unreleased]
 
 
+## [0.8.0] - 2024-07-30
+### Added
+- Change the context using the `from:` keyword. This is helpful when the tables relations are not linear and look like a tree.
+```
+company as c | document | from: c | employee
+```
+
+### Breaking
+- State: `joins` is a vector e.g. `[ "x" "y" ["x" "id" :has "y" "x_id"]]`
+
+### Changed
+- State: `join-map` is kept for legacy reasons but it is only used internally.
+
 ## [0.7.2] - 2024-07-26
 ### Changed
 - No difference in functionality. Removed a lot of deprecated code - only keeping the code for reborn.
@@ -22,7 +35,7 @@ log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 
 ## [0.6.0] - 2024-07-22
 ### Added
-- Support for diretional joins:
+- Support for directional joins:
 ```
 employee | has: employee
 employee | of: employee

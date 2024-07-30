@@ -51,10 +51,8 @@
     (is (= [{:type :table, :value {:schema "public" :table "user" :alias "u" :join-column "other_id" :parent true}}]  (p "of: public.user .other_id as u ")))
     (is (= [{:type :table, :value {:schema "public" :table "user" :alias "u" :join-column "other_id" :parent true}}]  (p "public.user^ .other_id as u "))))
 
-
   (testing "Parse `from` expressions"
     (is (= [{:type :from, :value {:alias "u"}}] (p "from: u"))))
-
 
   (testing "Parse `select` expressions"
     (is (= [{:type :select, :value [{:column  "name"}]}]                               (p "select: name")))
