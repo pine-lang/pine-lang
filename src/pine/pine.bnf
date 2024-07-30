@@ -1,12 +1,14 @@
 OPERATIONS := <ws*> OPERATION <ws*> (<"|"> <ws*> OPERATION <ws*>)*
-OPERATION  := SELECT | FROM | WHERE | LIMIT | DELETE
+OPERATION  := SELECT | TABLE | WHERE | LIMIT | DELETE | FROM
 
-FROM            := table (<ws+> hint-column)? (<ws+> as-alias)?
+TABLE           := table (<ws+> hint-column)? (<ws+> as-alias)?
 
 SELECT          := <"select:"> <ws*> columns     | <"s:"> <ws*> columns
 WHERE           := <"where:"> <ws*> condition    | <"w:"> <ws*> condition    | condition
 LIMIT           := <"limit:"> <ws*> number       | <"l:"> <ws*> number       | number
 DELETE          := <"delete!"> <ws*> hint-column | <"d!"> <ws*> hint-column
+
+FROM            := <"from:"> <ws*> alias | <"f:"> <ws*> alias
 
 <table>         := child | parent | symbol* | symbol <"."> symbol*
 <child>         := "has:" <ws*> symbol+ | "has:" <ws*> symbol <"."> symbol+

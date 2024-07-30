@@ -7,7 +7,7 @@
 
 (deftest test-parser
 
-  (testing "Parse `from` expressions"
+  (testing "Parse `table` expressions"
     (is (= [{:type :table, :value {:table ""}}]                                 (p "")))
     (is (= [{:type :table, :value {:table "user"}}]                             (p " user")))
     (is (= [{:type :table, :value {:table "user" :schema "public"}}]            (p "public.user")))
@@ -19,7 +19,7 @@
                                    :table "user"
                                    :join-column "id"}}]                         (p "public.user .id"))))
 
-  (testing "Parse `from` expressions with directionality"
+  (testing "Parse `table` expressions with directionality"
 
     ;; table
     (is (= [{:type :table, :value {:table "user" :parent false}}]                 (p "has: user")))
@@ -50,6 +50,9 @@
     (is (= [{:type :table, :value {:schema "public" :table "user" :alias "u" :join-column "other_id" :parent false}}] (p "has: public.user .other_id as u ")))
     (is (= [{:type :table, :value {:schema "public" :table "user" :alias "u" :join-column "other_id" :parent true}}]  (p "of: public.user .other_id as u ")))
     (is (= [{:type :table, :value {:schema "public" :table "user" :alias "u" :join-column "other_id" :parent true}}]  (p "public.user^ .other_id as u "))))
+
+  (testing "Parse `from` expressions"
+    (is (= [{:type :from, :value {:alias "u"}}] (p "from: u"))))
 
   (testing "Parse `select` expressions"
     (is (= [{:type :select, :value [{:column  "name"}]}]                               (p "select: name")))

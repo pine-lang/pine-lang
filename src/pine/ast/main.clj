@@ -4,9 +4,10 @@
             [pine.ast.limit :as limit]
             [pine.db.main :as db]
             [pine.ast.where :as where]
-            [pine.hints :as hints]
+            [pine.ast.hints :as hints]
             [pine.ast.select :as select]
-            [pine.ast.delete :as delete]))
+            [pine.ast.delete :as delete]
+            [pine.ast.from :as from]))
 
 (def state {;; pre
             ;; - connection
@@ -19,7 +20,8 @@
             :columns         []           ;; e.g. [{ :alias "u" :column "name" }]
             :limit           nil          ;; number ;; nilable
             :aliases         {}           ;; e.g. [{ :schema "public" :table "user" }] ;; schema is nilable
-            :joins           {}           ;; This can be a map or a vector - will decide later
+            :joins           []           ;; Vector of joins e.g. [ "u" "c" ".. relation .."]
+            :join-map        {}           ;; Map of aliases of the joined tables e.g. { "u" { "c" [".. relation .."]}}
             :where           []           ;; e.g. [ "name" "=" "john" ]
 
             ;; state
@@ -27,6 +29,7 @@
                              :value nil} ;; [ ] 1. For post-handle. e.g. set hints if operation is table.
                                          ;; [ ] 2. For backwards compat with version < 0.5.
                                          ;;        If op is :table, then the context  in the api handler has one less table
+            :current        nil
             :context        nil
             :table-count    0
             :pending-count  0
@@ -48,6 +51,7 @@
     :limit (limit/handle state value)
     :where (where/handle state value)
     :delete (delete/handle state value)
+    :from (from/handle state value)
     (update state :errors conj [type "Unknown operation type in parse tree"])))
 
 (defn handle-ops [state ops]
@@ -58,6 +62,7 @@
 
 (defn post-handle [state]
   (-> state
+      hints/handle
       (assoc :selected-tables (let [tables (state :tables)
                                     type (-> state :operation :type)]
                                 (if

@@ -60,7 +60,7 @@ Response to `api/v1/build`:
                 "table": "atta"
             }
         },
-        "joins": {
+        "join-map": {
             "t_0": {
                 "c_1": [
                     "c_1",

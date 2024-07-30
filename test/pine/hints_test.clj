@@ -1,5 +1,5 @@
 (ns pine.hints-test
-  (:require [pine.hints :refer :all]
+  (:require [pine.ast.hints :refer :all]
             [clojure.test :refer :all]
             [pine.parser :as parser]
             [pine.ast.main :as ast]))
@@ -12,6 +12,13 @@
       :result
       (ast/generate :test)
       :hints))
+
+(-> "company | e"
+    parser/parse
+    :result
+    (ast/generate :test)
+    ;; :hints
+    )
 
 (deftest test-hints
   (testing "Generate hints"
