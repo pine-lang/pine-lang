@@ -1,33 +1,30 @@
 # Pine
 
-[![Tests](https://github.com/pine-lang/pine-lang/actions/workflows/test.yaml/badge.svg)](https://github.com/pine-lang/pine-lang/actions/workflows/test.yaml)
+## Dependencies
 
-Pine uses pipes to query a database. When you evaluate the following pine expression:
+- Clojure `1.11.3`
 
-```
-customers name="Acme" | users name="John *" | s: id, email
-```
+### Dev
 
-the following SQL is executed:
+- [cljfmt](https://github.com/weavejester/cljfmt)
 
-```
-SELECT u.id, u.email
-  FROM customers AS c
-  JOIN users AS u
-    ON (u.customerId = c.id)
- WHERE c.name = "Acme"
-   AND u.name LIKE "John %"
-```
 
-## Run the pine server
+## Repl
 
-### Config file
+From emacs:
+
+- Connect: `M-x cider-jack-in`
+- Disconnect: `M-x  cider-quit`
+
+No need to run the repl manually (i.e. open a terminal and run it).
+
+## Run
 
 ```
-cp src/pine/config.sample src/pine/config.clj
+clj -M:run # or run-dev
 ```
 
-### Run the server
+or
 
 ```
 ./server.sh
@@ -35,14 +32,9 @@ cp src/pine/config.sample src/pine/config.clj
 
 ## Dev
 
-```
-./repl.sh
-```
+Fix clojure format issues:
 
-## Philosophy
 
-- **Compositional:** operations are composed together to perform a bigger task
-- **Incremental:** keep adding operations instead of going back and modify them
-- **Hide the plumbing:** let the machine figure out what it can - separate the _what_ from the _how_
-- **Concise:** less to type
-- **Doesn't replace existing tools:** it reduces the surface area of the underlying platform
+```
+clj -M:fmt fix
+```

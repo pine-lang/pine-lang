@@ -1,368 +1,107 @@
 (ns pine.ast-test
-  (:require [pine.ast :as ast]
+  (:require [clojure.test :refer :all]
             [clojure.test :refer :all]
-            [clojure.string :as s]
-            [pine.fixtures.mysql :as fixtures]
-            [pine.db :as db]
-            [pine.db.connection :as connection]
+            [pine.parser :as parser]
+            [pine.ast.main :as ast]))
 
-            [pine.db.connection-factory :as cf]))
+(defn- generate
+  ([expression]
+   (generate identity expression))
+  ([type expression]
+   "Helper function to generate and get the relevant part in the ast"
+   (-> expression
+       parser/parse
+       :result
+       (ast/generate :test)
+       type)))
 
-;; Parsing the Pine Expressions and Lexemes
+(defn- generate-joins [expression]
+  (generate #(select-keys % [:join-map :joins]) expression))
 
-(deftest str->operations:one-operation-implicit-id
-  (testing "Create operations for a query"
-    (is
-     (=
-      [{:type    "condition"
-        :entity  "customers"
-        :partial ["customers" [:schema :table]]
-        :alias   "customers_0"
-        :values  [[ "id" [:number "1"] "="]]
-        :context {:schema nil, :entity nil, :alias nil}
-        }]
-      (ast/str->operations (cf/create :postgres) "customers 1")
-      ))))
+(deftest test-ast
 
-(deftest str->operations:group-explicit-fn
-  (testing "Create operations for a max function"
-    (is
-     (=
-      [{:type    "condition"
-        :entity  "customers"
-        :partial ["customers" [:schema :table]]
-        :alias   "customers_0"
-        :values  []
-        :context {:schema nil, :entity nil :alias nil}
-        }
-       {:type    "group"
-        :column  "status"
-        :fn-name "max"
-        :fn-column "id"
-        :context {:schema "public" :entity "customers" :alias "customers_0"}
-        }]
-      (ast/str->operations (cf/create :postgres) "customers | group: status max: id")
-      ))))
+  (testing "Generate ast for `tables`"
+    (is (= [{:schema nil :table "company" :alias "c" :parent nil :join-column nil}]
+           (generate :tables "company as c")))
+    (is (= [{:schema nil :table "user" :alias "u_0" :parent nil  :join-column nil}]
+           (generate :tables "user")))
+    (is (= [{:schema "public" :table "user" :alias "u_0" :parent nil  :join-column nil}]
+           (generate :tables "public.user")))
+    (is (= [{:schema "public" :table "user" :alias "u_0" :parent true  :join-column nil}]
+           (generate :tables "public.user^"))))
 
-(deftest str->operations:one-operation-explicit-id
-  (testing "Create operations for a query explicitly specifying the id"
-    (is
-     (=
-      [{:type    "condition"
-        :entity  "customers"
-        :partial ["customers" [:schema :table]]
-        :alias   "customers_0"
-        :values  [[ "id" [:number "1"]  "="]]
-        :context {:schema nil :entity nil :alias nil}
-        :or      false
-        }
-       ]
-      (ast/str->operations (cf/create :postgres) "customers id=1")
-      ))))
+  (testing "Generate ast for `from`"
+    (is (= "c"
+           (generate :context "company as c | user | from: c | ")))
+    (is (= "c"
+           (generate :context "company as c | user | from: c | 1"))))
 
-(deftest str->operations:one-operation-name-has-number-and-wildcard
-  (testing "Create operations for a query explicitly specifying the id"
-    (is
-     (=
-      [{:type    "condition"
-        :entity  "customers"
-        :partial ["customers" [:schema :table]]
-        :alias   "customers_0"
-        :values  [[ "name" [:string "1*"] "="]]
-        :context {:schema nil :entity nil, :alias nil}
-        :or      false
-        }]
-      (ast/str->operations (cf/create :postgres) "customers name='1*'")
-      ))))
+  (testing "Generate ast for `select`"
+    (is (= [{:alias "c_0" :column "id"}]
+           (generate :columns "company | s: id")))
 
-(deftest str->operations:two-operations
-  (testing "Create operations for a query"
-    (is
-     (=
-      [{:type    "condition"
-        :entity  "customers"
-        :partial ["customers" [:schema :table]]
-        :alias   "customers_0"
-        :values  [[ "id" [:number "1"] "="]]
-        :context {:schema nil :entity nil :alias nil}
-        }
-       {:type    "condition"
-        :entity  "users"
-        :partial ["users" [:schema :table]]
-        :alias   "users_1"
-        :values  [[ "id" [:number "2"] "="]]
-        :context {:schema "public" :entity "customers", :alias "customers_0"}
-        }]
-      (ast/str->operations (cf/create :postgres) "customers 1 | users 2")
-      ))))
+    (is (= [{:alias "u" :column "id"}]
+           (generate :columns "company | s: u.id")))
+    (is (= [{:alias "c_0" :column "id" :column-alias "c_id"}]
+           (generate :columns "company | s: id as c_id")))
+    (is (= [{:alias "c_0" :column "id"} {:alias "e_1" :column "id"}]
+           (generate :columns "company | s: id | employee | s: id")))
+    (is (= [{:alias "c" :column "id"}]
+           (generate :columns "company as c | s: id")))
+    (is (= []
+           (generate :columns "user"))))
 
-(deftest str->operations:three-operations
-  (testing "Create operations for a query"
-    (is
-     (=
-      [{:type    "condition"
-        :entity  "customers"
-        :partial ["customers" [:schema :table]]
-        :alias   "customers_0"
-        :values  [[ "id" [:number "1"] "="]]
-        :context {:schema nil :entity nil, :alias nil}
-        }
-       {:type    "condition"
-        :entity  "users"
-        :partial ["users" [:schema :table]]
-        :alias   "users_1"
-        :values  [[ "name" [:string "John"] "="]]
-        :context {:schema "public" :entity "customers" :alias "customers_0"}
-        :or      false
-        }
-       {:type    "condition"
-        :entity  "address"
-        :partial ["address" [:schema :table]]
-        :alias   "address_2"
-        :values  []
-        :context {:schema "public" :entity "users", :alias "users_1"}
-        }
-       ]
-      (ast/str->operations (cf/create :postgres) "customers 1 | users name='John' | address")
-      ))))
+  (testing "Generate ast for `limit`"
+    (is (= 10
+           (generate :limit "limit: 10")))
+    (is (= 1
+           (generate :limit "l: 1"))))
 
-;; Opertations to AST
+  (testing "Generate ast for `where`"
+    (is (= [[nil "name" "=" "Acme"]]
+           (generate :where "name = 'Acme'")))
+    (is (= [["c_0" "name" "=" "Acme"]]
+           (generate :where "company | name = 'Acme'")))
+    (is (= [["c" "name" "=" "Acme"]]
+           (generate :where "company as c | name = 'Acme'")))
+    (is (= [["c" "name" "=" "Acme"] ["c" "country" "=" "PK"]]
+           (generate :where "company as c | name = 'Acme' | country = 'PK'")))
+    (is (= [["c" "country" "in" ["PK" "DK"]]]
+           (generate :where "company as c | country in ('PK', 'DK')"))))
 
-(deftest operations->group-implicit-fn
-  (testing "Create a where condition from operations"
-    (is
-     (=
-      ["customers_0.id, count(customers_0.id)"]
-      (->> "customers 1 | group: id"
-           (ast/str->operations (cf/create :postgres))
-       (filter (ast/operation-type? ["group"]))
-       ast/operations->group-columns
-       )
-      ))))
+  (testing "Generate ast for `join` where there is no relation"
+    (is (= {:join-map {"a_0" {"b_1" nil}} :joins [["a_0" "b_1" nil]]}
+           (generate-joins "a | b")))
+    (is (= {:join-map {"a_0" {"b_1" nil}} :joins [["a_0" "b_1" nil]]}
+           (generate-joins "a | b .a_id"))))
 
-(deftest operation->where:customer-id-is-1
-  (testing "Create a where condition from an operation"
-    (is
-     (=
-      { :conditions "(customers_0.\"id\" = ?)" :params [[:number "1"]] }
-      (->> (ast/str->operations (cf/create :postgres) "customers 1")
-           first
-           (ast/operation->where (cf/create :postgres) true)
-           )
-      ))))
+  (testing "Generate ast for `join` where there is a relation"
+    (is (= {:join-map {"c_0" {"e_1" ["c_0" "id" :has "e_1" "company_id"]}} :joins [["c_0" "e_1" ["c_0" "id" :has "e_1" "company_id"]]]}
+           (generate-joins "company | employee")))
+    (is (= {:join-map {"c_0" {"e_1" ["c_0" "id" :has "e_1" "company_id"]}} :joins [["c_0" "e_1" ["c_0" "id" :has "e_1" "company_id"]]]}
+           (generate-joins "company | employee .company_id")))
+    (is (= {:join-map {"c_0" {"e_1" ["c_0" nil :has "e_1" nil]}}, :joins [["c_0" "e_1" ["c_0" nil :has "e_1" nil]]]}
+           (generate-joins "company | employee .employee_id"))) ;; trying with incorrect id
+    )
+  (testing "Generate ast for `join` where there is ambiguity"
+    (is (= {:join-map {"e_0" {"d_1" ["e_0" "id" :has "d_1" "created_by"]}}, :joins [["e_0" "d_1" ["e_0" "id" :has "d_1" "created_by"]]]}
+           (generate-joins "employee | document .created_by")))
+    (is (= {:join-map {"e_0" {"d_1" ["e_0" "id" :has "d_1" "employee_id"]}}, :joins [["e_0" "d_1" ["e_0" "id" :has "d_1" "employee_id"]]]}
+           (generate-joins "employee | document .employee_id"))))
 
-(deftest operation->where:customer-name-is-acme
-  (testing "Create a where condition from an operation"
-    (is
-     (=
-      { :conditions "(customers_0.\"name\" = ?)" :params [[:string "acme"]] }
-      (->> (ast/str->operations (cf/create :postgres) "customers name='acme'")
-           first
-           (ast/operation->where (cf/create :postgres) true))
-      ))))
+  (testing "Generate ast for `join` using self join"
+    ;; By default, we narrow the results
+    ;; i.e. we join with the child
+    (is (= {:join-map {"e_0" {"e_1" ["e_0" "id" :has "e_1" "reports_to"]}} :joins [["e_0" "e_1" ["e_0" "id" :has "e_1" "reports_to"]]]}
+           (generate-joins "employee | employee")))
+    (is (= {:join-map {"e_0" {"e_1" ["e_0" "id" :has "e_1" "reports_to"]}} :joins [["e_0" "e_1" ["e_0" "id" :has "e_1" "reports_to"]]]}
+           (generate-joins "employee | employee .reports_to")))
 
-(deftest operation->where:customer-name-is-acme-something
-  (testing "Create a where condition from an operation"
-    (is
-     (=
-      { :conditions "(customers_0.\"name\" LIKE ?)" :params [[:string "acme%"]] }
-      (->> (ast/str->operations (cf/create :postgres) "customers name='acme*'")
-           first
-           (ast/operation->where (cf/create :postgres) true))
-      ))))
+    ;; However, we can exlicitly saw that the table is a parent using the `^` character
+    (is (= {:join-map {"e_0" {"e_1" ["e_0" "reports_to" :of "e_1" "id"]}} :joins [["e_0" "e_1" ["e_0" "reports_to" :of "e_1" "id"]]]}
+           (generate-joins "employee | employee^")))
+    (is (= {:join-map {"e_0" {"e_1" ["e_0" "reports_to" :of "e_1" "id"]}} :joins [["e_0" "e_1" ["e_0" "reports_to" :of "e_1" "id"]]]}
+           (generate-joins "employee | employee^ .reports_to"))))
 
-(deftest operations->where
-  (testing "Create a where condition from operations"
-    (is
-     (=
-      {
-       :conditions ["(customers_0.\"name\" = ?)"
-                    "(users_1.\"id\" = ?)"]
-       :params [[:string "acme"] [:number "1"]]
-       }
-      (->> "customers name='acme' | users 1"
-           (ast/str->operations (cf/create :postgres))
-           (ast/operations->where (cf/create :postgres) true)
-           )
-      ))))
-
-(deftest operations->join:entity-owns-another-entity
-  (testing "Create operations for a query"
-    (is
-     (=
-      ["\"organization\"" "o" ["u.\"org_id\"" "o.\"id\""]]
-      (ast/operations->join
-       (cf/create :postgres)
-       {:entity "user", :alias "u"}
-       {:entity "organization", :alias "o"})
-      ))))
-
-(deftest operations->join:entity-owned-by-another-entity
-  (testing "Create operations for a query"
-    (is
-     (=
-      ["\"user\"" "u" ["u.\"org_id\"" "o.\"id\""]]
-      (ast/operations->join
-       (cf/create :postgres)
-       {:entity "organization", :alias "o"}
-       {:entity "user", :alias "u"}
-       )
-      ))))
-
-(deftest operations->joins:three-operations
-  (testing "Create operations for a query"
-    (is
-     (=
-      (ast/operations->joins
-       (cf/create :postgres)
-       [{:entity "organization" :alias "o"}
-        {:entity "user" :alias "u"}
-        {:entity "document" :alias "d"}
-        ])
-
-      ["\"user\"" "u" ["u.\"org_id\"" "o.\"id\""]
-       "\"document\"" "d" ["d.\"user_id\"" "u.\"id\""]]
-      ))))
-
-(deftest operations->joins:no-filter
-  (testing "Create operations for a query"
-    (is
-     (=
-      ["\"user\"" "u" ["u.\"org_id\"" "o.\"id\""]]
-      (ast/operations->joins
-      (cf/create :postgres)
-       [{:type "condition" :entity "organization" :values [] :alias "o"}
-        {:type "condition" :entity "user" :values [] :alias "u"}
-        ])
-      ))))
-
-(deftest operations->group:no-filter
-  (testing "Operatations to the group sql"
-    (is
-     (=
-      nil
-      (ast/operations->group
-       [{:type "condition" :entity "document", :values []}
-        ])
-      ))))
-
-(deftest operations->ast
-  (testing "Create operations for a query"
-    (is
-     (=
-      {
-       :select ["document_2.*"]
-       :from [nil "organization" "organization_0"]
-       :joins ["\"user\"" "user_1" ["user_1.\"org_id\"" "organization_0.\"id\""]
-               "\"document\"" "document_2" ["document_2.\"user_id\"" "user_1.\"id\""]]
-       :where {
-               :conditions ["(organization_0.\"id\" = ?)"
-                            "(user_1.\"name\" = ?)"
-                            "(document_2.\"name\" = ?)"
-                            ]
-               :params     [[:number "1"] [:string "john"] [:string "test"]]
-               }
-       :order nil
-       :group nil
-       :limit nil
-       :meta nil
-       :delete nil
-       :set nil
-       }
-      (->> "organization 1 | user name='john' | document name='test'"
-           (ast/str->operations (cf/create :postgres))
-           (ast/operations->ast (cf/create :postgres)))
-      ))))
-
-;; AST to SQL
-
-(deftest ast->sql:one-operation
-  (testing "Create sql from an ast with one operation"
-    (is
-     (=
-      (ast/ast->sql-and-params (cf/create :postgres) {
-                     :select ["c.*"]
-                     :from [nil :organization "c"]
-                     :where {
-                             :conditions ["c.id = ?"
-                                          ]
-                             :params     ["1"]
-                             }
-                     })
-      ["SELECT c.* FROM \"organization\" AS c WHERE c.id = ?" ["1"]]
-      ))))
-
-(deftest ast-join->sql
-  (testing "Create sql from a single join from the joins part of the ast"
-    (is
-     (=
-      (ast/ast-join->sql "\"users\"" "u" ["u.customerId" "c.id"])
-      "JOIN \"users\" AS u ON (u.customerId = c.id)"
-      ))))
-
-(deftest ast-joins->sql:no-join
-  (testing "Create sql from a joins part of the ast"
-    (is
-     (=
-      (ast/ast-joins->sql [])
-      ""
-      ))))
-
-(deftest ast-joins->sql
-  (testing "Create sql from a joins part of the ast"
-    (is
-     (=
-      (ast/ast-joins->sql ["\"users\"" "u" ["u.customerId" "c.id"]
-                          "\"address\"" "a" ["a.userId" "u.id"]])
-      "JOIN \"users\" AS u ON (u.customerId = c.id) JOIN \"address\" AS a ON (a.userId = u.id)"
-      ))))
-
-(deftest ast->sql-and-params:two-operation
-  (testing "Create sql from an ast with two operations"
-    (is
-     (=
-      (ast/ast->sql-and-params (cf/create :postgres) {
-                                :select ["u.*"]
-                                :from [nil :organization "c"]
-                                :joins ["\"users\"" "u" ["u.customerId" "c.id"]]
-                                :where {
-                                        :conditions ["c.id = ?"
-                                                     "u.name = ?"
-                                                     ]
-                                        :params     ["1" "john"]
-                                        }
-                     })
-      ["SELECT u.* FROM \"organization\" AS c JOIN \"users\" AS u ON (u.customerId = c.id) WHERE c.id = ? AND u.name = ?" ["1" "john"]]
-      ))))
-
-(deftest str->operations:one-operation-comparison-less-than
-  (testing "Create operations for a query explicitly specifying the id with a comparison operator"
-    (is
-     (=
-      [{:type    "condition"
-        :entity  "organization"
-        :partial ["organization" [:schema :table]]
-        :alias   "organization_0"
-        :values  [[ "id" [:number "1"]  "<"]]
-        :context {:schema nil :entity nil, :alias nil}
-        :or      false
-        }
-       ]
-      (ast/str->operations (cf/create :postgres) "organization id<1")
-      ))))
-
-(deftest str->operations:one-operation-comparison-greater-than
-  (testing "Create operations for a query explicitly specifying the id with a comparison operator"
-    (is
-     (=
-      [{:type    "condition"
-        :entity  "organization"
-        :partial ["organization" [:schema :table]]
-        :alias   "organization_0"
-        :values  [[ "id" [:number "1"]  ">"]]
-        :context {:schema nil :entity nil, :alias nil}
-        :or      false
-        }
-       ]
-      (ast/str->operations (cf/create :postgres) "organization id>1")
-      ))))
+  (testing "Generate ast for `delete`"
+    (is (= {:column "id"} (generate :delete "company | delete! .id")))))

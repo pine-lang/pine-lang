@@ -4,6 +4,111 @@ log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 
 ## [Unreleased]
 
+
+## [0.8.1] - 2024-07-30
+### Fixed
+
+- Specifying the join column in case of ambigious relations wasn't working.
+
+## [0.8.0] - 2024-07-30
+### Added
+- Change the context using the `from:` keyword. This is helpful when the tables relations are not linear and look like a tree.
+```
+company as c | document | from: c | employee
+```
+
+### Breaking
+- State: `joins` is a vector e.g. `[ "x" "y" ["x" "id" :has "y" "x_id"]]`
+
+### Changed
+- State: `join-map` is kept for legacy reasons but it is only used internally.
+
+## [0.7.2] - 2024-07-26
+### Changed
+- No difference in functionality. Removed a lot of deprecated code - only keeping the code for reborn.
+
+## [0.7.1] - 2024-07-26
+### Fixed
+- Allow spaces in the start of a pine expression
+
+## [0.7.0] - 2024-07-26
+### Added
+- Support for `in` operator
+
+### Changed
+- Error type is returned. It is either nothing or `parse`.
+
+## [0.6.0] - 2024-07-22
+### Added
+- Support for directional joins:
+```
+employee | has: employee
+employee | of: employee
+employee | employee^
+```
+- Columns can be qualified by table aliases:
+```
+employee as e | s: e.name
+```
+
+## [0.5.4] - 2024-07-16
+### Fixed
+- Incorrect hints were generated in case of ambiguity
+
+## [0.5.3] - 2024-07-16
+### Fixed
+- Incorrect schema being returned in hints when joining from child to parent
+
+## [0.5.2] - 2024-07-14
+### Changed
+- Default `limit` is `250` if not specified
+
+### Fixed
+- All columns weren't being select in some cases e.g. using `company | s: id | employee`, the columns from `employee` table weren't being selected
+
+## [0.5.1] - 2024-07-11
+### Added
+- Context sensitive columns selection e.g. `company | s: id | employee | s: id`
+
+## [0.5.0] - 2024-07-10
+
+### Added
+- Hints can be provided to resolve ambigious joins e.g. instead of `company | employee`, you can explicitly specify the join column i.e. `column | employee .company_id`
+- The delete operation uses a nested query. The column used for deletes must be specified:
+
+```pine
+public.company | delete! .id
+```
+
+evaluates to:
+
+```sql
+DELETE FROM
+  "public"."company"
+WHERE
+  "id" IN (
+    SELECT
+      "c_0"."id"
+    FROM
+      "public"."company" AS "c_0"
+  );
+```
+- Conditions can be composed. Following are allowed:
+
+```pine
+company | where: id='xxx'
+company | w: id='xxx'
+company | id='xxx'
+```
+
+### Changed
+- Conditions can't be combined with the tables e.g. `company id='xxx'`. Instead compose them using pipes: `company | id='xxx'`
+- Double quotes around strings aren't supported anymore. Use single quotes i.e. instead of `id="xxx"`, use `id='xxx'`
+
+### Removed
+- Support for `group`, `order`, `set!` is dropped. It will be added soon in the up coming versions.
+- Context sensitive columns selection
+
 ## [0.4.8] - 2024-06-24
 ### Fixed
 - Strings can contain a `+` character.

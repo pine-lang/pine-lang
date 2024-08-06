@@ -1,0 +1,12 @@
+(ns pine.db.config)
+
+(defn get-env [var default]
+  (or (System/getenv var) default))
+
+(def connections {:connection-id :default
+                  :default {:host (get-env "DB_HOST" nil)
+                            :dbtype (get-env "DB_TYPE" "postgres")
+                            :dbname (get-env "DB_NAME" nil)
+                            :user (get-env "DB_USER" nil)
+                            :password (get-env "DB_PASSWORD" nil)
+                            :schema (get-env "DB_SCHEMA" nil)}})

@@ -4,9 +4,9 @@ name: Tests
 
 on:
   push:
-    branches: [master]
+    branches: [reborn] # change to `master` right before merge
   pull_request:
-    branches: [master]
+    branches: [reborn] # change to `master` right before merge
 
 jobs:
 
@@ -36,8 +36,8 @@ jobs:
           # Install just one or all simultaneously
           # The value must indicate a particular version of the tool, or use 'latest'
           # to always provision the latest version
-          cli: 1.10.1.693                # Clojure CLI based on tools.deps
-          lein: 2.8.3                    # Leiningen
+          cli: 1.11.3.1463               # Clojure CLI based on tools.deps
+          # lein: 2.8.3                    # Leiningen
           # boot: 2.8.3                  # Boot.clj
           # bb: 0.7.8                    # Babashka
           # clj-kondo: 2022.05.31        # Clj-kondo
@@ -55,9 +55,9 @@ jobs:
             ~/.gitlibs
             ~/.deps.clj
           # List all files containing dependencies:
-          # key: cljdeps-${{ hashFiles('deps.edn') }}
+          key: cljdeps-${{ hashFiles('deps.edn') }}
           # key: cljdeps-${{ hashFiles('deps.edn', 'bb.edn') }}
-          key: cljdeps-${{ hashFiles('project.clj') }}
+          # key: cljdeps-${{ hashFiles('project.clj') }}
           # key: cljdeps-${{ hashFiles('build.boot') }}
           restore-keys: cljdeps-
 
@@ -87,5 +87,8 @@ jobs:
       # - name: Get zprint version
       #   run: zprint --version
 
+      - name: Check format
+        run: clojure -M:fmt check
+
       - name: Run tests
-        run: cd src/pine && ln -s config.sample config.clj && cd - && lein test
+        run: clojure -M:test

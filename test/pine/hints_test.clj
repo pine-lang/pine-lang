@@ -1,36 +1,82 @@
 (ns pine.hints-test
-  (:require [pine.hints :as sut]
+  (:require [pine.ast.hints :refer :all]
             [clojure.test :refer :all]
-            [pine.db.connection :as connection]
-            [pine.db.connection-factory :as cf]
-            [pine.db.postgres :as postgres]
-            [clojure.string :as s]))
+            [pine.parser :as parser]
+            [pine.ast.main :as ast]))
 
-(def md (let [connection (cf/create :postgres)]
-          (connection/get-metadata connection)
-          ))
+(defn- gen
+  [expression]
+  "Helper function to generate and get the relevant part in the ast"
+  (-> expression
+      parser/parse
+      :result
+      (ast/generate :test)
+      :hints))
 
+(-> "company | e"
+    parser/parse
+    :result
+    (ast/generate :test)
+    ;; :hints
+    )
 
-(deftest test-candidates:filter
-  (testing "candidates"
-    (is (= '( "a""ab" "abc" ) (sut/candidates "a" ["a" "b" "c" "ab" "bc" "abc"])))))
+(deftest test-hints
+  (testing "Generate hints"
+    (is (= {:table [{:schema "x", :table "company"
+                     :pine "x.company"}]}
+           (gen "co")))
 
-(deftest test-schema-hint
-  (testing "schema hint"
-    (is (= '( "public" ) (sut/schema-hint md {} "pu")))))
+    (is (= {:table [{:schema "y", :table "employee" :column "company_id" :parent false
+                     :pine "y.employee .company_id"}
+                    {:schema "z", :table "document", :column "company_id", :parent false,
+                     :pine "z.document .company_id"}]}
+           (gen "company | e")))
 
-(deftest test-table-hint:without-schema
-  (testing "table hint without schema"
-    (is (= '( "document" "organization" ) (sut/table-hint md {} "o")))))
+    (is (= {:table [{:schema "x", :table "company" :column "company_id" :parent true
+                     :pine "of: x.company .company_id"}]}
+           (gen "employee | co")))
 
-(deftest test-table-hint:with-schema
-  (testing "table hint with schema"
-    (is (= '( "user" ) (sut/table-hint md {:schema "x"} "us")))))
+    (is (= {:table []}
+           (gen "company as c | s: id")))
 
-(deftest test-table-hint:without-context
-  (testing "table hint without context"
-    (is (= '( "user" "document" "organization" ) (sut/table-hint md {} "")))))
+    ;; The following shouldn't generate any hint but it does
+    ;;
+    ;; (is (= {:table []}
+    ;;        (gen "company as c")))
+    )
 
-(deftest test-table-hint:with-context
-  (testing "table hint with context"
-    (is (= '( "user" ) (sut/table-hint md {:context {:entity "document"}} "")))))
+  (testing "Generate hints in ambiguity"
+    (is (= {:table
+            [{:schema "z",
+              :table "document"
+              :column "employee_id"
+              :parent false
+              :pine "z.document .employee_id"}
+             {:schema "z"
+              :table "document"
+              :column "created_by"
+              :parent false
+              :pine "z.document .created_by"}]}
+           (gen "employee | doc"))))
+
+  (testing "Generate hints when direction is specified"
+    (is (= {:table
+            [{:schema "y"
+              :table "employee"
+              :column "reports_to"
+              :parent true
+              :pine "of: y.employee .reports_to"}
+             {:schema "y"
+              :table "employee"
+              :column "reports_to"
+              :parent false
+              :pine "y.employee .reports_to"}]}
+           (gen "employee | employee")))
+    (is (= {:table
+            [{:schema "y"
+              :table "employee"
+              :column "reports_to"
+              :parent true
+              :pine "of: y.employee .reports_to"}]}
+           (gen "employee | of: employee")))))
+

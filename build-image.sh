@@ -40,8 +40,8 @@ build_and_push_image() {
 }
 
 # Check if the image already exists
-if image_exists; then
-    echo "Image $IMAGE_NAME already exists in the registry. Skipping build and push."
-else
+# if image_exists; then
+#     echo "Image $IMAGE_NAME already exists in the registry. Skipping build and push."
+# else
     build_and_push_image
-fi
+# fi
