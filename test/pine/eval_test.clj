@@ -21,15 +21,24 @@
     (is (= "\"x\".\"y\"" (q "x" "y"))))
 
   (testing "Condition"
+
     (is (= {:query "SELECT c_0.* FROM \"company\" AS \"c_0\" WHERE \"c_0\".\"name\" = ? LIMIT 250",
             :params (map dt/string ["Acme Inc."])}
            (generate "company | where: name='Acme Inc.'")))
-    (is (= {:query "SELECT c_0.* FROM \"company\" AS \"c_0\" WHERE \"c_0\".\"name\" like ? AND \"c_0\".\"country\" = ? LIMIT 250",
+    (is (= {:query "SELECT c_0.* FROM \"company\" AS \"c_0\" WHERE \"c_0\".\"name\" LIKE ? AND \"c_0\".\"country\" = ? LIMIT 250",
             :params (map dt/string ["Acme%", "PK"])}
            (generate "company | where: name like 'Acme%' | country = 'PK'")))
     (is (= {:query "SELECT c_0.* FROM \"company\" AS \"c_0\" WHERE \"c_0\".\"country\" IN (?, ?) LIMIT 250",
             :params (map dt/string ["PK", "DK"])}
            (generate "company | where: country in ('PK' 'DK')"))))
+
+  (testing "Condition with null"
+    (is (= {:query "SELECT c_0.* FROM \"company\" AS \"c_0\" WHERE \"c_0\".\"deleted_at\" IS NULL LIMIT 250",
+            :params []}
+           (generate "company | where: deleted_at is null")))
+    (is (= {:query "SELECT c_0.* FROM \"company\" AS \"c_0\" WHERE \"c_0\".\"deleted_at\" IS NULL LIMIT 250",
+            :params []}
+           (generate "company | where: deleted_at = null"))))
 
   (testing "Joins"
     (is (= {:query "SELECT e_1.* FROM \"company\" AS \"c_0\" JOIN \"employee\" AS \"e_1\" ON \"c_0\".\"id\" = \"e_1\".\"company_id\" LIMIT 250",

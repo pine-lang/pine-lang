@@ -89,9 +89,12 @@
 
 (defmethod -normalize-op :WHERE [[_ payload]]
   (match payload
-    [:condition [:symbol column] [:operator op] [:number value]]        {:type :where :value [column op (dt/number value)]}
-    [:condition [:symbol column] [:operator op] string]                 {:type :where :value [column op (parse-characters string)]}
-    [:condition [:symbol column] op  & strings]                         {:type :where :value [column op (map parse-characters strings)]}
+    [:condition [:symbol column] [:equals _] [:number value]]        {:type :where :value [column "=" (dt/number value)]}
+    [:condition [:symbol column] [:is _] [:null _]]                  {:type :where :value [column "IS" (dt/symbol "NULL")]}
+    [:condition [:symbol column] [:equals _] [:null _]]              {:type :where :value [column "IS" (dt/symbol "NULL")]}
+    [:condition [:symbol column] [:equals _] string]                 {:type :where :value [column "=" (parse-characters string)]}
+    [:condition [:symbol column] [:like _] string]                   {:type :where :value [column "LIKE" (parse-characters string)]}
+    [:condition [:symbol column] [:in _]  & strings]                 {:type :where :value [column "IN" (map parse-characters strings)]}
     :else                (throw (ex-info "Unknown WHERE operation"      {:_ payload}))))
 
 ;; -----

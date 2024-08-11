@@ -7,3 +7,6 @@
 
 (defn number [x]
   (t :number x))
+
+(defn symbol [x]
+  (t :symbol x))

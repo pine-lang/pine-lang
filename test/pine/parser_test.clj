@@ -72,16 +72,16 @@
     (is (= [{:type :where, :value ["name" "=" (dt/string "John Doe")]}] (p "w: name='John Doe'")))
     (is (= [{:type :where, :value ["name" "=" (dt/string "John Doe")]}] (p "name = 'John Doe'")))
     (is (= [{:type :where, :value ["name" "=" (dt/string "John Doe")]}] (p "name='John Doe'")))
-    (is (= [{:type :where, :value ["name" "like" (dt/string "John%")]}] (p "name like 'John%'")))
+    (is (= [{:type :where, :value ["name" "LIKE" (dt/string "John%")]}] (p "name like 'John%'")))
+    (is (= [{:type :where, :value ["age" "IS" (dt/symbol "NULL")]}]     (p "age is null")))
+    (is (= [{:type :where, :value ["age" "IS" (dt/symbol "NULL")]}]     (p "age = null")))
     (is (= [{:type :where, :value ["age" "=" (dt/number "24")]}]        (p "age = 24"))))
 
   (testing "Parse `where` `in` expressions"
-    (is (= [{:type :where, :value ["age" "in" [(dt/string "24")]]}]                  (p "age in ('24')")))
-    (is (= [{:type :where, :value ["age" "in" [(dt/string "24")]]}]                  (p "age in ('24' ) ")))
-    (is (= [{:type :where, :value ["age" "in" [(dt/string "24") (dt/string "36")]]}] (p "age in (  '24' ,'36' )")))
-    (is (= [{:type :where, :value ["age" "in" [(dt/string "24") (dt/string "36")]]}] (p "age in ('24' '36')"))))
+    (is (= [{:type :where, :value ["age" "IN" [(dt/string "24")]]}]                  (p "age in ('24')")))
+    (is (= [{:type :where, :value ["age" "IN" [(dt/string "24")]]}]                  (p "age in ('24' ) ")))
+    (is (= [{:type :where, :value ["age" "IN" [(dt/string "24") (dt/string "36")]]}] (p "age in (  '24' ,'36' )")))
+    (is (= [{:type :where, :value ["age" "IN" [(dt/string "24") (dt/string "36")]]}] (p "age in ('24' '36')"))))
 
   (testing "Parse `delete` expressions"
     (is (= [{:type :delete, :value {:column "id"}}] (p "delete! .id")))))
-
-(p "where: name='John Doe'")

@@ -4,11 +4,10 @@ OPERATION  := SELECT | TABLE | WHERE | LIMIT | DELETE | FROM
 TABLE           := table (<ws+> hint-column)? (<ws+> as-alias)?
 
 SELECT          := <"select:"> <ws*> columns     | <"s:"> <ws*> columns
-WHERE           := <"where:"> <ws*> condition    | <"w:"> <ws*> condition    | condition
-LIMIT           := <"limit:"> <ws*> number       | <"l:"> <ws*> number       | number
+WHERE           := <"where:">  <ws*> condition   | <"w:"> <ws*> condition | condition
+LIMIT           := <"limit:">  <ws*> number      | <"l:"> <ws*> number    | number
 DELETE          := <"delete!"> <ws*> hint-column | <"d!"> <ws*> hint-column
-
-FROM            := <"from:"> <ws*> alias | <"f:"> <ws*> alias
+FROM            := <"from:">   <ws*> alias       | <"f:"> <ws*> alias
 
 <table>         := child | parent | symbol* | symbol <"."> symbol*
 <child>         := "has:" <ws*> symbol+ | "has:" <ws*> symbol <"."> symbol+
@@ -16,8 +15,8 @@ FROM            := <"from:"> <ws*> alias | <"f:"> <ws*> alias
 
 
 
-condition       := symbol <ws*> operator <ws*> (string|number) | condition-in
-<condition-in>  := symbol <ws*> "in" <ws*>  <"("> strings* <")">
+condition       := symbol <ws*> operator <ws*> (string|number|null) | condition-in
+<condition-in>  := symbol <ws*> in <ws*>  <"("> strings* <")">
 <strings>       := <ws*> string <ws*> <",">?
 
 columns         := column (<","> <ws*> column)*
@@ -35,4 +34,10 @@ string   := <"'"> char* <"'">
 number   := #"[0-9]+"
 ws       := #"\s+"
 <char>   := #'[^\']'
-operator := "like" | "="
+<operator> := like | equals | is
+like     := "like"
+equals   := "="
+is       := "is"
+in       := "in"
+null     := "null"
+
