@@ -91,6 +91,7 @@
   (match payload
     [:condition [:symbol column] [:equals _] [:number value]]        {:type :where :value [column "=" (dt/number value)]}
     [:condition [:symbol column] [:is _] [:null _]]                  {:type :where :value [column "IS" (dt/symbol "NULL")]}
+    [:condition [:symbol column] [:is _] [:not _] [:null _]]         {:type :where :value [column "IS NOT" (dt/symbol "NULL")]}
     [:condition [:symbol column] [:equals _] [:null _]]              {:type :where :value [column "IS" (dt/symbol "NULL")]}
     [:condition [:symbol column] [:equals _] string]                 {:type :where :value [column "=" (parse-characters string)]}
     [:condition [:symbol column] [:like _] string]                   {:type :where :value [column "LIKE" (parse-characters string)]}

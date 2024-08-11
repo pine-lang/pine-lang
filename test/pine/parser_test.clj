@@ -75,6 +75,7 @@
     (is (= [{:type :where, :value ["name" "LIKE" (dt/string "John%")]}] (p "name like 'John%'")))
     (is (= [{:type :where, :value ["age" "IS" (dt/symbol "NULL")]}]     (p "age is null")))
     (is (= [{:type :where, :value ["age" "IS" (dt/symbol "NULL")]}]     (p "age = null")))
+    (is (= [{:type :where, :value ["age" "IS NOT" (dt/symbol "NULL")]}] (p "age is not null")))
     (is (= [{:type :where, :value ["age" "=" (dt/number "24")]}]        (p "age = 24"))))
 
   (testing "Parse `where` `in` expressions"

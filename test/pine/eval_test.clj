@@ -36,6 +36,9 @@
     (is (= {:query "SELECT c_0.* FROM \"company\" AS \"c_0\" WHERE \"c_0\".\"deleted_at\" IS NULL LIMIT 250",
             :params []}
            (generate "company | where: deleted_at is null")))
+    (is (= {:query "SELECT c_0.* FROM \"company\" AS \"c_0\" WHERE \"c_0\".\"deleted_at\" IS NOT NULL LIMIT 250",
+            :params []}
+           (generate "company | where: deleted_at is not null")))
     (is (= {:query "SELECT c_0.* FROM \"company\" AS \"c_0\" WHERE \"c_0\".\"deleted_at\" IS NULL LIMIT 250",
             :params []}
            (generate "company | where: deleted_at = null"))))

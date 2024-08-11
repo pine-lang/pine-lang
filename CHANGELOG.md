@@ -10,6 +10,7 @@ log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 ```
 company | name is null
 company | name = null
+company | name is not null
 ```
 
 

@@ -15,7 +15,7 @@ FROM            := <"from:">   <ws*> alias       | <"f:"> <ws*> alias
 
 
 
-condition       := symbol <ws*> operator <ws*> (string|number|null) | condition-in
+condition       := symbol <ws*> operator <ws*> (not <ws+>)? (string|number|null) | condition-in
 <condition-in>  := symbol <ws*> in <ws*>  <"("> strings* <")">
 <strings>       := <ws*> string <ws*> <",">?
 
@@ -40,4 +40,5 @@ equals   := "="
 is       := "is"
 in       := "in"
 null     := "null"
+not      := "not"
 
