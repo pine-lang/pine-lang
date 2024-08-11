@@ -4,9 +4,9 @@ name: Tests
 
 on:
   push:
-    branches: [reborn] # change to `master` right before merge
+    branches: [master]
   pull_request:
-    branches: [reborn] # change to `master` right before merge
+    branches: [master]
 
 jobs:
 

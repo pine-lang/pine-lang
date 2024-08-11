@@ -1,6 +1,7 @@
 (ns pine.parser-test
   (:require [clojure.test :refer :all]
-            [pine.parser :refer :all]))
+            [pine.parser :refer :all]
+            [pine.data-types :as dt]))
 
 (defn- p [e]
   (-> e parse-or-fail))
@@ -55,10 +56,10 @@
     (is (= [{:type :from, :value {:alias "u"}}] (p "from: u"))))
 
   (testing "Parse `select` expressions"
-    (is (= [{:type :select, :value [{:column  "name"}]}]                               (p "select: name")))
-    (is (= [{:type :select, :value [{:alias "u" :column  "name"}]}]                    (p "select: u.name")))
-    (is (= [{:type :select, :value [{:column "id"} {:column  "name"}]}]                (p "s: id, name")))
-    (is (= [{:type :select, :value [{:column-alias "t_id" :column "id"}]}]             (p "s: id as t_id")))
+    (is (= [{:type :select, :value [{:column  "name"}]}]                              (p "select: name")))
+    (is (= [{:type :select, :value [{:alias "u" :column  "name"}]}]                   (p "select: u.name")))
+    (is (= [{:type :select, :value [{:column "id"} {:column  "name"}]}]               (p "s: id, name")))
+    (is (= [{:type :select, :value [{:column-alias "t_id" :column "id"}]}]            (p "s: id as t_id")))
     (is (= [{:type :select, :value [{:alias "u" :column "id" :column-alias "t_id"}]}] (p "s: u.id as t_id"))))
 
   (testing "Parse `limit` expressions"
@@ -67,18 +68,21 @@
     (is (= [{:type :limit, :value 10}]  (p "10"))))
 
   (testing "Parse `where` expressions"
-    (is (= [{:type :where, :value ["name" "=" "John Doe"]}] (p "where: name='John Doe'")))
-    (is (= [{:type :where, :value ["name" "=" "John Doe"]}] (p "w: name='John Doe'")))
-    (is (= [{:type :where, :value ["name" "=" "John Doe"]}] (p "name = 'John Doe'")))
-    (is (= [{:type :where, :value ["name" "=" "John Doe"]}] (p "name='John Doe'")))
-    (is (= [{:type :where, :value ["name" "like" "John%"]}] (p "name like 'John%'")))
-    (is (= [{:type :where, :value ["age" "=" "24"]}]        (p "age = 24"))))
+    (is (= [{:type :where, :value ["name" "=" (dt/string "John Doe")]}] (p "where: name='John Doe'")))
+    (is (= [{:type :where, :value ["name" "=" (dt/string "John Doe")]}] (p "w: name='John Doe'")))
+    (is (= [{:type :where, :value ["name" "=" (dt/string "John Doe")]}] (p "name = 'John Doe'")))
+    (is (= [{:type :where, :value ["name" "=" (dt/string "John Doe")]}] (p "name='John Doe'")))
+    (is (= [{:type :where, :value ["name" "LIKE" (dt/string "John%")]}] (p "name like 'John%'")))
+    (is (= [{:type :where, :value ["age" "IS" (dt/symbol "NULL")]}]     (p "age is null")))
+    (is (= [{:type :where, :value ["age" "IS" (dt/symbol "NULL")]}]     (p "age = null")))
+    (is (= [{:type :where, :value ["age" "IS NOT" (dt/symbol "NULL")]}] (p "age is not null")))
+    (is (= [{:type :where, :value ["age" "=" (dt/number "24")]}]        (p "age = 24"))))
 
   (testing "Parse `where` `in` expressions"
-    (is (= [{:type :where, :value ["age" "in" ["24"]]}]        (p "age in ('24')")))
-    (is (= [{:type :where, :value ["age" "in" ["24"]]}]        (p "age in ('24' ) ")))
-    (is (= [{:type :where, :value ["age" "in" ["24" "36"]]}]   (p "age in (  '24' ,'36' )")))
-    (is (= [{:type :where, :value ["age" "in" ["24" "36"]]}]   (p "age in ('24' '36')"))))
+    (is (= [{:type :where, :value ["age" "IN" [(dt/string "24")]]}]                  (p "age in ('24')")))
+    (is (= [{:type :where, :value ["age" "IN" [(dt/string "24")]]}]                  (p "age in ('24' ) ")))
+    (is (= [{:type :where, :value ["age" "IN" [(dt/string "24") (dt/string "36")]]}] (p "age in (  '24' ,'36' )")))
+    (is (= [{:type :where, :value ["age" "IN" [(dt/string "24") (dt/string "36")]]}] (p "age in ('24' '36')"))))
 
   (testing "Parse `delete` expressions"
     (is (= [{:type :delete, :value {:column "id"}}] (p "delete! .id")))))

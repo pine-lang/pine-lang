@@ -2,7 +2,8 @@
   "The parser is responsible for generating a parse tree from the bnf and
   normalize the output which is used for the input for generating the ast"
   (:require [instaparse.core :as insta]
-            [clojure.core.match :refer [match]]))
+            [clojure.core.match :refer [match]]
+            [pine.data-types :as dt]))
 
 (defmulti -normalize-op
   "Normalize the output of the parser. The first argument is the type of the
@@ -84,12 +85,18 @@
 ;; WHERE
 ;; -----
 
+(defn- parse-characters [[_ & characters]] {:type :string :value (apply str characters)})
+
 (defmethod -normalize-op :WHERE [[_ payload]]
   (match payload
-    [:condition [:symbol column] [:operator op] [:number value]]                {:type :where :value [column op value]}
-    [:condition [:symbol column] [:operator op] [:string & characters]]         {:type :where :value [column op (apply str characters)]}
-    [:condition [:symbol column] op  & strings]                         {:type :where :value [column op (map #(apply str (rest %1)) strings)]}
-    :else                (throw (ex-info "Unknown WHERE operation" {:_ payload}))))
+    [:condition [:symbol column] [:equals _] [:number value]]        {:type :where :value [column "=" (dt/number value)]}
+    [:condition [:symbol column] [:is _] [:null _]]                  {:type :where :value [column "IS" (dt/symbol "NULL")]}
+    [:condition [:symbol column] [:is _] [:not _] [:null _]]         {:type :where :value [column "IS NOT" (dt/symbol "NULL")]}
+    [:condition [:symbol column] [:equals _] [:null _]]              {:type :where :value [column "IS" (dt/symbol "NULL")]}
+    [:condition [:symbol column] [:equals _] string]                 {:type :where :value [column "=" (parse-characters string)]}
+    [:condition [:symbol column] [:like _] string]                   {:type :where :value [column "LIKE" (parse-characters string)]}
+    [:condition [:symbol column] [:in _]  & strings]                 {:type :where :value [column "IN" (map parse-characters strings)]}
+    :else                (throw (ex-info "Unknown WHERE operation"      {:_ payload}))))
 
 ;; -----
 ;; LIMIT

@@ -2,7 +2,8 @@
   (:require [clojure.test :refer :all]
             [clojure.test :refer :all]
             [pine.parser :as parser]
-            [pine.ast.main :as ast]))
+            [pine.ast.main :as ast]
+            [pine.data-types :as dt]))
 
 (defn- generate
   ([expression]
@@ -58,15 +59,17 @@
            (generate :limit "l: 1"))))
 
   (testing "Generate ast for `where`"
-    (is (= [[nil "name" "=" "Acme"]]
+    (is (= [[nil "name" "=" (dt/string "Acme")]]
            (generate :where "name = 'Acme'")))
-    (is (= [["c_0" "name" "=" "Acme"]]
+    (is (= [[nil "id" "=" (dt/number "1")]]
+           (generate :where "id = 1")))
+    (is (= [["c_0" "name" "=" (dt/string "Acme")]]
            (generate :where "company | name = 'Acme'")))
-    (is (= [["c" "name" "=" "Acme"]]
+    (is (= [["c" "name" "=" (dt/string "Acme")]]
            (generate :where "company as c | name = 'Acme'")))
-    (is (= [["c" "name" "=" "Acme"] ["c" "country" "=" "PK"]]
+    (is (= [["c" "name" "=" (dt/string "Acme")] ["c" "country" "=" (dt/string "PK")]]
            (generate :where "company as c | name = 'Acme' | country = 'PK'")))
-    (is (= [["c" "country" "in" ["PK" "DK"]]]
+    (is (= [["c" "country" "IN" [(dt/string "PK") (dt/string "DK")]]]
            (generate :where "company as c | country in ('PK', 'DK')"))))
 
   (testing "Generate ast for `join` where there is no relation"
