@@ -45,14 +45,18 @@
         where-clause (when (not-empty where)
                        (str "WHERE "
                             (clojure.string/join " AND "
-                                                 (for [[a col op val] where]
+                                                 (for [[a col op value] where]
                                                    (if (= op "in")
-                                                     (str (q a col) " IN (" (clojure.string/join ", " (repeat (count val) "?"))  ")")
+                                                     (str (q a col) " IN (" (clojure.string/join ", " (repeat (count value) "?"))  ")")
                                                      (str (q a col) " " op " ?"))))))
         limit (str "LIMIT " (or limit 250))
         query (clojure.string/join " " (filter some? [select from join where-clause limit]))
         params (when (not-empty where)
-                 (mapcat (fn [[a col op val]] (if (coll? val) val [val])) where))]
+                 (->> where
+                      (map (fn [[a col op value]] (if (coll? value) value [value])))
+                      ;; TODO: filter out the symbols e.g. null, etc
+                      flatten))]
+
     {:query query :params params}))
 
 (defn build-delete-query [state]
@@ -72,14 +76,14 @@
 
 (defn formatted-query [{:keys [query params]}]
   (let [replacer (fn [s param]
-                   (let [param-str (if (string? param)
-                                     (str "'" param "'")
-                                     (str param))]
+                   (let [v (:value param)
+                         param-str (if (= (:type param) :string)
+                                     (str "'" v "'")
+                                     (str v))]
                      (clojure.string/replace-first s "?" param-str)))]
     (str "\n" (reduce replacer query params) ";\n")))
 
 (defn run-query [state]
-  (let [connection-id (state :connection-id)]
-    (->> state
-         build-query
-         (db/run-query connection-id))))
+  (let [connection-id (state :connection-id)
+        {query :query params :params} (build-query state)]
+    (db/run-query connection-id {:query query :params (map #(:value %) params)})))

@@ -3,7 +3,8 @@
             [clojure.test :refer :all]
             [pine.ast.main :as ast]
             [pine.parser :as parser]
-            [pine.eval :as eval]))
+            [pine.eval :as eval]
+            [pine.data-types :as dt]))
 
 (defn- generate [expression]
   "Helper function to generate the sql"
@@ -21,13 +22,13 @@
 
   (testing "Condition"
     (is (= {:query "SELECT c_0.* FROM \"company\" AS \"c_0\" WHERE \"c_0\".\"name\" = ? LIMIT 250",
-            :params ["Acme Inc."]}
+            :params (map dt/string ["Acme Inc."])}
            (generate "company | where: name='Acme Inc.'")))
     (is (= {:query "SELECT c_0.* FROM \"company\" AS \"c_0\" WHERE \"c_0\".\"name\" like ? AND \"c_0\".\"country\" = ? LIMIT 250",
-            :params ["Acme%", "PK"]}
+            :params (map dt/string ["Acme%", "PK"])}
            (generate "company | where: name like 'Acme%' | country = 'PK'")))
     (is (= {:query "SELECT c_0.* FROM \"company\" AS \"c_0\" WHERE \"c_0\".\"country\" IN (?, ?) LIMIT 250",
-            :params ["PK", "DK"]}
+            :params (map dt/string ["PK", "DK"])}
            (generate "company | where: country in ('PK' 'DK')"))))
 
   (testing "Joins"
@@ -70,3 +71,8 @@
     (is (= {:query "DELETE FROM \"company\" WHERE \"id\" IN ( SELECT \"c_0\".\"id\" FROM \"company\" AS \"c_0\" LIMIT 250 )",
             :params nil}
            (generate "company | delete! .id")))))
+
+(deftest test-format--query
+  (testing "string"
+    (is (= "\nSELECT c_0.* FROM \"company\" AS \"c_0\" WHERE \"c_0\".\"name\" = 'Acme Inc.' LIMIT 250;\n"
+           (-> "company | where: name='Acme Inc.'" generate eval/formatted-query)))))
