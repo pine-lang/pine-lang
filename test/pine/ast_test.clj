@@ -53,9 +53,10 @@
            (generate :columns "user"))))
 
   (testing "Generate ast for `order`"
-    (is (= [{:column "country" :direction "DESC"}]
+    (is (= [{:alias "c_0" :column "country" :direction "DESC"}]
            (generate :order "company | o: country")))
-    (is (= [{:column "country" :direction "DESC"} {:column "created_at" :direction "DESC"}]
+    (is (= [{:alias "c_0" :column "country" :direction "DESC"}
+            {:alias "c_0" :column "created_at" :direction "DESC"}]
            (generate :order "company | o: country, created_at"))))
 
   (testing "Generate ast for `limit`"
