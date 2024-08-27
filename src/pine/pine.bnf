@@ -3,7 +3,7 @@ OPERATION  := SELECT | TABLE | WHERE | LIMIT | DELETE | FROM | ORDER
 
 TABLE           := table (<ws+> hint-column)? (<ws+> as-alias)?
 
-SELECT          := <"select:"> <ws*> q-columns   | <"s:"> <ws*> q-columns
+SELECT          := <"select:"> <ws*> aliased-columns   | <"s:"> <ws*> aliased-columns
 WHERE           := <"where:">  <ws*> condition   | <"w:"> <ws*> condition | condition
 LIMIT           := <"limit:">  <ws*> number      | <"l:"> <ws*> number    | number
 DELETE          := <"delete!"> <ws*> hint-column | <"d!"> <ws*> hint-column
@@ -20,15 +20,14 @@ condition       := symbol <ws*> operator <ws*> (not <ws+>)? (string|number|null)
 <condition-in>  := symbol <ws*> in <ws*>  <"("> strings* <")">
 <strings>       := <ws*> string <ws*> <",">?
 
-q-columns       := q-column (<","> <ws*> q-column)*
+aliased-columns := aliased-column (<","> <ws*> aliased-column)*
 columns         := column (<","> <ws*> column)*
-q-column        := qualified-column
 hint-column     := <"."> symbol
 
-<column>                  := symbol
-<qualified-column>        := qualified-symbol | qualified-symbol <ws+> as-alias
-<qualified-symbol>        := symbol* | symbol <"."> symbol*
-<as-alias>                := <"as"> <ws+> alias
+aliased-column     := column | column <ws+> as-alias
+column             := qualified-symbol
+<qualified-symbol> := symbol* | alias <"."> symbol*
+<as-alias>         := <"as"> <ws+> alias
 
 alias    := symbol
 
