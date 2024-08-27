@@ -35,6 +35,15 @@
      select-all
      " FROM")))
 
+(defn- build-order-clause [{:keys [order]}]
+  (if (empty? order) nil
+      (str
+       "ORDER BY "
+       (clojure.string/join
+        ", "
+        (map (fn [{:keys [alias column direction]}]
+               (str (q alias column) " " direction)) order)))))
+
 (defn- remove-symbols [vs]
   "Remove symbols from a vector of values"
   (filter #(not (= (:type %) :symbol)) vs))
@@ -53,8 +62,9 @@
                                                    (if (= op "IN")
                                                      (str (q a col) " IN (" (clojure.string/join ", " (repeat (count value) "?"))  ")")
                                                      (str (q a col) " " op " " (if (= (:type value) :symbol) (:value value) "?")))))))
+        order (build-order-clause state)
         limit (str "LIMIT " (or limit 250))
-        query (clojure.string/join " " (filter some? [select from join where-clause limit]))
+        query (clojure.string/join " " (filter some? [select from join where-clause order limit]))
         params (when (not-empty where)
                  (->> where
                       (map (fn [[a col op value]] (if (coll? value) value [value])))
