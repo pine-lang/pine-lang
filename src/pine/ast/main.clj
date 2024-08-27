@@ -23,6 +23,7 @@
             :joins           []           ;; Vector of joins e.g. [ "u" "c" ".. relation .."]
             :join-map        {}           ;; Map of aliases of the joined tables e.g. { "u" { "c" [".. relation .."]}}
             :where           []           ;; e.g. [ "name" "=" "john" ]
+            :order           []           ;; e.g. [{ :alias "u" :column "name" :direction "DESC" }]
 
             ;; state
             :operation      {:type  nil

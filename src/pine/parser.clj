@@ -68,11 +68,6 @@
 
 (defn- -normalize-column [column]
   (match column
-    ;; order
-    [:column [:symbol c]]
-    {:column c}
-
-    ;; select
     [:aliased-column [:column [:symbol c]]]                                     {:column c}
     [:aliased-column [:column [:alias [:symbol a]] [:symbol c]]]                {:alias a :column c}
     [:aliased-column [:column [:symbol c]] [:alias [:symbol ca]]]             {:column c :column-alias ca}
@@ -89,9 +84,14 @@
 ;; ORDER
 ;; ------
 
+(defn- -normalize-order[column]
+  (match column
+         [:column [:symbol c]] {:column c :direction "DESC"} ;; TODO: direction is hardcoded
+         :else                 (throw (ex-info "Unknown ORDER operation" {:_ column}))))
+
 (defmethod -normalize-op :ORDER [[_ payload]]
   (match payload
-    [:columns & columns] {:type :order :value (mapv -normalize-column columns)}
+    [:columns & columns] {:type :order :value (mapv -normalize-order columns)}
     :else                (throw (ex-info "Unknown SELECT operation" {:_ payload}))))
 
 ;; -----
