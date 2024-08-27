@@ -84,14 +84,15 @@
 ;; ORDER
 ;; ------
 
-(defn- -normalize-order[column]
+(defn- -normalize-order [column]
   (match column
-         [:column [:symbol c]] {:column c :direction "DESC"} ;; TODO: direction is hardcoded
-         :else                 (throw (ex-info "Unknown ORDER operation" {:_ column}))))
+    [:order-column [:column [:symbol c]]]   {:column c :direction "DESC"}
+    [:order-column [:column [:symbol c]] d] {:column c :direction (clojure.string/upper-case d)}
+    :else                                   (throw (ex-info "Unknown ORDER operation" {:_ column}))))
 
 (defmethod -normalize-op :ORDER [[_ payload]]
   (match payload
-    [:columns & columns] {:type :order :value (mapv -normalize-order columns)}
+    [:order-columns & columns] {:type :order :value (mapv -normalize-order columns)}
     :else                (throw (ex-info "Unknown SELECT operation" {:_ payload}))))
 
 ;; -----

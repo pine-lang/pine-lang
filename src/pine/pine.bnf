@@ -3,28 +3,30 @@ OPERATION  := SELECT | TABLE | WHERE | LIMIT | DELETE | FROM | ORDER
 
 TABLE           := table (<ws+> hint-column)? (<ws+> as-alias)?
 
-SELECT          := <"select:"> <ws*> aliased-columns   | <"s:"> <ws*> aliased-columns
-WHERE           := <"where:">  <ws*> condition   | <"w:"> <ws*> condition | condition
-LIMIT           := <"limit:">  <ws*> number      | <"l:"> <ws*> number    | number
-DELETE          := <"delete!"> <ws*> hint-column | <"d!"> <ws*> hint-column
-FROM            := <"from:">   <ws*> alias       | <"f:"> <ws*> alias
-ORDER           := <"order:">  <ws*> columns     | <"o:"> <ws*> columns
+SELECT          := <"select:"> <ws*> aliased-columns | <"s:"> <ws*> aliased-columns
+WHERE           := <"where:">  <ws*> condition       | <"w:"> <ws*> condition | condition
+LIMIT           := <"limit:">  <ws*> number          | <"l:"> <ws*> number    | number
+DELETE          := <"delete!"> <ws*> hint-column     | <"d!"> <ws*> hint-column
+FROM            := <"from:">   <ws*> alias           | <"f:"> <ws*> alias
+ORDER           := <"order:">  <ws*> order-columns   | <"o:"> <ws*> order-columns
 
 <table>         := child | parent | symbol* | symbol <"."> symbol*
 <child>         := "has:" <ws*> symbol+ | "has:" <ws*> symbol <"."> symbol+
 <parent>        := "of:"  <ws*> symbol+ | "of:"  <ws*> symbol <"."> symbol+ | symbol+ "^" | symbol <"."> symbol+ "^"
-
-
 
 condition       := symbol <ws*> operator <ws*> (not <ws+>)? (string|number|null) | condition-in
 <condition-in>  := symbol <ws*> in <ws*>  <"("> strings* <")">
 <strings>       := <ws*> string <ws*> <",">?
 
 aliased-columns := aliased-column (<","> <ws*> aliased-column)*
-columns         := column (<","> <ws*> column)*
+aliased-column  := column | column <ws+> as-alias
+
+order-columns := order-column (<","> <ws*> order-column)*
+order-column  := column | column <ws+> ("desc"|"asc")
+
 hint-column     := <"."> symbol
 
-aliased-column     := column | column <ws+> as-alias
+columns            := column (<","> <ws*> column)*
 column             := qualified-symbol
 <qualified-symbol> := symbol* | alias <"."> symbol*
 <as-alias>         := <"as"> <ws+> alias
