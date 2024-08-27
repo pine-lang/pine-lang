@@ -62,6 +62,11 @@
             :params nil}
            (generate "x.company as c | y.employee | from: c | z.document"))))
 
+  (testing "order"
+    (is (= {:query "SELECT c_0.* FROM \"company\" AS \"c_0\" ORDER BY \"c_0\".\"country\" DESC LIMIT 250",
+            :params nil}
+           (generate "company | order: country"))))
+
   (testing "columns"
     (is (= {:query "SELECT \"c\".\"id\" FROM \"company\" AS \"c\" LIMIT 250",
             :params nil}

@@ -7,7 +7,8 @@
             [pine.ast.hints :as hints]
             [pine.ast.select :as select]
             [pine.ast.delete :as delete]
-            [pine.ast.from :as from]))
+            [pine.ast.from :as from]
+            [pine.ast.order :as order]))
 
 (def state {;; pre
             ;; - connection
@@ -23,6 +24,7 @@
             :joins           []           ;; Vector of joins e.g. [ "u" "c" ".. relation .."]
             :join-map        {}           ;; Map of aliases of the joined tables e.g. { "u" { "c" [".. relation .."]}}
             :where           []           ;; e.g. [ "name" "=" "john" ]
+            :order           []           ;; e.g. [{ :alias "u" :column "name" :direction "DESC" }]
 
             ;; state
             :operation      {:type  nil
@@ -52,6 +54,7 @@
     :where (where/handle state value)
     :delete (delete/handle state value)
     :from (from/handle state value)
+    :order (order/handle state value)
     (update state :errors conj [type "Unknown operation type in parse tree"])))
 
 (defn handle-ops [state ops]

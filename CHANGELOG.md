@@ -13,6 +13,11 @@ company | name = null
 company | name is not null
 ```
 
+- Support for `order`:
+```
+company | order: created_at
+company | order: country, created_at asc
+```
 
 ## [0.8.1] - 2024-07-30
 ### Fixed
