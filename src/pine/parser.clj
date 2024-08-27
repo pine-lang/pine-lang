@@ -68,17 +68,17 @@
 
 (defn- -normalize-column [column]
   (match column
-    [:column [:symbol c]]                                   {:column c}
-    [:column [:symbol a] [:symbol c]]                       {:alias a :column c}
-    [:column [:symbol c]]                                   {:column c}
-    [:column [:symbol c] [:alias [:symbol ca]]]             {:column c :column-alias ca}
-    [:column [:symbol a] [:symbol c] [:alias [:symbol ca]]] {:alias a :column c :column-alias ca}
+    [:q-column [:symbol c]]                                   {:column c}
+    [:q-column [:symbol a] [:symbol c]]                       {:alias a :column c}
+    [:q-column [:symbol c]]                                   {:column c}
+    [:q-column [:symbol c] [:alias [:symbol ca]]]             {:column c :column-alias ca}
+    [:q-column [:symbol a] [:symbol c] [:alias [:symbol ca]]] {:alias a :column c :column-alias ca}
 
     :else                 (throw (ex-info "Unknown COLUMN operation" {:_ column}))))
 
 (defmethod -normalize-op :SELECT [[_ payload]]
   (match payload
-    [:columns & columns] {:type :select :value (mapv -normalize-column columns)}
+    [:q-columns & columns] {:type :select :value (mapv -normalize-column columns)}
     :else                (throw (ex-info "Unknown SELECT operation" {:_ payload}))))
 
 ;; -----

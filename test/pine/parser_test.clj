@@ -84,5 +84,8 @@
     (is (= [{:type :where, :value ["age" "IN" [(dt/string "24") (dt/string "36")]]}] (p "age in (  '24' ,'36' )")))
     (is (= [{:type :where, :value ["age" "IN" [(dt/string "24") (dt/string "36")]]}] (p "age in ('24' '36')"))))
 
+  (testing "Parse `order` expressions"
+    (is (= [{:type :order, :value [{:column  "name"}]}]                              (p "order: name"))))
+
   (testing "Parse `delete` expressions"
     (is (= [{:type :delete, :value {:column "id"}}] (p "delete! .id")))))

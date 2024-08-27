@@ -1,13 +1,14 @@
 OPERATIONS := <ws*> OPERATION <ws*> (<"|"> <ws*> OPERATION <ws*>)*
-OPERATION  := SELECT | TABLE | WHERE | LIMIT | DELETE | FROM
+OPERATION  := SELECT | TABLE | WHERE | LIMIT | DELETE | FROM | ORDER
 
 TABLE           := table (<ws+> hint-column)? (<ws+> as-alias)?
 
-SELECT          := <"select:"> <ws*> columns     | <"s:"> <ws*> columns
+SELECT          := <"select:"> <ws*> q-columns   | <"s:"> <ws*> q-columns
 WHERE           := <"where:">  <ws*> condition   | <"w:"> <ws*> condition | condition
 LIMIT           := <"limit:">  <ws*> number      | <"l:"> <ws*> number    | number
 DELETE          := <"delete!"> <ws*> hint-column | <"d!"> <ws*> hint-column
 FROM            := <"from:">   <ws*> alias       | <"f:"> <ws*> alias
+ORDER           := <"order:">  <ws*> columns     | <"o:"> <ws*> columns
 
 <table>         := child | parent | symbol* | symbol <"."> symbol*
 <child>         := "has:" <ws*> symbol+ | "has:" <ws*> symbol <"."> symbol+
@@ -19,10 +20,12 @@ condition       := symbol <ws*> operator <ws*> (not <ws+>)? (string|number|null)
 <condition-in>  := symbol <ws*> in <ws*>  <"("> strings* <")">
 <strings>       := <ws*> string <ws*> <",">?
 
+q-columns       := q-column (<","> <ws*> q-column)*
 columns         := column (<","> <ws*> column)*
-column          := qualified-column
+q-column        := qualified-column
 hint-column     := <"."> symbol
 
+<column>                  := symbol
 <qualified-column>        := qualified-symbol | qualified-symbol <ws+> as-alias
 <qualified-symbol>        := symbol* | symbol <"."> symbol*
 <as-alias>                := <"as"> <ws+> alias
