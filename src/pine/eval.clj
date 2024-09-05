@@ -48,7 +48,7 @@
   "Remove symbols from a vector of values"
   (filter #(not (= (:type %) :symbol)) vs))
 
-(defn build-select-clause [state]
+(defn build-select-query [state]
   (let [{:keys [tables columns limit where aliases]} state
         from         (let [{a :alias} (first tables)
                            {table :table schema :schema} (get aliases a)]
@@ -73,12 +73,17 @@
 
     {:query query :params params}))
 
+(defn build-count-query [state]
+  (let [{:keys [query params]} (build-select-query state)]
+    {:query (str "SELECT COUNT(*) FROM ( " query " )")
+     :params params}))
+
 (defn build-delete-query [state]
   (let [{:keys [delete current aliases]} state
         {table :table schema :schema}     (get aliases current)
         {:keys [column]}                  delete
         state                             (assoc state :columns [{:column column :alias current}])
-        {:keys [query params]}            (build-select-clause state)]
+        {:keys [query params]}            (build-select-query state)]
     {:query (str "DELETE FROM " (q schema table) " WHERE " (q column) " IN ( "  query " )")
      :params params}))
 
@@ -86,7 +91,8 @@
   (let [{:keys [type]} (state :operation)]
     (cond
       (= type :delete) (build-delete-query state)
-      :else (build-select-clause state))))
+      (= type :count) (build-count-query state)
+      :else (build-select-query state))))
 
 (defn formatted-query [{:keys [query params]}]
   (let [replacer (fn [s param]

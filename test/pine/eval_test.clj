@@ -20,6 +20,16 @@
     (is (= "\"x\"" (q "x")))
     (is (= "\"x\".\"y\"" (q "x" "y"))))
 
+  (testing "Select"
+    (is (= {:query "SELECT c_0.* FROM \"company\" AS \"c_0\" LIMIT 250",
+            :params nil}
+           (generate "company"))))
+
+  (testing "Count"
+    (is (= {:query "SELECT COUNT(*) FROM ( SELECT c_0.* FROM \"company\" AS \"c_0\" LIMIT 250 )",
+            :params nil}
+           (generate "company | count:"))))
+
   (testing "Condition"
 
     (is (= {:query "SELECT c_0.* FROM \"company\" AS \"c_0\" WHERE \"c_0\".\"name\" = ? LIMIT 250",

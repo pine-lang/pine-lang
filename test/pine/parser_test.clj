@@ -91,5 +91,11 @@
     (is (= [{:type :order, :value [{:column  "name" :direction "DESC"}
                                    {:column "created_at" :direction "ASC"}]}]       (p "order: name, created_at asc"))))
 
+  (testing "Parse `count` expressions"
+    (is (= [{:type :count, :value {:column "*"}}] (p "count:"))))
+
   (testing "Parse `delete` expressions"
-    (is (= [{:type :delete, :value {:column "id"}}] (p "delete! .id")))))
+    (is (= [{:type :delete, :value {:column "id"}}] (p "delete! .id"))))
+
+  (testing "Parse `delete-cascade` expressions"
+    (is (= [{:type :delete-cascade, :value {:column "id"}}] (p "delete-cascade! .id")))))
