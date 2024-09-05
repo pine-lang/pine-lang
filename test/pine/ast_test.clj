@@ -113,5 +113,11 @@
     (is (= {:join-map {"e_0" {"e_1" ["e_0" "reports_to" :of "e_1" "id"]}} :joins [["e_0" "e_1" ["e_0" "reports_to" :of "e_1" "id"]]]}
            (generate-joins "employee | employee^ .reports_to"))))
 
+  (testing "Generate ast for `count`"
+    (is (= {:column "*"} (generate :count "company | count:"))))
+
   (testing "Generate ast for `delete`"
-    (is (= {:column "id"} (generate :delete "company | delete! .id")))))
+    (is (= {:column "id"} (generate :delete "company | delete! .id"))))
+
+  (testing "Generate ast for `delete-cascade`"
+    (is (= {:column "id"} (generate :delete-cascade "company | delete-cascade! .id")))))

@@ -4,6 +4,14 @@ log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Added
+
+- Support for `count:`:
+
+```
+company | count:
+```
+
 ## [0.9.0] - 2024-09-04
 ### Added
 

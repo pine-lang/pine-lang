@@ -130,6 +130,13 @@
     :else (throw (ex-info "Unknown FROM operation" {:_ payload}))))
 
 ;; -----
+;; COUNT
+;; -----
+
+(defmethod -normalize-op :COUNT [[_ [_ payload]]]
+  {:type :count :value {:column "*"}})
+
+;; -----
 ;; DELETE
 ;; -----
 
@@ -137,6 +144,15 @@
   (match payload
     [:symbol c] {:type :delete :value {:column c}}
     :else (throw (ex-info "Unknown DELETE operation" {:_ payload}))))
+
+;; --------------
+;; DELETE-CASCADE
+;; --------------
+
+(defmethod -normalize-op :DELETE-CASCADE [[_ [_ payload]]]
+  (match payload
+    [:symbol c] {:type :delete-cascade :value {:column c}}
+    :else (throw (ex-info "Unknown DELETE-CASCADE operation" {:_ payload}))))
 
 ;; -----
 

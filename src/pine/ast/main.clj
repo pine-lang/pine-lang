@@ -8,7 +8,9 @@
             [pine.ast.select :as select]
             [pine.ast.delete :as delete]
             [pine.ast.from :as from]
-            [pine.ast.order :as order]))
+            [pine.ast.order :as order]
+            [pine.ast.delete-cascade :as delete-cascade]
+            [pine.ast.count :as pine-count]))
 
 (def state {;; pre
             ;; - connection
@@ -52,9 +54,11 @@
     :table (table/handle state value)
     :limit (limit/handle state value)
     :where (where/handle state value)
-    :delete (delete/handle state value)
     :from (from/handle state value)
     :order (order/handle state value)
+    :count (pine-count/handle state value)
+    :delete (delete/handle state value)
+    :delete-cascade (delete-cascade/handle state value)
     (update state :errors conj [type "Unknown operation type in parse tree"])))
 
 (defn handle-ops [state ops]
