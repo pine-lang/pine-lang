@@ -16,7 +16,7 @@ DELETE-CASCADE  := <"delete-cascade!"> <ws*> hint-column
 <child>         := "has:" <ws*> symbol+ | "has:" <ws*> symbol <"."> symbol+
 <parent>        := "of:"  <ws*> symbol+ | "of:"  <ws*> symbol <"."> symbol+ | symbol+ "^" | symbol <"."> symbol+ "^"
 
-condition       := symbol <ws*> operator <ws*> (string|number|null) | condition-in
+condition       := symbol <ws*> operator <ws*> (column|string|number|null) | condition-in
 <condition-in>  := symbol <ws*> in <ws*>  <"("> strings* <")">
 <strings>       := <ws*> string <ws*> <",">?
 

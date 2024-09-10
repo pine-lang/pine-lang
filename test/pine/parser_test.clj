@@ -68,16 +68,18 @@
     (is (= [{:type :limit, :value 10}]  (p "10"))))
 
   (testing "Parse `where` expressions"
-    (is (= [{:type :where, :value ["name" "=" (dt/string "John Doe")]}] (p "where: name='John Doe'")))
-    (is (= [{:type :where, :value ["name" "=" (dt/string "John Doe")]}] (p "w: name='John Doe'")))
-    (is (= [{:type :where, :value ["name" "=" (dt/string "John Doe")]}] (p "name = 'John Doe'")))
-    (is (= [{:type :where, :value ["name" "=" (dt/string "John Doe")]}] (p "name='John Doe'")))
-    (is (= [{:type :where, :value ["name" "LIKE" (dt/string "John%")]}] (p "name like 'John%'")))
-    (is (= [{:type :where, :value ["age" "IS" (dt/symbol "NULL")]}]     (p "age is null")))
-    (is (= [{:type :where, :value ["age" "IS" (dt/symbol "NULL")]}]     (p "age = null")))
-    (is (= [{:type :where, :value ["age" "IS NOT" (dt/symbol "NULL")]}] (p "age is not null")))
-    (is (= [{:type :where, :value ["age" "=" (dt/number "24")]}]        (p "age = 24")))
-    (is (= [{:type :where, :value ["age" "!=" (dt/number "24")]}]        (p "age != 24")))
+    (is (= [{:type :where, :value ["name" "=" (dt/string "John Doe")]}]       (p "where: name='John Doe'")))
+    (is (= [{:type :where, :value ["name" "=" (dt/string "John Doe")]}]       (p "w: name='John Doe'")))
+    (is (= [{:type :where, :value ["name" "=" (dt/string "John Doe")]}]       (p "name = 'John Doe'")))
+    (is (= [{:type :where, :value ["name" "=" (dt/string "John Doe")]}]       (p "name='John Doe'")))
+    (is (= [{:type :where, :value ["name" "LIKE" (dt/string "John%")]}]       (p "name like 'John%'")))
+    (is (= [{:type :where, :value ["age" "IS" (dt/symbol "NULL")]}]           (p "age is null")))
+    (is (= [{:type :where, :value ["age" "IS" (dt/symbol "NULL")]}]           (p "age = null")))
+    (is (= [{:type :where, :value ["age" "IS NOT" (dt/symbol "NULL")]}]       (p "age is not null")))
+    (is (= [{:type :where, :value ["age" "=" (dt/number "24")]}]              (p "age = 24")))
+    (is (= [{:type :where, :value ["age" "!=" (dt/number "24")]}]             (p "age != 24")))
+    (is (= [{:type :where, :value ["name" "=" (dt/column "first_name")]}]     (p "name = first_name")))
+    (is (= [{:type :where, :value ["name" "=" (dt/column "x" "first_name")]}] (p "name = x.first_name")))
     )
 
   (testing "Parse `where` `in` expressions"
