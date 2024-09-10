@@ -76,7 +76,9 @@
     (is (= [{:type :where, :value ["age" "IS" (dt/symbol "NULL")]}]     (p "age is null")))
     (is (= [{:type :where, :value ["age" "IS" (dt/symbol "NULL")]}]     (p "age = null")))
     (is (= [{:type :where, :value ["age" "IS NOT" (dt/symbol "NULL")]}] (p "age is not null")))
-    (is (= [{:type :where, :value ["age" "=" (dt/number "24")]}]        (p "age = 24"))))
+    (is (= [{:type :where, :value ["age" "=" (dt/number "24")]}]        (p "age = 24")))
+    (is (= [{:type :where, :value ["age" "!=" (dt/number "24")]}]        (p "age != 24")))
+    )
 
   (testing "Parse `where` `in` expressions"
     (is (= [{:type :where, :value ["age" "IN" [(dt/string "24")]]}]                  (p "age in ('24')")))

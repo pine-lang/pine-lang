@@ -103,13 +103,16 @@
 
 (defmethod -normalize-op :WHERE [[_ payload]]
   (match payload
-    [:condition [:symbol column] [:equals _] [:number value]]        {:type :where :value [column "=" (dt/number value)]}
-    [:condition [:symbol column] [:is _] [:null _]]                  {:type :where :value [column "IS" (dt/symbol "NULL")]}
-    [:condition [:symbol column] [:is _] [:not _] [:null _]]         {:type :where :value [column "IS NOT" (dt/symbol "NULL")]}
-    [:condition [:symbol column] [:equals _] [:null _]]              {:type :where :value [column "IS" (dt/symbol "NULL")]}
-    [:condition [:symbol column] [:equals _] string]                 {:type :where :value [column "=" (parse-characters string)]}
-    [:condition [:symbol column] [:like _] string]                   {:type :where :value [column "LIKE" (parse-characters string)]}
-    [:condition [:symbol column] [:in _]  & strings]                 {:type :where :value [column "IN" (map parse-characters strings)]}
+    [:condition [:symbol column] [:equals] [:number value]]         {:type :where :value [column "=" (dt/number value)]}
+    [:condition [:symbol column] [:equals] [:null]]                 {:type :where :value [column "IS" (dt/symbol "NULL")]}
+    [:condition [:symbol column] [:equals] string]                  {:type :where :value [column "=" (parse-characters string)]}
+    [:condition [:symbol column] [:does-not-equal] [:number value]] {:type :where :value [column "!=" (dt/number value)]}
+    [:condition [:symbol column] [:does-not-equal] [:null]]         {:type :where :value [column "IS NOT" (dt/symbol "NULL")]}
+    [:condition [:symbol column] [:does-not-equal] string]          {:type :where :value [column "!=" (parse-characters string)]}
+    [:condition [:symbol column] [:is] [:null]]                     {:type :where :value [column "IS" (dt/symbol "NULL")]}
+    [:condition [:symbol column] [:is-not] [:null]]                 {:type :where :value [column "IS NOT" (dt/symbol "NULL")]}
+    [:condition [:symbol column] [:like] string]                    {:type :where :value [column "LIKE" (parse-characters string)]}
+    [:condition [:symbol column] [:in]  & strings]                  {:type :where :value [column "IN" (map parse-characters strings)]}
     :else                (throw (ex-info "Unknown WHERE operation"      {:_ payload}))))
 
 ;; -----
