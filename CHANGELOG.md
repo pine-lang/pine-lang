@@ -14,6 +14,13 @@ log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 company | count:
 ```
 
+- `where:` supports comparing values between columns of different tables
+
+```
+company | where: name = city
+company as c | where: name != c.city
+```
+
 ## [0.9.0] - 2024-09-04
 ### Added
 

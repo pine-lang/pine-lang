@@ -45,8 +45,8 @@
                (str (q alias column) " " direction)) order)))))
 
 (defn- remove-symbols [vs]
-  "Remove symbols from a vector of values"
-  (filter #(not (= (:type %) :symbol)) vs))
+  "Remove symbols or columns from a vector of values"
+  (filter #(not (or (= (:type %) :symbol) (= (:type %) :column))) vs))
 
 (defn build-select-query [state]
   (let [{:keys [tables columns limit where aliases]} state
@@ -61,7 +61,10 @@
                                                  (for [[a col op value] where]
                                                    (if (= op "IN")
                                                      (str (q a col) " IN (" (clojure.string/join ", " (repeat (count value) "?"))  ")")
-                                                     (str (q a col) " " op " " (if (= (:type value) :symbol) (:value value) "?")))))))
+                                                     (str (q a col) " " op " " (cond
+                                                                                 (= (:type value) :symbol) (:value value)
+                                                                                 (= (:type value) :column) (let [[a col] (:value value)] (q a col))
+                                                                                 :else "?")))))))
         order (build-order-clause state)
         limit (str "LIMIT " (or limit 250))
         query (clojure.string/join " " (filter some? [select from join where-clause order limit]))
