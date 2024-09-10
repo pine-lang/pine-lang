@@ -17,8 +17,8 @@ company | count:
 - `where:` supports comparing values between columns of different tables
 
 ```
-company | where: name = city
-company as c | where: name != c.city
+folder as f | document | where: name = f.name
+folder as f | document | name != f.name
 ```
 
 ## [0.9.0] - 2024-09-04
