@@ -28,8 +28,13 @@ folder as f | document | name != f.name
 
 ```
 company | name is null
-company | name = null
 company | name is not null
+```
+
+which also works with the `=` operator:
+```
+company | name = null
+company | name != null
 ```
 
 - Support for `order`:
