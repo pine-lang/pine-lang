@@ -19,7 +19,7 @@
 (add-encoder org.postgresql.util.PGobject encode-str)
 (add-encoder org.postgresql.jdbc.PgArray encode-str)
 
-(def version "0.9.0")
+(def version "0.10.0")
 
 (defn- generate-state [expression]
   (let [{:keys [result error]} (->> expression parser/parse)]
