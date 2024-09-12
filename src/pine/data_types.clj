@@ -10,3 +10,7 @@
 
 (defn symbol [x]
   (t :symbol x))
+
+(defn column
+  ([column] (t :column [nil column]))
+  ([alias column] (t :column [alias column])))

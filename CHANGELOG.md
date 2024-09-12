@@ -8,6 +8,17 @@ log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 ## [0.10.0] - 2024-09-12
 ### Added
 
+- `where:` supports comparing values between columns of different tables
+
+```
+folder as f | document | where: name = f.name
+folder as f | document | name != f.name
+```
+
+
+## [0.10.0] - 2024-09-12
+### Added
+
 - Support for `count:`:
 
 ```
@@ -21,8 +32,13 @@ company | count:
 
 ```
 company | name is null
-company | name = null
 company | name is not null
+```
+
+which also works with the `=` operator:
+```
+company | name = null
+company | name != null
 ```
 
 - Support for `order`:

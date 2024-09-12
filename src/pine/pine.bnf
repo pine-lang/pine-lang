@@ -16,7 +16,7 @@ DELETE-CASCADE  := <"delete-cascade!"> <ws*> hint-column
 <child>         := "has:" <ws*> symbol+ | "has:" <ws*> symbol <"."> symbol+
 <parent>        := "of:"  <ws*> symbol+ | "of:"  <ws*> symbol <"."> symbol+ | symbol+ "^" | symbol <"."> symbol+ "^"
 
-condition       := symbol <ws*> operator <ws*> (not <ws+>)? (string|number|null) | condition-in
+condition       := symbol <ws*> operator <ws*> (column|string|number|null) | condition-in
 <condition-in>  := symbol <ws*> in <ws*>  <"("> strings* <")">
 <strings>       := <ws*> string <ws*> <",">?
 
@@ -40,11 +40,13 @@ string   := <"'"> char* <"'">
 number   := #"[0-9]+"
 ws       := #"\s+"
 <char>   := #'[^\']'
-<operator> := like | equals | is
-like     := "like"
-equals   := "="
-is       := "is"
-in       := "in"
-null     := "null"
-not      := "not"
+
+<operator>     := like | does-not-equal | equals | is | is-not
+like           := <"like">
+does-not-equal := <"!"> <ws*> <"=">
+equals         := <"=">
+is             := <"is">
+is-not         := <"is"> <ws*> <"not">
+in             := <"in">
+null           := <"null">
 

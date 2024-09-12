@@ -30,19 +30,39 @@
             :params nil}
            (generate "company | count:"))))
 
-  (testing "Condition"
-
+  (testing "Condition : ="
     (is (= {:query "SELECT c_0.* FROM \"company\" AS \"c_0\" WHERE \"c_0\".\"name\" = ? LIMIT 250",
             :params (map dt/string ["Acme Inc."])}
            (generate "company | where: name='Acme Inc.'")))
     (is (= {:query "SELECT c_0.* FROM \"company\" AS \"c_0\" WHERE \"c_0\".\"name\" LIKE ? AND \"c_0\".\"country\" = ? LIMIT 250",
             :params (map dt/string ["Acme%", "PK"])}
-           (generate "company | where: name like 'Acme%' | country = 'PK'")))
+           (generate "company | where: name like 'Acme%' | country = 'PK'"))))
+
+  (testing "Condition : !="
+    (is (= {:query "SELECT c_0.* FROM \"company\" AS \"c_0\" WHERE \"c_0\".\"name\" != ? LIMIT 250",
+            :params (map dt/string ["Acme Inc."])}
+           (generate "company | where: name != 'Acme Inc.'"))))
+
+  (testing "Condition : IN"
     (is (= {:query "SELECT c_0.* FROM \"company\" AS \"c_0\" WHERE \"c_0\".\"country\" IN (?, ?) LIMIT 250",
             :params (map dt/string ["PK", "DK"])}
            (generate "company | where: country in ('PK' 'DK')"))))
 
-  (testing "Condition with null"
+  (testing "Condition : columns"
+    (is (= {:query "SELECT c_0.* FROM \"company\" AS \"c_0\" WHERE \"c_0\".\"name\" = \"country\" LIMIT 250",
+            :params (map dt/string [])}
+           (generate "company | where: name = country")))
+    (is (= {:query "SELECT c.* FROM \"company\" AS \"c\" WHERE \"c\".\"name\" != \"c\".\"country\" LIMIT 250",
+            :params (map dt/string [])}
+           (generate "company as c | name != c.country")))
+    ;; aliasing for both the columns is not supported yet
+    ;;
+    ;; (is (= {:query "SELECT c.* FROM \"company\" AS \"c\" WHERE \"c\".\"name\" != \"c\".\"country\" LIMIT 250",
+    ;;         :params (map dt/string [])}
+    ;;        (generate "company as c | c.name != c.country")))
+    )
+
+  (testing "Condition : NULL"
     (is (= {:query "SELECT c_0.* FROM \"company\" AS \"c_0\" WHERE \"c_0\".\"deleted_at\" IS NULL LIMIT 250",
             :params []}
            (generate "company | where: deleted_at is null")))
