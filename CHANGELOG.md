@@ -5,7 +5,7 @@ log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 ## [Unreleased]
 
 
-## [0.10.0] - 2024-09-12
+## [0.11.0] - 2024-09-12
 ### Added
 
 - `where:` supports comparing values between columns of different tables
