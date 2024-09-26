@@ -48,6 +48,7 @@
         (if error result
             {:connection-id connection-name
              :version version
+             :time (db/run-query (state :connection-id) {:query "SELECT NOW() AT TIME ZONE 'UTC' AS utc, NOW() AS db;"})
              :result (eval/run-query state)}))
       (catch Exception e {:connection-id connection-name
                           :error (.getMessage e)}))))

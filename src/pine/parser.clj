@@ -99,24 +99,31 @@
 ;; WHERE
 ;; -----
 
-(defn- parse-characters [[_ & characters]] {:type :string :value (apply str characters)})
+(defn- parse-characters [characters] {:type :string :value (apply str characters)})
+(defn- parse-strings [[_ & characters]] (parse-characters characters))
 
-(defmethod -normalize-op :WHERE [[_ payload]]
-  (match payload
+(defn- parse-condition [condition]
+  (match condition
     [:condition [:symbol column] [:equals] [:number value]]                                    {:type :where :value [column "=" (dt/number value)]}
     [:condition [:symbol column] [:equals] [:null]]                                            {:type :where :value [column "IS" (dt/symbol "NULL")]}
     [:condition [:symbol column] [:equals] [:column [:symbol c]]]                              {:type :where :value [column "=" (dt/column c)]}
     [:condition [:symbol column] [:equals] [:column [:alias [:symbol a]] [:symbol c]]]         {:type :where :value [column "=" (dt/column a c)]}
-    [:condition [:symbol column] [:equals] string]                                             {:type :where :value [column "=" (parse-characters string)]}
+    [:condition [:symbol column] [:equals] [:string & characters]]                             {:type :where :value [column "=" (parse-characters characters)]}
     [:condition [:symbol column] [:does-not-equal] [:number value]]                            {:type :where :value [column "!=" (dt/number value)]}
     [:condition [:symbol column] [:does-not-equal] [:null]]                                    {:type :where :value [column "IS NOT" (dt/symbol "NULL")]}
     [:condition [:symbol column] [:does-not-equal] [:column [:symbol c]]]                      {:type :where :value [column "!=" (dt/column c)]}
     [:condition [:symbol column] [:does-not-equal] [:column [:alias [:symbol a]] [:symbol c]]] {:type :where :value [column "!=" (dt/column a c)]}
-    [:condition [:symbol column] [:does-not-equal] string]                                     {:type :where :value [column "!=" (parse-characters string)]}
+    [:condition [:symbol column] [:does-not-equal] [:string & characters]]                     {:type :where :value [column "!=" (parse-characters characters)]}
     [:condition [:symbol column] [:is] [:null]]                                                {:type :where :value [column "IS" (dt/symbol "NULL")]}
     [:condition [:symbol column] [:is-not] [:null]]                                            {:type :where :value [column "IS NOT" (dt/symbol "NULL")]}
-    [:condition [:symbol column] [:like] string]                                               {:type :where :value [column "LIKE" (parse-characters string)]}
-    [:condition [:symbol column] [:in]  & strings]                                             {:type :where :value [column "IN" (map parse-characters strings)]}
+    [:condition [:symbol column] [:like] [:string & characters]]                               {:type :where :value [column "LIKE" (parse-characters characters)]}
+    [:condition [:symbol column] [:in] & strings]                                              {:type :where :value [column "IN" (map parse-strings strings)]}
+    [:condition [:symbol column] [:not-in] & strings]                                          {:type :where :value [column "NOT IN" (map parse-strings strings)]}
+    :else                (throw (ex-info "Unknown condition in WHERE operation"      {:_ condition}))))
+
+(defmethod -normalize-op :WHERE [[_ payload]]
+  (match payload
+    [:conditions & conditions] (first (map parse-condition conditions))
     :else                (throw (ex-info "Unknown WHERE operation"      {:_ payload}))))
 
 ;; -----
