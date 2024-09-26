@@ -5,6 +5,10 @@ log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 ## [Unreleased]
 
 
+
+### Added
+- Support for `not in` operator
+
 ## [0.11.0] - 2024-09-12
 ### Added
 
