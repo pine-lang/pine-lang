@@ -123,7 +123,7 @@
 
 (defmethod -normalize-op :WHERE [[_ payload]]
   (match payload
-         [:conditions & conditions] (first (map parse-condition conditions))
+    [:conditions & conditions] (first (map parse-condition conditions))
     :else                (throw (ex-info "Unknown WHERE operation"      {:_ payload}))))
 
 ;; -----
