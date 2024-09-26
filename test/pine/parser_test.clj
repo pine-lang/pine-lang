@@ -84,6 +84,10 @@
     ;; (is (= [{:type :where, :value ["name" "=" (dt/column "x" "first_name")]}] (p "x.name = x.first_name")))
     )
 
+  (testing "Parse `where` `or` expressions"
+    (is (= [{:type :where, :value ["name" "=" (dt/string "John Doe")]}]       (p "w: name='John Doe', age=24 ")))
+    )
+
   (testing "Parse `where` `in` expressions"
     (is (= [{:type :where, :value ["age" "IN" [(dt/string "24")]]}]                  (p "age in ('24')")))
     (is (= [{:type :where, :value ["age" "IN" [(dt/string "24")]]}]                  (p "age in ('24' ) ")))

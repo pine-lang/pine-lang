@@ -59,8 +59,8 @@
                        (str "WHERE "
                             (clojure.string/join " AND "
                                                  (for [[a col op value] where]
-                                                   (if (= op "IN")
-                                                     (str (q a col) " IN (" (clojure.string/join ", " (repeat (count value) "?"))  ")")
+                                                   (if (or (= op "IN") (= op "NOT IN"))
+                                                     (str (q a col) " " op " (" (clojure.string/join ", " (repeat (count value) "?"))  ")")
                                                      (str (q a col) " " op " " (cond
                                                                                  (= (:type value) :symbol) (:value value)
                                                                                  (= (:type value) :column) (let [[a col] (:value value)] (q a col))

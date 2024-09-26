@@ -4,7 +4,7 @@ OPERATION  := SELECT | TABLE | WHERE | LIMIT| FROM | ORDER | COUNT | DELETE | DE
 TABLE           := table (<ws+> hint-column)? (<ws+> as-alias)?
 
 SELECT          := <"select:"> <ws*> aliased-columns | <"s:"> <ws*> aliased-columns
-WHERE           := <"where:">  <ws*> condition       | <"w:"> <ws*> condition | condition
+WHERE           := <"where:">  <ws*> conditions      | <"w:"> <ws*> conditions | conditions
 LIMIT           := <"limit:">  <ws*> number          | <"l:"> <ws*> number    | number
 FROM            := <"from:">   <ws*> alias           | <"f:"> <ws*> alias
 ORDER           := <"order:">  <ws*> order-columns   | <"o:"> <ws*> order-columns
@@ -16,8 +16,9 @@ DELETE-CASCADE  := <"delete-cascade!"> <ws*> hint-column
 <child>         := "has:" <ws*> symbol+ | "has:" <ws*> symbol <"."> symbol+
 <parent>        := "of:"  <ws*> symbol+ | "of:"  <ws*> symbol <"."> symbol+ | symbol+ "^" | symbol <"."> symbol+ "^"
 
+conditions      := condition (<","> <ws*> condition)*
 condition       := symbol <ws*> operator <ws*> (column|string|number|null) | condition-in
-<condition-in>  := symbol <ws*> in <ws*>  <"("> strings* <")">
+<condition-in>  := symbol <ws*> (in  | not-in) <ws*>  <"("> strings* <")">
 <strings>       := <ws*> string <ws*> <",">?
 
 aliased-columns := aliased-column (<","> <ws*> aliased-column)*
@@ -48,5 +49,6 @@ equals         := <"=">
 is             := <"is">
 is-not         := <"is"> <ws*> <"not">
 in             := <"in">
+not-in         := <"not"> <ws*> <"in">
 null           := <"null">
 
