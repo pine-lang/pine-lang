@@ -159,14 +159,14 @@
     [:symbol c] {:type :delete :value {:column c}}
     :else (throw (ex-info "Unknown DELETE operation" {:_ payload}))))
 
-;; --------------
-;; DELETE-CASCADE
-;; --------------
+;; -----
+;; UI-OP
+;; -----
 
-(defmethod -normalize-op :DELETE-CASCADE [[_ [_ payload]]]
+(defmethod -normalize-op :UI-OP [[_ payload]]
   (match payload
-    [:symbol c] {:type :delete-cascade :value {:column c}}
-    :else (throw (ex-info "Unknown DELETE-CASCADE operation" {:_ payload}))))
+         [:symbol c] {:type :no-op :value c}
+         :else (throw (ex-info "Unknown UI-OP operation" {:_ payload}))))
 
 ;; -----
 

@@ -1,16 +1,19 @@
-OPERATIONS := <ws*> OPERATION <ws*> (<"|"> <ws*> OPERATION <ws*>)*
-OPERATION  := SELECT | TABLE | WHERE | LIMIT| FROM | ORDER | COUNT | DELETE | DELETE-CASCADE
+OPERATIONS := <ws*> OPERATION <ws*> (<"|"> <ws*> OPERATION <ws*>)* (<">"> <ws*> UI-OPERATION)?
 
-TABLE           := table (<ws+> hint-column)? (<ws+> as-alias)?
+OPERATION    := SELECT | TABLE | WHERE | LIMIT| FROM | ORDER | COUNT | DELETE
+UI-OPERATION := UI-OP
 
-SELECT          := <"select:"> <ws*> aliased-columns | <"s:"> <ws*> aliased-columns
-WHERE           := <"where:">  <ws*> conditions      | <"w:"> <ws*> conditions | conditions
-LIMIT           := <"limit:">  <ws*> number          | <"l:"> <ws*> number    | number
-FROM            := <"from:">   <ws*> alias           | <"f:"> <ws*> alias
-ORDER           := <"order:">  <ws*> order-columns   | <"o:"> <ws*> order-columns
-COUNT           := <"count:">
-DELETE          := <"delete!"> <ws*> hint-column     | <"d!"> <ws*> hint-column
-DELETE-CASCADE  := <"delete-cascade!"> <ws*> hint-column
+UI-OP        := symbol
+
+TABLE             := table (<ws+> hint-column)? (<ws+> as-alias)?
+
+SELECT            := <"select:"> <ws*> aliased-columns | <"s:"> <ws*> aliased-columns
+WHERE             := <"where:">  <ws*> conditions      | <"w:"> <ws*> conditions | conditions
+LIMIT             := <"limit:">  <ws*> number          | <"l:"> <ws*> number    | number
+FROM              := <"from:">   <ws*> alias           | <"f:"> <ws*> alias
+ORDER             := <"order:">  <ws*> order-columns   | <"o:"> <ws*> order-columns
+COUNT             := <"count:">
+DELETE            := <"delete!"> <ws*> hint-column     | <"d!"> <ws*> hint-column
 
 <table>         := child | parent | symbol* | symbol <"."> symbol*
 <child>         := "has:" <ws*> symbol+ | "has:" <ws*> symbol <"."> symbol+
