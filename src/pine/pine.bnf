@@ -1,9 +1,7 @@
-OPERATIONS := <ws*> OPERATION <ws*> (<"|"> <ws*> OPERATION <ws*>)* (<">"> <ws*> UI-OPERATION)?
+OPERATIONS := <ws*> OPERATION <ws*> (<"|"> <ws*> OPERATION <ws*>)*
 
-OPERATION    := SELECT | TABLE | WHERE | LIMIT| FROM | ORDER | COUNT | DELETE
-UI-OPERATION := UI-OP
+OPERATION    := SELECT | TABLE | WHERE | LIMIT| FROM | ORDER | COUNT | DELETE-ACTION | DELETE
 
-UI-OP        := symbol
 
 TABLE             := table (<ws+> hint-column)? (<ws+> as-alias)?
 
@@ -13,7 +11,8 @@ LIMIT             := <"limit:">  <ws*> number          | <"l:"> <ws*> number    
 FROM              := <"from:">   <ws*> alias           | <"f:"> <ws*> alias
 ORDER             := <"order:">  <ws*> order-columns   | <"o:"> <ws*> order-columns
 COUNT             := <"count:">
-DELETE            := <"delete!"> <ws*> hint-column     | <"d!"> <ws*> hint-column
+DELETE-ACTION     := <"delete!"> <ws*> hint-column     | <"d!"> <ws*> hint-column
+DELETE            := <"delete:">                       | <"d:">
 
 <table>         := child | parent | symbol* | symbol <"."> symbol*
 <child>         := "has:" <ws*> symbol+ | "has:" <ws*> symbol <"."> symbol+

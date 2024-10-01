@@ -6,10 +6,10 @@
             [pine.ast.where :as where]
             [pine.ast.hints :as hints]
             [pine.ast.select :as select]
-            [pine.ast.delete :as delete]
             [pine.ast.from :as from]
             [pine.ast.order :as order]
-            [pine.ast.count :as pine-count]))
+            [pine.ast.count :as pine-count]
+            [pine.ast.delete-action :as delete-action]))
 
 (def state {;; pre
             ;; - connection
@@ -56,7 +56,7 @@
     :from (from/handle state value)
     :order (order/handle state value)
     :count (pine-count/handle state value)
-    :delete (delete/handle state value)
+    :delete-action (delete-action/handle state value)
     :no-op state
     (update state :errors conj [type "Unknown operation type in parse tree"])))
 

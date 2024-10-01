@@ -103,8 +103,8 @@
   (testing "Parse `count` expressions"
     (is (= [{:type :count, :value {:column "*"}}] (p "count:"))))
 
-  (testing "Parse `delete` expressions"
-    (is (= [{:type :delete, :value {:column "id"}}] (p "delete! .id"))))
+  (testing "Parse `delete!` expressions"
+    (is (= [{:type :delete-action, :value {:column "id"}}] (p "delete! .id"))))
 
-  (testing "Parse `no-op` expressions"
-    (is (= [{:value {:table "company"}, :type :table} {:type :no-op, :value "delete"}] (p "company > delete")))))
+  (testing "Parse No Operation expressions"
+    (is (= [{:value {:table "company"}, :type :table} {:type :delete, :value nil}] (p "company | d:")))))

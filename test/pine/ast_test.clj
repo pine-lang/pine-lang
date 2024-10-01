@@ -117,6 +117,4 @@
     (is (= {:column "*"} (generate :count "company | count:"))))
 
   (testing "Generate ast for `delete`"
-    (is (= {:column "id"} (generate :delete "company | delete! .id"))))
-
-  )
+    (is (= {:column "id"} (generate :delete "company | delete! .id")))))

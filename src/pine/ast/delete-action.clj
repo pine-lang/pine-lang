@@ -1,4 +1,4 @@
-(ns pine.ast.delete)
+(ns pine.ast.delete-action)
 
 (defn handle [state column]
   (assoc state :delete column))

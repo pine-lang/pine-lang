@@ -114,10 +114,14 @@
             :params nil}
            (generate "company | s: id | employee | s: id"))))
 
-  (testing "delete"
+  (testing "delete action"
     (is (= {:query "DELETE FROM \"company\" WHERE \"id\" IN ( SELECT \"c_0\".\"id\" FROM \"company\" AS \"c_0\" LIMIT 250 )",
             :params nil}
-           (generate "company | delete! .id")))))
+           (generate "company | delete! .id"))))
+
+  (testing "delete"
+    (is (= {:query " /* No SQL. Evaluate the pine expression for results */ "}
+           (generate "company | delete:")))))
 
 (deftest test-format--query
   (testing "string"

@@ -93,8 +93,10 @@
 (defn build-query [state]
   (let [{:keys [type]} (state :operation)]
     (cond
-      (= type :delete) (build-delete-query state)
+      (= type :delete-action) (build-delete-query state)
       (= type :count) (build-count-query state)
+      ;; no op
+      (= type :delete) {:query " /* No SQL. Evaluate the pine expression for results */ "}
       :else (build-select-query state))))
 
 (defn formatted-query [{:keys [query params]}]
@@ -107,6 +109,8 @@
     (str "\n" (reduce replacer query params) ";\n")))
 
 (defn run-query [state]
-  (let [connection-id (state :connection-id)
-        {query :query params :params} (build-query state)]
-    (db/run-query connection-id {:query query :params (map #(:value %) params)})))
+  (if (= (-> state :operation :type) :no-op)
+    [["No operation"] ["-"]]
+    (let [connection-id (state :connection-id)
+          {query :query params :params} (build-query state)]
+      (db/run-query connection-id {:query query :params (map #(:value %) params)}))))

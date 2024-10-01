@@ -154,19 +154,17 @@
 ;; DELETE
 ;; -----
 
-(defmethod -normalize-op :DELETE [[_ [_ payload]]]
+(defmethod -normalize-op :DELETE-ACTION [[_ [_ payload]]]
   (match payload
-    [:symbol c] {:type :delete :value {:column c}}
+    [:symbol c] {:type :delete-action :value {:column c}}
     :else (throw (ex-info "Unknown DELETE operation" {:_ payload}))))
 
 ;; -----
-;; UI-OP
+;; NO-OP
 ;; -----
 
-(defmethod -normalize-op :UI-OP [[_ payload]]
-  (match payload
-         [:symbol c] {:type :no-op :value c}
-         :else (throw (ex-info "Unknown UI-OP operation" {:_ payload}))))
+(defmethod -normalize-op :DELETE [_]
+  {:type :delete :value nil})
 
 ;; -----
 
