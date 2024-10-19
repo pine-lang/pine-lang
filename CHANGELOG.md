@@ -6,6 +6,7 @@ log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 
 
 
+## [0.12.0] - 2024-10-18
 ### Added
 - Support for `not in` operator
 - Support for no operations e.g. `delete:`. Such operations are evaluated client side.
