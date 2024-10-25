@@ -5,7 +5,6 @@ COPY deps.edn .
 COPY build.clj .
 COPY VERSION .
 COPY ./src src
-COPY src/pine/db/config.default src/pine/db/config.clj
 RUN clj -T:build uber
 
 # Stage 2: Create a minimal runtime image (amd64 and arm64)

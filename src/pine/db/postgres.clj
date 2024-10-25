@@ -1,8 +1,7 @@
 (ns pine.db.postgres
   (:require [clojure.java.jdbc :as jdbc]
-            [pine.db.config :as config]
-            [pine.db.fixtures :as fixtures]
-            [pine.util :as util]))
+            [pine.db.connections :as connections]
+            [pine.db.fixtures :as fixtures]))
 
 (defn- get-references
   "Get the foreign keys from the database."
@@ -69,7 +68,7 @@ WHERE con.contype = 'f'
           references))
 
 (defn get-references-helper [id]
-  (let [connection (util/get-connection id)]
+  (let [connection (connections/get-connection id)]
     (get-references connection)))
 
 (defn get-indexed-references [id]
@@ -84,7 +83,7 @@ WHERE con.contype = 'f'
     (catch Exception e x)))
 
 (defn run-query [id query]
-  (let [connection (config/connections id)
+  (let [connection (@connections/connections id)
         {:keys [query params]} query
         params (map try-cast-to-uuid params)
         _ (prn (format "Running query: %s" query))

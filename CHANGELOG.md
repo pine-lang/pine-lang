@@ -5,6 +5,13 @@ log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 ## [Unreleased]
 
 
+## [0.13.0] - 2024-10-25
+### Added
+- DB connection management i.e. create a new connection and connect to it
+```
+POST /connections
+POST /connections/:id/connect
+```
 
 ## [0.12.0] - 2024-10-18
 ### Added

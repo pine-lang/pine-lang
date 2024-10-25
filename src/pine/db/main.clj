@@ -1,9 +1,8 @@
 (ns pine.db.main
-  (:require [pine.db.postgres :as postgres]
-            [pine.db.config :as config]))
+  (:require [pine.db.postgres :as postgres]))
 
 ;; Application state
-(def connection-id "Currently selected connection" (atom :default))
+(def connection-id "Currently selected connection" (atom nil))
 (def references "References indexed by the connection id" (atom {}))
 
 (defn init-references
