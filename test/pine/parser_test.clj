@@ -80,6 +80,9 @@
     (is (= [{:type :where, :value ["age" "!=" (dt/number "24")]}]             (p "age != 24")))
     (is (= [{:type :where, :value ["name" "=" (dt/column "first_name")]}]     (p "name = first_name")))
     (is (= [{:type :where, :value ["name" "=" (dt/column "x" "first_name")]}] (p "name = x.first_name")))
+    (is (= [{:type :where, :value ["public" "=" (dt/symbol "true")]}]         (p "public = true")))
+    (is (= [{:type :where, :value ["public" "=" (dt/symbol "false")]}]        (p "public = false")))
+    (is (= [{:type :where, :value ["public" "!=" (dt/symbol "false")]}]       (p "public != false")))
     ;; aliasing for both the columns is not supported yet
     ;; (is (= [{:type :where, :value ["name" "=" (dt/column "x" "first_name")]}] (p "x.name = x.first_name")))
     )

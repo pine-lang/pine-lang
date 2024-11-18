@@ -119,6 +119,8 @@
     [:condition [:symbol column] [:like] [:string & characters]]                               {:type :where :value [column "LIKE" (parse-characters characters)]}
     [:condition [:symbol column] [:in] & strings]                                              {:type :where :value [column "IN" (map parse-strings strings)]}
     [:condition [:symbol column] [:not-in] & strings]                                          {:type :where :value [column "NOT IN" (map parse-strings strings)]}
+    [:condition [:symbol column] [:equals] [:boolean b]]                                       {:type :where :value [column "=" (dt/symbol b)]}
+    [:condition [:symbol column] [:does-not-equal] [:boolean b]]                               {:type :where :value [column "!=" (dt/symbol b)]}
     :else                (throw (ex-info "Unknown condition in WHERE operation"      {:_ condition}))))
 
 (defmethod -normalize-op :WHERE [[_ payload]]

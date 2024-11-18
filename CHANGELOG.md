@@ -13,6 +13,11 @@ POST /connections
 POST /connections/:id/connect
 ```
 
+- Support for booleans:
+```
+company | is_public = true
+```
+
 ## [0.12.0] - 2024-10-18
 ### Added
 - Support for `not in` operator

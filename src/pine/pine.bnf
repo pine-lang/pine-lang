@@ -19,7 +19,7 @@ DELETE            := <"delete:">                       | <"d:">
 <parent>        := "of:"  <ws*> symbol+ | "of:"  <ws*> symbol <"."> symbol+ | symbol+ "^" | symbol <"."> symbol+ "^"
 
 conditions      := condition (<","> <ws*> condition)*
-condition       := symbol <ws*> operator <ws*> (column|string|number|null) | condition-in
+condition       := symbol <ws*> operator <ws*> (column|string|number|boolean|null) | condition-in
 <condition-in>  := symbol <ws*> (in  | not-in) <ws*>  <"("> strings* <")">
 <strings>       := <ws*> string <ws*> <",">?
 
@@ -53,4 +53,5 @@ is-not         := <"is"> <ws*> <"not">
 in             := <"in">
 not-in         := <"not"> <ws*> <"in">
 null           := <"null">
+boolean        := "true" | "false"
 
