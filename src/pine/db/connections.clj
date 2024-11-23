@@ -19,11 +19,15 @@
       connection
       (throw (ex-info "Connection not found" {:id id})))))
 
-;; connection is of the format
-(defn add-connection [connection]
-  (let [id (connection :host)]
-    (swap! connections assoc id connection)
-    id))
+(defn make-connection-id [connection]
+  (str (connection :host) ":" (connection :port)))
 
 (defn get-connection-name [id]
-  (-> id get-connection :host))
+  (-> id get-connection make-connection-id))
+
+(defn add-connection [connection]
+  (let [id (make-connection-id connection)]
+    (swap! connections assoc id connection)
+    (prn connections)
+    id))
+
