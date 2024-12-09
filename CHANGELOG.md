@@ -3,6 +3,12 @@ All notable changes to this project will be documented in this file. This change
 log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 
 ## [Unreleased]
+### Added
+- Support for columns e.g. hints are generated for a partial select:
+```
+company | s:
+```
+
 ### Changed
 - Connection id format is `host`:`port` instead of just the `host`.
 

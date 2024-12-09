@@ -55,6 +55,10 @@
   (testing "Parse `from` expressions"
     (is (= [{:type :from, :value {:alias "u"}}] (p "from: u"))))
 
+  (testing "Parse `select-partial` expressions"
+    (is (= [{:type :select-partial, :value []}]                   (p "select:")))
+    (is (= [{:type :select-partial, :value []}]                   (p "s: "))))
+
   (testing "Parse `select` expressions"
     (is (= [{:type :select, :value [{:column  "name"}]}]                              (p "select: name")))
     (is (= [{:type :select, :value [{:alias "u" :column  "name"}]}]                   (p "select: u.name")))
@@ -111,3 +115,4 @@
 
   (testing "Parse No Operation expressions"
     (is (= [{:value {:table "company"}, :type :table} {:type :delete, :value nil}] (p "company | d:")))))
+

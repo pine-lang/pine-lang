@@ -1,11 +1,13 @@
 OPERATIONS := <ws*> OPERATION <ws*> (<"|"> <ws*> OPERATION <ws*>)*
 
-OPERATION    := SELECT | TABLE | WHERE | LIMIT| FROM | ORDER | COUNT | DELETE-ACTION | DELETE
+OPERATION    := SELECT-PARTIAL | SELECT | TABLE | WHERE | LIMIT| FROM | ORDER | COUNT | DELETE-ACTION | DELETE
 
 
 TABLE             := table (<ws+> hint-column)? (<ws+> as-alias)?
 
+SELECT-PARTIAL    := <"select:"> <ws*> | <"s:"> <ws*>
 SELECT            := <"select:"> <ws*> aliased-columns | <"s:"> <ws*> aliased-columns
+
 WHERE             := <"where:">  <ws*> conditions      | <"w:"> <ws*> conditions | conditions
 LIMIT             := <"limit:">  <ws*> number          | <"l:"> <ws*> number    | number
 FROM              := <"from:">   <ws*> alias           | <"f:"> <ws*> alias
@@ -33,7 +35,7 @@ hint-column     := <"."> symbol
 
 columns            := column (<","> <ws*> column)*
 column             := qualified-symbol
-<qualified-symbol> := symbol* | alias <"."> symbol*
+<qualified-symbol> := symbol | alias <"."> symbol
 <as-alias>         := <"as"> <ws+> alias
 
 alias    := symbol

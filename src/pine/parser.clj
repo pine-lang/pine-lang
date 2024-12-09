@@ -80,6 +80,13 @@
     [:aliased-columns & columns] {:type :select :value (mapv -normalize-column columns)}
     :else                (throw (ex-info "Unknown SELECT operation" {:_ payload}))))
 
+;; -------------
+;; SELECT-PARTIAL
+;; -------------
+
+(defmethod -normalize-op :SELECT-PARTIAL [_]
+  {:type :select-partial :value []})
+
 ;; ------
 ;; ORDER
 ;; ------

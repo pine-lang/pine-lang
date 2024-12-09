@@ -75,24 +75,35 @@
         ;; of duplicates
         distinct)))
 
-(defn generate [state {token :table parent :parent}]
-  (let [candidate         (-> state :tables reverse first)
-        from-alias        (state :context)
-        table-hints         (if from-alias
-
-                              ;; This is not the first table, then filter out the related tables
-                              (relation-hints state token)
-
-                              ;; This is the first table - get all the tables matching the token
-                              (table-hints state token))
-        table-hints         (if parent
-                              (filter #(= (:parent %) true) table-hints)
-                              table-hints)
+(defn generate-table-hints [state]
+  (let [{token :table parent :parent} (-> state :tables reverse first)
+        from-alias (state :context)
+        table-hints (if from-alias
+                      ;; This is not the first table, then filter out the related tables
+                      (relation-hints state token)
+                      ;; This is the first table - get all the tables matching the token
+                      (table-hints state token))
+        ;; Filter by parent if specified
+        table-hints (if parent
+                      (filter #(= (:parent %) true) table-hints)
+                      table-hints)
+        ;; Add pine expression to each hint
         add-pine-expression (fn [h] (assoc h :pine (generate-expression h)))]
     (map add-pine-expression table-hints)))
 
+(defn generate-column-hints [state]
+  (let [aliases (state :aliases)
+        a (-> state :current)
+        {table :table schema :schema} (->> a (get aliases))
+        columns (if schema
+                  (get-in state [:references :schema schema :table table :columns])
+                  (get-in state [:references :table table :columns]))]
+    (map #(select-keys % [:column]) columns)))
+
 (defn handle [state]
   (let [type (-> state :operation :type)
-        candidate (-> state :tables reverse first)
-        hints (if (and (= type :table) candidate) (generate state candidate) [])]
-    (assoc-in state [:hints] {:table hints})))
+        hints (case type
+                :table (generate-table-hints state)
+                :select-partial (generate-column-hints state)
+                [])]
+    (assoc-in state [:hints type] (or hints []))))
