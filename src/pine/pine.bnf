@@ -25,7 +25,7 @@ condition       := symbol <ws*> operator <ws*> (column|string|number|boolean|nul
 <condition-in>  := symbol <ws*> (in  | not-in) <ws*>  <"("> strings* <")">
 <strings>       := <ws*> string <ws*> <",">?
 
-aliased-columns := aliased-column (<","> <ws*> aliased-column)*
+aliased-columns := aliased-column (<","> <ws*> aliased-column)* <",">?
 aliased-column  := column | column <ws+> as-alias
 
 order-columns := order-column (<","> <ws*> order-column)*

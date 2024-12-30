@@ -41,7 +41,7 @@
 
             ;; post
             ;; - hints
-            :hints          {:table []}})
+            :hints          {:table [] :select []}})
 
 (defn pre-handle [state connection-id ops-count]
   (-> state

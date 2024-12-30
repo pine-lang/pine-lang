@@ -73,4 +73,8 @@
 
   (testing "Generate `select-partial` hints"
     (is (= [{:column "id"}]
-           (-> "company | s:" gen :select-partial)))))
+           (-> "company | s:" gen :select)))
+    (is (= [{:column "id"}]
+           (-> "x.company | s:" gen :select)))))
+
+

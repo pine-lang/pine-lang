@@ -86,7 +86,7 @@ FROM information_schema.columns"]
   (reduce (fn [acc [schema table col pos type len nullable default]]
             (let [col {:column col :type type :nullable nullable :default default}]
               (-> acc
-                  (update-in [:schema schema :contains table :columns] conj col)
+                  (update-in [:schema schema :table table :columns] conj col)
                   (update-in [:table table :columns] conj col))))
           acc
           columns))
