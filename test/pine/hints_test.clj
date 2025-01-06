@@ -71,10 +71,20 @@
              :pine "of: y.employee .reports_to"}]
            (-> "employee | of: employee" gen :table))))
 
-  (testing "Generate `select-partial` hints"
-    (is (= [{:column "id"}]
-           (-> "company | s:" gen :select)))
-    (is (= [{:column "id"}]
-           (-> "x.company | s:" gen :select)))))
+  (testing "Generate `select` hints with relevant columns"
+    (is (= []
+           (-> "x.company | s: does_not_exist" gen :select)))
+    (is (= [{:column "id" :alias "c_0"}]
+           (-> "x.company | s: i" gen :select)))
+    (is (= [ "company_id" "id"] ;;  "reports_to" is not returned
+           (->> "y.employee | s: id" gen :select (map :column))))
+    )
 
+  (testing "Generate `select-partial` hints"
+    (is (= [{:column "id" :alias "c_0"}]
+           (-> "company | s:" gen :select)))
+    (is (= [{:column "id" :alias "c_0"}]
+           (-> "x.company | s:" gen :select)))
+    (is (= ["reports_to"  "company_id" "id"]
+           (->> "y.employee | s:" gen :select (map :column))))))
 

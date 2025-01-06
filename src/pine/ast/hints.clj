@@ -1,4 +1,5 @@
-(ns pine.ast.hints)
+(ns pine.ast.hints
+  (:require [clojure.string :as str]))
 
 (defn- filter-relations [token candidates]
   "Given a partial token (which can be completed to a table) and all the
@@ -91,14 +92,26 @@
         add-pine-expression (fn [h] (assoc h :pine (generate-expression h)))]
     (map add-pine-expression table-hints)))
 
-(defn generate-column-hints [state]
+(defn generate-all-column-hints [state a]
   (let [aliases (state :aliases)
-        a (-> state :current)
         {table :table schema :schema} (->> a (get aliases))
         columns (if schema
                   (get-in state [:references :schema schema :table table :columns])
                   (get-in state [:references :table table :columns]))]
-    (map #(select-keys % [:column]) columns)))
+    (for [column columns]
+      (-> column
+          (select-keys [:column])
+          (assoc :alias a)))))
+
+(defn generate-column-hints [state]
+  (let [column (some-> state :columns reverse first)
+        a (if column (column :alias) (state :current))
+        hints (generate-all-column-hints state a)]
+    (if column
+      ;; Filter the results to include columns that contain the value of :column
+      (filter #(str/includes? (:column %) (:column column)) hints)
+      ;; Else, return all hints
+      hints)))
 
 (defn handle [state]
   (let [type (-> state :operation :type)
