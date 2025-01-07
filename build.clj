@@ -7,13 +7,6 @@
 (def class-dir "target/classes")
 (def uber-file "target/pine-standalone.jar")
 
-;; Load version dynamically from src/pine/version.clj
-(defn load-version []
-  (require 'pine.version) ;; dynamically require the namespace
-  (resolve 'pine.version/version)) ;; resolve the `version` var
-
-(def version (load-version)) ;; Call the function to get the version
-
 ;; delay to defer side effects (artifact downloads)
 (def basis (delay (b/create-basis {:project "deps.edn"})))
 
@@ -33,5 +26,4 @@
            :main 'pine.core}))
 
 (defn info [_]
-  (prn {:file uber-file
-        :version version}))
+  (prn {:file uber-file}))
