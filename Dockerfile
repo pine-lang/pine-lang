@@ -3,7 +3,6 @@ FROM clojure:tools-deps-1.10.3.1020 AS build
 WORKDIR /app
 COPY deps.edn .
 COPY build.clj .
-COPY VERSION .
 COPY ./src src
 RUN clj -T:build uber
 

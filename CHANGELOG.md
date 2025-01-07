@@ -3,10 +3,14 @@ All notable changes to this project will be documented in this file. This change
 log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 
 ## [Unreleased]
+
+## [0.14.0] - 2025-01-07
+
 ### Added
 - Support for columns e.g. hints are generated for a partial select:
 ```
 company | s:
+company | s: id,
 ```
 
 ### Changed

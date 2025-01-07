@@ -135,7 +135,6 @@
       ;; Otherwise, return all hints
       :else hints)))
 
-
 (defn handle [state]
   (let [type (-> state :operation :type)
         hints (case type
@@ -144,6 +143,5 @@
                 :select-partial (generate-column-hints state)
                 ;; for :where-partial, we can also use the :select hints as we need to see the columns
                 [])
-        type (case type :select-partial :select type)
-        ]
+        type (case type :select-partial :select type)]
     (assoc-in state [:hints type] (or hints []))))

@@ -77,8 +77,8 @@
 
 (defn normalize-select [payload type]
   (match payload
-         [:aliased-columns & columns] {:type type :value (mapv -normalize-column columns)}
-         :else                (throw (ex-info (str "Unknown " (name type) " operation") {:_ payload}))))
+    [:aliased-columns & columns] {:type type :value (mapv -normalize-column columns)}
+    :else                (throw (ex-info (str "Unknown " (name type) " operation") {:_ payload}))))
 
 (defmethod -normalize-op :SELECT [[_ payload]]
   (normalize-select payload :select))
