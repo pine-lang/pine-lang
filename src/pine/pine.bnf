@@ -5,16 +5,25 @@ OPERATION    := SELECT-PARTIAL | SELECT | TABLE | WHERE | LIMIT| FROM | ORDER | 
 
 TABLE             := table (<ws+> hint-column)? (<ws+> as-alias)?
 
-SELECT-PARTIAL    := <"select:"> <ws*> | <"s:"> <ws*>
-SELECT            := <"select:"> <ws*> aliased-columns | <"s:"> <ws*> aliased-columns
+SELECT-PARTIAL    := <select-op> aliased-columns? <",">?
+SELECT            := <select-op> aliased-columns
 
-WHERE             := <"where:">  <ws*> conditions      | <"w:"> <ws*> conditions | conditions
-LIMIT             := <"limit:">  <ws*> number          | <"l:"> <ws*> number    | number
-FROM              := <"from:">   <ws*> alias           | <"f:"> <ws*> alias
-ORDER             := <"order:">  <ws*> order-columns   | <"o:"> <ws*> order-columns
-COUNT             := <"count:">
-DELETE-ACTION     := <"delete!"> <ws*> hint-column     | <"d!"> <ws*> hint-column
-DELETE            := <"delete:">                       | <"d:">
+WHERE             := <where-op>         conditions     |     conditions
+LIMIT             := <limit-op>         number         |     number
+FROM              := <from-op>          alias
+ORDER             := <order-op>         order-columns
+DELETE-ACTION     := <delete-action-op> hint-column
+DELETE            := <delete-op>
+COUNT             := <count-op>
+
+select-op         := (<"select:"> | <"s:">) <ws*>
+where-op          := (<"where:">  | <"w:">) <ws*>
+limit-op          := (<"limit:">  | <"l:">) <ws*>
+from-op           := (<"from:">   | <"f:">) <ws*>
+order-op          := (<"order:">  | <"o:">) <ws*>
+delete-action-op  := (<"delete!"> | <"d!">) <ws*>
+delete-op         := (<"delete:"> | <"d:">) <ws*>
+count-op          := <"count:">
 
 <table>         := child | parent | symbol* | symbol <"."> symbol*
 <child>         := "has:" <ws*> symbol+ | "has:" <ws*> symbol <"."> symbol+
@@ -25,8 +34,8 @@ condition       := symbol <ws*> operator <ws*> (column|string|number|boolean|nul
 <condition-in>  := symbol <ws*> (in  | not-in) <ws*>  <"("> strings* <")">
 <strings>       := <ws*> string <ws*> <",">?
 
-aliased-columns := aliased-column (<","> <ws*> aliased-column)* <",">?
-aliased-column  := column | column <ws+> as-alias
+aliased-columns := aliased-column (<","> <ws*> aliased-column)*
+aliased-column  := column <ws*> | column <ws+> as-alias <ws*>
 
 order-columns := order-column (<","> <ws*> order-column)*
 order-column  := column | column <ws+> ("desc"|"asc")
@@ -56,4 +65,3 @@ in             := <"in">
 not-in         := <"not"> <ws*> <"in">
 null           := <"null">
 boolean        := "true" | "false"
-

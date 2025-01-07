@@ -38,3 +38,11 @@ Fix clojure format issues:
 ```
 clj -M:fmt fix
 ```
+
+## Tests
+
+Run tests:
+
+```
+clojure -M:test
+```

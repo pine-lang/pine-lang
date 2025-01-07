@@ -76,15 +76,12 @@
            (-> "x.company | s: does_not_exist" gen :select)))
     (is (= [{:column "id" :alias "c_0"}]
            (-> "x.company | s: i" gen :select)))
-    (is (= [ "company_id" "id"] ;;  "reports_to" is not returned
-           (->> "y.employee | s: id" gen :select (map :column))))
-    )
+    (is (= ["company_id" "id"] ;;  "reports_to" is not returned
+           (->> "y.employee | s: id" gen :select (map :column)))))
 
   (testing "Generate `select-partial` hints"
-    (is (= [{:column "id" :alias "c_0"}]
-           (-> "company | s:" gen :select)))
-    (is (= [{:column "id" :alias "c_0"}]
-           (-> "x.company | s:" gen :select)))
-    (is (= ["reports_to"  "company_id" "id"]
-           (->> "y.employee | s:" gen :select (map :column))))))
+    (is (= [{:column "id" :alias "c_0"}]     (->  "company    | s:"                 gen :select)))
+    (is (= [{:column "id" :alias "c_0"}]     (->  "x.company  | s:"                 gen :select)))
+    (is (= ["reports_to"  "company_id" "id"] (->> "y.employee | s:"                 gen :select (map :column))))
+    (is (= ["reports_to" ]                   (->> "y.employee | s: id, company_id," gen :select (map :column))))))
 

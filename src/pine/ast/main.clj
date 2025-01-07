@@ -52,6 +52,7 @@
 (defn handle-op [state {:keys [type value]}]
   (case type
     :select (select/handle state value)
+    :select-partial (select/handle state value)
     :table (table/handle state value)
     :limit (limit/handle state value)
     :where (where/handle state value)
@@ -61,7 +62,6 @@
     :delete-action (delete-action/handle state value)
     ;; No operations
     :no-op state
-    :select-partial state
     (update state :errors conj [type "Unknown operation type in parse tree"])))
 
 (defn handle-ops [state ops]
