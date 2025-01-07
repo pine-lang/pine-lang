@@ -3,7 +3,7 @@
             [pine.db.connections :as connections]
             [pine.db.fixtures :as fixtures]))
 
-(defn- get-references
+(defn- get-foreign-keys
   "Get the foreign keys from the database."
   [config]
   (prn (format "Loading all references..."))
@@ -26,13 +26,7 @@ WHERE con.contype = 'f'
 "]
     (rest (jdbc/query config sql opts))))
 
-(defn- index-references
-  "Finding forward and inverse relations for the table Example: A 'user' has
-  'document' i.e. the document has a `user_id` column that points to
-  `user`.`id`. Alternatively, 'document' of 'user'. When we find a foreign key,
-  then we index create both forward and inverse relations i.e. `:has` and `:of`
-  relations / or `:refered-by` and `:refers-to` relations."
-  [references]
+(defn- index-foreign-keys [foreign-keys]
   (reduce (fn [acc [schema table col f-schema f-table f-col]]
             (let [has [f-schema f-table f-col :referred-by   schema   table   col]
                   of  [schema     table   col :refers-to   f-schema f-table f-col]]
@@ -60,16 +54,61 @@ WHERE con.contype = 'f'
                   (assoc-in [:table  table    :in  schema   :refers-to f-table :in f-schema :via col] of)
                   ;;
                   ;;
-                  ;; Relations between schema and tables
-                  ;; TODO: check if this is used
-                  (assoc-in [:schema f-schema :contains f-table] true)
-                  (assoc-in [:schema schema   :contains table] true))))
+                  ;; Metadata
+                  ;;
+                  ;; (assoc-in [:schema f-schema :contains f-table :columns] {:columns nil})
+                  ;; (assoc-in [:schema schema   :contains table :columns] {:columns nil})
+                  ;; ;; ;; For the ambiguous case
+                  ;; (update-in [:table f-table :columns] {})
+                  ;; (update-in [:table table :columns] {})
+                  )))
           {}
-          references))
+          foreign-keys))
 
-(defn get-references-helper [id]
-  (let [connection (connections/get-connection id)]
-    (get-references connection)))
+(defn- get-columns
+  "Get the columns for all tables"
+  [config]
+  (prn (format "Loading all columns..."))
+  (let [opts {:as-arrays? true}
+        sql "SELECT
+  table_schema,
+  table_name,
+  column_name,
+  ordinal_position,
+  data_type,
+  character_maximum_length,
+  is_nullable,
+  column_default
+FROM information_schema.columns"]
+    (rest (jdbc/query config sql opts))))
+
+(defn- index-columns [acc columns]
+  (reduce (fn [acc [schema table col pos type len nullable default]]
+            (let [col {:column col :type type :nullable nullable :default default}]
+              (-> acc
+                  (update-in [:schema schema :table table :columns] conj col)
+                  (update-in [:table table :columns] conj col))))
+          acc
+          columns))
+
+(defn- index-references
+  "Finding forward and inverse relations for the table Example: A 'user' has
+  'document' i.e. the document has a `user_id` column that points to
+  `user`.`id`. Alternatively, 'document' of 'user'. When we find a foreign key,
+  then we index create both forward and inverse relations i.e. `:has` and `:of`
+  relations / or `:refered-by` and `:refers-to` relations."
+  [[foreign-keys columns]]
+
+  ;; Index the foreign keys
+  (->
+   (index-foreign-keys foreign-keys)
+   (index-columns columns)))
+
+(defn get-references-helper [id] "Return the foreign keys. TODO: also return the columns."
+  (let [connection (connections/get-connection id)
+        columns (get-columns connection)
+        foreign-keys (get-foreign-keys connection)]
+    [foreign-keys columns]))
 
 (defn get-indexed-references [id]
   (let [references (cond

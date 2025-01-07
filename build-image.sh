@@ -1,11 +1,8 @@
 #!/usr/bin/env bash
 
-if [ ! -f "VERSION" ]; then
-    echo "VERSION file not found!"
-    exit 1
-fi
+VERSION_FILE="src/pine/version.clj"
+PINE_VERSION=$(grep -oP '\b\d+\.\d+\.\d+(-[a-zA-Z0-9]+)?\b' "$VERSION_FILE")
 
-PINE_VERSION=$(cat VERSION)
 IMAGE_REPO="ahmadnazir/pine"
 IMAGE_NAME="$IMAGE_REPO:$PINE_VERSION"
 echo "Pine version: $PINE_VERSION"
@@ -40,8 +37,8 @@ build_and_push_image() {
 }
 
 # Check if the image already exists
-# if image_exists; then
-#     echo "Image $IMAGE_NAME already exists in the registry. Skipping build and push."
-# else
+if image_exists; then
+    echo "Image $IMAGE_NAME already exists in the registry. Skipping build and push."
+else
     build_and_push_image
-# fi
+fi

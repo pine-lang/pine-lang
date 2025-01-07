@@ -13,13 +13,14 @@
    [pine.db.main :as db]
    [pine.db.connections :as connections]
    ;; Encode arrays and json results in API responses
-   [cheshire.generate :refer [add-encoder encode-str]]))
+   [cheshire.generate :refer [add-encoder encode-str]]
+   [pine.version :as v]))
 
 ;; array/json encoding
 (add-encoder org.postgresql.util.PGobject encode-str)
 (add-encoder org.postgresql.jdbc.PgArray encode-str)
 
-(def version "0.13.0")
+(def version v/version)
 
 (defn- generate-state [expression]
   (let [{:keys [result error]} (->> expression parser/parse)]

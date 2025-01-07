@@ -32,14 +32,16 @@
                              :value nil} ;; [ ] 1. For post-handle. e.g. set hints if operation is table.
                                          ;; [ ] 2. For backwards compat with version < 0.5.
                                          ;;        If op is :table, then the context  in the api handler has one less table
-            :current        nil
-            :context        nil
+
+            :current        nil          ;; alias of the current table
+            :context        nil          ;; alias of the table in context
+
             :table-count    0
             :pending-count  0
 
             ;; post
             ;; - hints
-            :hints          {:table []}})
+            :hints          {:table [] :select []}})
 
 (defn pre-handle [state connection-id ops-count]
   (-> state
@@ -50,6 +52,7 @@
 (defn handle-op [state {:keys [type value]}]
   (case type
     :select (select/handle state value)
+    :select-partial (select/handle state value)
     :table (table/handle state value)
     :limit (limit/handle state value)
     :where (where/handle state value)
@@ -57,6 +60,7 @@
     :order (order/handle state value)
     :count (pine-count/handle state value)
     :delete-action (delete-action/handle state value)
+    ;; No operations
     :no-op state
     (update state :errors conj [type "Unknown operation type in parse tree"])))
 

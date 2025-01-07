@@ -1,11 +1,11 @@
 ;; Taken and modified from https://clojure.org/guides/tools_build
 
 (ns build
-  (:require [clojure.tools.build.api :as b]))
+  (:require [clojure.tools.build.api :as b]
+            [clojure.java.io :as io]))
 
-(def version (-> "VERSION" slurp .trim))
 (def class-dir "target/classes")
-(def uber-file "target/pine-standalone.jar" )
+(def uber-file "target/pine-standalone.jar")
 
 ;; delay to defer side effects (artifact downloads)
 (def basis (delay (b/create-basis {:project "deps.edn"})))
@@ -26,5 +26,4 @@
            :main 'pine.core}))
 
 (defn info [_]
-  (prn {:file uber-file
-        :version version}))
+  (prn {:file uber-file}))

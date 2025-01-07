@@ -62,9 +62,9 @@
     :else
     (throw (ex-info "Unknown RESOURCE operation" {:_ payload}))))
 
-;; ------
-;; SELECT
-;; ------
+;; -----------------------
+;; SELECT / SELECT-PARTIAL
+;; -----------------------
 
 (defn- -normalize-column [column]
   (match column
@@ -75,10 +75,18 @@
 
     :else                 (throw (ex-info "Unknown COLUMN operation" {:_ column}))))
 
-(defmethod -normalize-op :SELECT [[_ payload]]
+(defn normalize-select [payload type]
   (match payload
-    [:aliased-columns & columns] {:type :select :value (mapv -normalize-column columns)}
-    :else                (throw (ex-info "Unknown SELECT operation" {:_ payload}))))
+    [:aliased-columns & columns] {:type type :value (mapv -normalize-column columns)}
+    :else                (throw (ex-info (str "Unknown " (name type) " operation") {:_ payload}))))
+
+(defmethod -normalize-op :SELECT [[_ payload]]
+  (normalize-select payload :select))
+
+(defmethod -normalize-op :SELECT-PARTIAL [[_ payload]]
+  (if (empty? payload)
+    {:type :select-partial, :value []}
+    (normalize-select payload :select-partial)))
 
 ;; ------
 ;; ORDER
