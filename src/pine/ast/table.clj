@@ -4,13 +4,17 @@
 
 (defn- join-helper [references t1 t2 a1 a2 c direction]
   "Find the references between the tables, get the columns for the first
-  refernece and return the pair of alias and columns that will be used for the join"
-  (when-let [reference (get-in references [:table t1 :referred-by t2 :via])]
-    (let [f (if c (fn [_] c) (fn [xs] (if xs (first xs) nil)))
-          col (-> reference keys f)
-          join (-> (get-in reference [col]) first) ;; There can theoretically be multiple relations - we get the first as `c` is not specified
-          [schema table col r f-schema f-table f-col] join]
-      (if (= direction :reverse)
+  reference and return the pair of alias and columns that will be used for the join"
+  (when-let [refs (get-in references [:table t1 :referred-by t2 :via])] ;; get references for the tables
+    (let [get-col-fn            (if c (fn [_] c) (fn [xs] (if xs (first xs) nil)))
+          col                   (-> refs keys get-col-fn)
+          join                  (-> (get-in refs [col]) reverse first)
+                                ;; Normally there is only one foreign key but if there
+                                ;; multiple, then we use the last one which is `id`
+
+          [_ _ col _ _ _ f-col] join ;; [ schema table col r f-schema f-table f-col ]
+          ]
+      (if (= direction :of)
         [a2 f-col :of a1 col]
         [a1 col :has a2 f-col]))))
 
@@ -24,8 +28,8 @@
                 ;; By default we narrow the results i.e.
                 ;; We get the children first and if a resultis not found, only
                 ;; then we look at parents
-                (if (not parent) (join-helper references t1 t2 a1 a2 c nil) nil)
-                (join-helper references t2 t1 a2 a1 c :reverse))]
+                (if (not parent) (join-helper references t1 t2 a1 a2 c :has) nil)
+                (join-helper references t2 t1 a2 a1 c :of))]
     result))
 
 (defn- update-joins [state current]

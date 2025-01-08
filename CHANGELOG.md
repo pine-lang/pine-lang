@@ -4,6 +4,14 @@ log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [0.14.1] - 2025-01-09
+### Fixed
+- By default all columns are selected. When columns are specified, all columns are not returned e.g. this didn't work:
+
+```
+employee as e | document as d | s: e.id
+```
+
 ## [0.14.0] - 2025-01-07
 
 ### Added

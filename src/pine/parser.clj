@@ -68,11 +68,11 @@
 
 (defn- -normalize-column [column]
   (match column
-    [:aliased-column [:column [:symbol c]]]                                     {:column c}
-    [:aliased-column [:column [:alias [:symbol a]] [:symbol c]]]                {:alias a :column c}
-    [:aliased-column [:column [:symbol c]] [:alias [:symbol ca]]]             {:column c :column-alias ca}
+    [:aliased-column [:column [:symbol c]]]                                            {:column c}
+    [:aliased-column [:column [:alias [:symbol a]] [:symbol c]]]                       {:alias a :column c}
+    [:aliased-column [:column [:symbol c]] [:alias [:symbol ca]]]                      {:column c :column-alias ca}
     [:aliased-column [:column [:alias [:symbol a]] [:symbol c]] [:alias [:symbol ca]]] {:alias a :column c :column-alias ca}
-
+    [:aliased-column [:alias [:symbol a]] [:star star]]                                {:alias a :column "" :symbol "*"}
     :else                 (throw (ex-info "Unknown COLUMN operation" {:_ column}))))
 
 (defn normalize-select [payload type]

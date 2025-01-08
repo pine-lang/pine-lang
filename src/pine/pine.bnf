@@ -35,7 +35,7 @@ condition       := symbol <ws*> operator <ws*> (column|string|number|boolean|nul
 <strings>       := <ws*> string <ws*> <",">?
 
 aliased-columns := aliased-column (<","> <ws*> aliased-column)*
-aliased-column  := column <ws*> | column <ws+> as-alias <ws*>
+aliased-column  := column <ws*> | column <ws+> as-alias <ws*> | alias <"."> star
 
 order-columns := order-column (<","> <ws*> order-column)*
 order-column  := column | column <ws+> ("desc"|"asc")
@@ -65,3 +65,4 @@ in             := <"in">
 not-in         := <"not"> <ws*> <"in">
 null           := <"null">
 boolean        := "true" | "false"
+star           := "*"

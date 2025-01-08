@@ -50,7 +50,9 @@
     (is (= [{:alias "c" :column "id"}]
            (generate :columns "company as c | s: id")))
     (is (= []
-           (generate :columns "user"))))
+           (generate :columns "user")))
+    (is (= [{:alias "u" :column "" :symbol "*"}]
+           (generate :columns "user as u | s: u.*"))))
 
   (testing "Generate ast for `order`"
     (is (= [{:alias "c_0" :column "country" :direction "DESC"}]

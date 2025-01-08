@@ -19,18 +19,17 @@
                                joins)]
       (clojure.string/join " " join-statements))))
 
-(defn- build-columns-clause [{:keys [columns current]}]
-  (let [column-context (if (empty? columns) nil (-> columns last :alias))
+(defn- build-columns-clause [{:keys [operation columns current]}]
+  (let [type (-> operation :type)
         select-all (cond
-                     (nil? column-context) (str current ".*")
-                     (= current column-context) ""
-                     :else (str ", " current ".*"))]
+                     (contains? #{:select :delete-action} type) ""
+                     :else (str (if (seq columns) ", " "") (q current) ".*"))]
     (str
      "SELECT "
      (clojure.string/join
       ", "
-      (map (fn [{:keys [column alias column-alias]}]
-             (let [c (q alias column)]
+      (map (fn [{:keys [column alias column-alias symbol]}]
+             (let [c (if (empty? column) (str (q alias) "." symbol) (q alias column))]
                (if column-alias (str c " AS " (q column-alias)) c))) columns))
      select-all
      " FROM")))
