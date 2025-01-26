@@ -14,11 +14,18 @@
       (ast/generate :test)
       eval/build-query))
 
+(generate "")
+
 (deftest test-build--query
 
   (testing "qualify table"
     (is (= "\"x\"" (q "x")))
     (is (= "\"x\".\"y\"" (q "x" "y"))))
+
+  (testing "No expression"
+    (is (= {:query "",
+            :params nil}
+           (generate ""))))
 
   (testing "Select"
     (is (= {:query "SELECT \"c_0\".* FROM \"company\" AS \"c_0\" LIMIT 250",

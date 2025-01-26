@@ -92,6 +92,7 @@
 (defn build-query [state]
   (let [{:keys [type]} (state :operation)]
     (cond
+      (= (-> state :current) "x_0") {:query "" :params nil}
       (= type :delete-action) (build-delete-query state)
       (= type :count) (build-count-query state)
       ;; no op
@@ -105,7 +106,7 @@
                                      (str "'" v "'")
                                      (str v))]
                      (clojure.string/replace-first s "?" param-str)))]
-    (str "\n" (reduce replacer query params) ";\n")))
+    (if (empty? query) "" (str "\n" (reduce replacer query params) ";\n"))))
 
 (defn run-query [state]
   (if (= (-> state :operation :type) :no-op)
