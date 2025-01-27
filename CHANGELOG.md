@@ -4,6 +4,21 @@ log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Added
+- Column hints when using the order operation:
+
+```
+company | o:
+company | o: id,
+```
+
+### Fixed
+- Columns hints for the correct table are show e.g. the following was showing hints for `company` to begin with:
+```
+company | s: id | document | s:
+```
+
+
 ## [0.14.1] - 2025-01-09
 ### Fixed
 - By default all columns are selected. When columns are specified, all columns are not returned e.g. this didn't work:

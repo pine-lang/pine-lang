@@ -1,6 +1,6 @@
 OPERATIONS := <ws*> OPERATION <ws*> (<"|"> <ws*> OPERATION <ws*>)*
 
-OPERATION    := SELECT-PARTIAL | SELECT | TABLE | WHERE | LIMIT| FROM | ORDER | COUNT | DELETE-ACTION | DELETE
+OPERATION    := SELECT-PARTIAL | SELECT | TABLE | WHERE | LIMIT| FROM | ORDER-PARTIAL | ORDER | COUNT | DELETE-ACTION | DELETE
 
 
 TABLE             := table (<ws+> hint-column)? (<ws+> as-alias)?
@@ -11,7 +11,10 @@ SELECT            := <select-op> aliased-columns
 WHERE             := <where-op>         conditions     |     conditions
 LIMIT             := <limit-op>         number         |     number
 FROM              := <from-op>          alias
+
+ORDER-PARTIAL     := <order-op>         order-columns? <",">?
 ORDER             := <order-op>         order-columns
+
 DELETE-ACTION     := <delete-action-op> hint-column
 DELETE            := <delete-op>
 COUNT             := <count-op>

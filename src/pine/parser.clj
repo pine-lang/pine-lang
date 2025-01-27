@@ -92,16 +92,24 @@
 ;; ORDER
 ;; ------
 
-(defn- -normalize-order [column]
+(defn- -normalize-order-col [column]
   (match column
     [:order-column [:column [:symbol c]]]   {:column c :direction "DESC"}
     [:order-column [:column [:symbol c]] d] {:column c :direction (clojure.string/upper-case d)}
     :else                                   (throw (ex-info "Unknown ORDER operation" {:_ column}))))
 
-(defmethod -normalize-op :ORDER [[_ payload]]
+(defn -normalize-order [payload type]
   (match payload
-    [:order-columns & columns] {:type :order :value (mapv -normalize-order columns)}
-    :else                (throw (ex-info "Unknown SELECT operation" {:_ payload}))))
+    [:order-columns & columns] {:type type :value (mapv -normalize-order-col columns)}
+    :else                (throw (ex-info (str "Unknown " (name type) " operation") {:_ payload}))))
+
+(defmethod -normalize-op :ORDER [[_ payload]]
+  (-normalize-order payload :order))
+
+(defmethod -normalize-op :ORDER-PARTIAL [[_ payload]]
+  (if (empty? payload)
+    {:type :order-partial, :value []}
+    (-normalize-order payload :order-partial)))
 
 ;; -----
 ;; WHERE

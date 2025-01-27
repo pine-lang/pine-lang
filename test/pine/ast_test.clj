@@ -38,27 +38,27 @@
            (generate :context "company as c | user | from: c | 1"))))
 
   (testing "Generate ast for `select`"
-    (is (= [{:alias "c_0" :column "id"}]
+    (is (= [{:alias "c_0" :column "id" :index 1}]
            (generate :columns "company | s: id")))
 
-    (is (= [{:alias "u" :column "id"}]
+    (is (= [{:alias "u" :column "id" :index 1}]
            (generate :columns "company | s: u.id")))
-    (is (= [{:alias "c_0" :column "id" :column-alias "c_id"}]
+    (is (= [{:alias "c_0" :column "id" :column-alias "c_id" :index 1}]
            (generate :columns "company | s: id as c_id")))
-    (is (= [{:alias "c_0" :column "id"} {:alias "e_1" :column "id"}]
+    (is (= [{:alias "c_0" :column "id" :index 1} {:alias "e_1" :column "id" :index 3}]
            (generate :columns "company | s: id | employee | s: id")))
-    (is (= [{:alias "c" :column "id"}]
+    (is (= [{:alias "c" :column "id" :index 1}]
            (generate :columns "company as c | s: id")))
     (is (= []
            (generate :columns "user")))
-    (is (= [{:alias "u" :column "" :symbol "*"}]
+    (is (= [{:alias "u" :column "" :symbol "*" :index 1}]
            (generate :columns "user as u | s: u.*"))))
 
   (testing "Generate ast for `order`"
-    (is (= [{:alias "c_0" :column "country" :direction "DESC"}]
+    (is (= [{:alias "c_0" :column "country" :direction "DESC" :index 1}]
            (generate :order "company | o: country")))
-    (is (= [{:alias "c_0" :column "country" :direction "DESC"}
-            {:alias "c_0" :column "created_at" :direction "DESC"}]
+    (is (= [{:alias "c_0" :column "country" :direction "DESC" :index 1}
+            {:alias "c_0" :column "created_at" :direction "DESC" :index 1}]
            (generate :order "company | o: country, created_at"))))
 
   (testing "Generate ast for `limit`"

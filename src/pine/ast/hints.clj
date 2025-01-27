@@ -117,19 +117,21 @@
             hints)
     hints))
 
-(defn generate-column-hints [state]
-  (let [columns (state :columns)
-        column (some-> columns reverse first)
-        a (if (seq column) (column :alias) (state :current))
+(defn generate-column-hints [state columns]
+  (let [column (some-> columns reverse first)
+        a (if (and (seq column)
+                   (> (column :index) (state :current-index))) ; Check if column's :index is greater
+            (column :alias)
+            (state :current))
         hints (generate-all-column-hints state a)
         type (-> state :operation :type)]
     (cond
-      ;; If the type is :select and columns exist, filter hints using the columns
-      (and (= type :select) column)
+      ;; If the type is :select or :order and columns exist, filter hints using the columns
+      (and (or (= type :select) (= type :order)) column)
       (find-relevant-columns hints column)
 
-      ;; If the type is :select-partial and columns exist
-      (and (= type :select-partial) columns)
+      ;; If the type is :select-partial or :order-partial and columns exist
+      (and (or (= type :select-partial) (= type :order-partial)) columns)
       (exclude-columns hints columns)
 
       ;; Otherwise, return all hints
@@ -139,9 +141,11 @@
   (let [type (-> state :operation :type)
         hints (case type
                 :table (generate-table-hints state)
-                :select (generate-column-hints state)
-                :select-partial (generate-column-hints state)
+                :select (generate-column-hints state (state :columns))
+                :select-partial (generate-column-hints state (state :columns))
+                :order-partial (generate-column-hints state (state :order))
+                :order (generate-column-hints state (state :order))
                 ;; for :where-partial, we can also use the :select hints as we need to see the columns
                 [])
-        type (case type :select-partial :select type)]
+        type (case type :select-partial :select :order-partial :order type)]
     (assoc-in state [:hints type] (or hints []))))

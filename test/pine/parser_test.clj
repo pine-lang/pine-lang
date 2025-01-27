@@ -57,7 +57,8 @@
 
   (testing "Parse `select-partial` expressions"
     (is (= [{:type :select-partial, :value []}]                   (p "select:")))
-    (is (= [{:type :select-partial, :value []}]                   (p "s: "))))
+    (is (= [{:type :select-partial, :value []}]                   (p "s: ")))
+    (is (= [{:type :select-partial, :value [{:column "id"}]}]     (p "s: id,"))))
 
   (testing "Parse `select` expressions"
     (is (= [{:type :select, :value [{:column  "name"}]}]                              (p "select: name")))
@@ -99,6 +100,11 @@
     (is (= [{:type :where, :value ["age" "IN" [(dt/string "24")]]}]                  (p "age in ('24' ) ")))
     (is (= [{:type :where, :value ["age" "IN" [(dt/string "24") (dt/string "36")]]}] (p "age in (  '24' ,'36' )")))
     (is (= [{:type :where, :value ["age" "IN" [(dt/string "24") (dt/string "36")]]}] (p "age in ('24' '36')"))))
+
+  (testing "Parse `order-partial` expressions"
+    (is (= [{:type :order-partial, :value []}]                                  (p "order:")))
+    (is (= [{:type :order-partial, :value []}]                                  (p "o: ")))
+    (is (= [{:type :order-partial, :value [{:column "id", :direction "DESC"}]}] (p "o: id,"))))
 
   (testing "Parse `order` expressions"
     (is (= [{:type :order, :value [{:column  "name" :direction "DESC"}]}]            (p "order: name")))

@@ -54,13 +54,15 @@
 
 ;; todo: spec for the :value for a :table
 (defn handle [state value]
-  (let [{:keys [table alias schema parent join-column]} value
+  (let [index (state :index)
+        {:keys [table alias schema parent join-column]} value
         a (or alias (str (make-alias table) "_" (state :table-count)))
         current {:schema schema :table table :alias a :parent parent :join-column join-column}]
     (-> state
         ;; pre
         (assoc  :context (state :current))
         (assoc  :current a)
+        (assoc  :current-index index)
         ;;
         (update :tables conj current)
         (update :aliases assoc a current)
