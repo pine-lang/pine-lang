@@ -120,7 +120,7 @@
 (defn generate-column-hints [state columns]
   (let [column (some-> columns reverse first)
         a (if (and (seq column)
-                   (> (column :index) (state :current-index))) ; Check if column's :index is greater
+                   (> (column :index) (state :current-index)))
             (column :alias)
             (state :current))
         hints (generate-all-column-hints state a)
@@ -132,7 +132,7 @@
 
       ;; If the type is :select-partial or :order-partial and columns exist
       (and (or (= type :select-partial) (= type :order-partial)) columns)
-      (exclude-columns hints columns)
+      (exclude-columns hints (filter #(= (:alias %) a) columns))
 
       ;; Otherwise, return all hints
       :else hints)))

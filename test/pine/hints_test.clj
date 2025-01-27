@@ -82,12 +82,17 @@
            (->> "y.employee as e | s: e.*" gen :select (map :column)))))
 
   (testing "Generate `select-partial` hints"
-    (is (= [{:column "id" :alias "c_0"}]     (->  "company    | s:"                 gen :select)))
-    (is (= [{:column "id" :alias "c_0"}]     (->  "x.company  | s:"                 gen :select)))
-    (is (= ["reports_to"  "company_id" "id"] (->> "y.employee | s:"                 gen :select (map :column))))
-    (is (= ["reports_to"]                    (->> "y.employee | s: id, company_id," gen :select (map :column)))))
+    (is (= [{:column "id" :alias "c_0"}]     (->  "company    | s:"                  gen :select)))
+    (is (= [{:column "id" :alias "c_0"}]     (->  "x.company  | s:"                  gen :select)))
+    (is (= ["reports_to"  "company_id" "id"] (->> "y.employee | s:"                  gen :select (map :column))))
+    (is (= ["reports_to"]                    (->> "y.employee | s: id, company_id,"  gen :select (map :column))))
+    (is (= ["reports_to"  "company_id" "id"] (->> "company | s: id | employee | s: " gen :select (map :column))))
+    (is (= ["company_id"] (->> "company | s: id | employee | s: id, "                gen :select (map :column))))
+    (is (= ["reports_to"  "company_id" "id"] (->> "employee as e | company | s: id, e."          gen :select (map :column))))
+    )
 
   (testing "Generate `order-partial` hints"
     (is (= [{:column "id" :alias "c_0"}]     (->  "company | o:"         gen :order)))
     (is (= []                                (->  "company | o: id," gen :order)))
     (is (= [{:column "id" :alias "c_0"}]     (->  "company | s: id | o:" gen :order)))))
+
