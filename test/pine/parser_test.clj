@@ -56,9 +56,12 @@
     (is (= [{:type :from, :value {:alias "u"}}] (p "from: u"))))
 
   (testing "Parse `select-partial` expressions"
-    (is (= [{:type :select-partial, :value []}]                   (p "select:")))
-    (is (= [{:type :select-partial, :value []}]                   (p "s: ")))
-    (is (= [{:type :select-partial, :value [{:column "id"}]}]     (p "s: id,"))))
+    (is (= [{:type :select-partial, :value []}]                        (p "select:")))
+    (is (= [{:type :select-partial, :value []}]                        (p "s: ")))
+    (is (= [{:type :select-partial, :value [{:column "id"}]}]          (p "s: id,")))
+    (is (= [{:type :select-partial, :value [{:column "id"}]}]          (-> "company | s: id," p rest)))
+    (is (= [{:type :select-partial, :value [{:alias "c" :column ""}]}] (-> "company as c | s: c." p rest)))
+    (is (= [{:type :select-partial, :value [{:alias "c" :column ""}]}] (-> "company as c | s: id, c." p rest))))
 
   (testing "Parse `select` expressions"
     (is (= [{:type :select, :value [{:column  "name"}]}]                              (p "select: name")))
