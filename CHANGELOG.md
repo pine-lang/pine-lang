@@ -4,6 +4,8 @@ log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 
 ## [Unreleased]
 
+
+## [0.15.0] - 2025-02-02
 ### Added
 - Column hints when using the order operation:
 
