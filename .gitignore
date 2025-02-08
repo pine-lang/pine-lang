@@ -2,3 +2,5 @@ src/pine/config.*
 !src/pine/config.default
 target
 .cpcache
+.clj-kondo
+.lsp

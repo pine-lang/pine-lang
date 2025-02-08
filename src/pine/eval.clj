@@ -1,5 +1,7 @@
 (ns pine.eval
-  (:require [pine.db.main :as db]))
+  (:require
+   [clojure.string :as s]
+   [pine.db.main :as db]))
 
 (defn q
   ([a b]
@@ -9,7 +11,7 @@
 
 (defn- build-join-clause [{:keys [tables joins aliases]}]
   (when (not-empty (rest tables))
-    (let [join-statements (map (fn [[from-alias to-alias relation]]
+    (let [join-statements (map (fn [[_from-alias to-alias relation]]
                                  (let [[a1 t1 _ a2 t2] relation
                                        {to-table :table to-schema :schema} (get aliases to-alias)]
                                    (str "JOIN " (q to-schema to-table) " AS " (q to-alias)
@@ -17,7 +19,7 @@
                                         " = " (q a2 t2))))
                                ;; (reverse joins)
                                joins)]
-      (clojure.string/join " " join-statements))))
+      (s/join " " join-statements))))
 
 (defn- build-columns-clause [{:keys [operation columns current]}]
   (let [type (-> operation :type)
@@ -26,7 +28,7 @@
                      :else (str (if (seq columns) ", " "") (q current) ".*"))]
     (str
      "SELECT "
-     (clojure.string/join
+     (s/join
       ", "
       (map (fn [{:keys [column alias column-alias symbol]}]
              (let [c (if (empty? column) (str (q alias) "." symbol) (q alias column))]
@@ -38,17 +40,18 @@
   (if (empty? order) nil
       (str
        "ORDER BY "
-       (clojure.string/join
+       (s/join
         ", "
         (map (fn [{:keys [alias column direction]}]
                (str (q alias column) " " direction)) order)))))
 
-(defn- remove-symbols [vs]
+(defn- remove-symbols
   "Remove symbols or columns from a vector of values"
+  [vs]
   (filter #(not (or (= (:type %) :symbol) (= (:type %) :column))) vs))
 
 (defn build-select-query [state]
-  (let [{:keys [tables columns limit where aliases]} state
+  (let [{:keys [tables _columns limit where aliases]} state
         from         (let [{a :alias} (first tables)
                            {table :table schema :schema} (get aliases a)]
                        (str (q schema table) " AS " (q a)))
@@ -56,20 +59,20 @@
         select       (build-columns-clause state)
         where-clause (when (not-empty where)
                        (str "WHERE "
-                            (clojure.string/join " AND "
-                                                 (for [[a col op value] where]
-                                                   (if (or (= op "IN") (= op "NOT IN"))
-                                                     (str (q a col) " " op " (" (clojure.string/join ", " (repeat (count value) "?"))  ")")
-                                                     (str (q a col) " " op " " (cond
-                                                                                 (= (:type value) :symbol) (:value value)
-                                                                                 (= (:type value) :column) (let [[a col] (:value value)] (q a col))
-                                                                                 :else "?")))))))
+                            (s/join " AND "
+                                    (for [[a col op value] where]
+                                      (if (or (= op "IN") (= op "NOT IN"))
+                                        (str (q a col) " " op " (" (s/join ", " (repeat (count value) "?"))  ")")
+                                        (str (q a col) " " op " " (cond
+                                                                    (= (:type value) :symbol) (:value value)
+                                                                    (= (:type value) :column) (let [[a col] (:value value)] (q a col))
+                                                                    :else "?")))))))
         order (build-order-clause state)
         limit (str "LIMIT " (or limit 250))
-        query (clojure.string/join " " (filter some? [select from join where-clause order limit]))
+        query (s/join " " (filter some? [select from join where-clause order limit]))
         params (when (not-empty where)
                  (->> where
-                      (map (fn [[a col op value]] (if (coll? value) value [value])))
+                      (map (fn [[_a _col _op value]] (if (coll? value) value [value])))
                       remove-symbols
                       flatten))]
 
@@ -105,7 +108,7 @@
                          param-str (if (= (:type param) :string)
                                      (str "'" v "'")
                                      (str v))]
-                     (clojure.string/replace-first s "?" param-str)))]
+                     (s/replace-first s "?" param-str)))]
     (if (empty? query) "" (str "\n" (reduce replacer query params) ";\n"))))
 
 (defn run-query [state]

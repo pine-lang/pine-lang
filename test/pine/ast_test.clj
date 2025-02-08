@@ -1,15 +1,14 @@
 (ns pine.ast-test
-  (:require [clojure.test :refer :all]
-            [clojure.test :refer :all]
+  (:require [clojure.test :refer [deftest is testing]]
             [pine.parser :as parser]
             [pine.ast.main :as ast]
             [pine.data-types :as dt]))
 
 (defn- generate
+  "Helper function to generate and get the relevant part in the ast"
   ([expression]
    (generate identity expression))
   ([type expression]
-   "Helper function to generate and get the relevant part in the ast"
    (-> expression
        parser/parse
        :result

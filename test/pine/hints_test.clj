@@ -1,12 +1,12 @@
 (ns pine.hints-test
-  (:require [pine.ast.hints :refer :all]
-            [clojure.test :refer :all]
-            [pine.parser :as parser]
-            [pine.ast.main :as ast]))
+  (:require
+   [clojure.test :refer [deftest is testing]]
+   [pine.parser :as parser]
+   [pine.ast.main :as ast]))
 
 (defn- gen
-  [expression]
   "Helper function to generate and get the relevant part in the ast"
+  [expression]
   (-> expression
       parser/parse
       :result

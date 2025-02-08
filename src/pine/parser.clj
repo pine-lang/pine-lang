@@ -1,9 +1,11 @@
 (ns pine.parser
   "The parser is responsible for generating a parse tree from the bnf and
   normalize the output which is used for the input for generating the ast"
-  (:require [instaparse.core :as insta]
-            [clojure.core.match :refer [match]]
-            [pine.data-types :as dt]))
+  (:require
+   [clojure.core.match :refer [match]]
+   [clojure.string :as s]
+   [instaparse.core :as insta]
+   [pine.data-types :as dt]))
 
 (defmulti -normalize-op
   "Normalize the output of the parser. The first argument is the type of the
@@ -72,7 +74,7 @@
     [:aliased-column [:column [:alias [:symbol a]] [:symbol c]]]                       {:alias a :column c}
     [:aliased-column [:column [:symbol c]] [:alias [:symbol ca]]]                      {:column c :column-alias ca}
     [:aliased-column [:column [:alias [:symbol a]] [:symbol c]] [:alias [:symbol ca]]] {:alias a :column c :column-alias ca}
-    [:aliased-column [:alias [:symbol a]] [:star star]]                                {:alias a :column "" :symbol "*"}
+    [:aliased-column [:alias [:symbol a]] [:star _star]]                                {:alias a :column "" :symbol "*"}
     :else                 (throw (ex-info "Unknown COLUMN operation" {:_ column}))))
 
 (defn normalize-select [payload type]
@@ -95,7 +97,7 @@
 (defn- -normalize-order-col [column]
   (match column
     [:order-column [:column [:symbol c]]]   {:column c :direction "DESC"}
-    [:order-column [:column [:symbol c]] d] {:column c :direction (clojure.string/upper-case d)}
+    [:order-column [:column [:symbol c]] d] {:column c :direction (s/upper-case d)}
     :else                                   (throw (ex-info "Unknown ORDER operation" {:_ column}))))
 
 (defn -normalize-order [payload type]
@@ -165,7 +167,7 @@
 ;; COUNT
 ;; -----
 
-(defmethod -normalize-op :COUNT [[_ [_ payload]]]
+(defmethod -normalize-op :COUNT [[_ [_ _payload]]]
   {:type :count :value {:column "*"}})
 
 ;; -----
@@ -195,19 +197,9 @@
 (defn- normalize-ops [[_ & ops]]
   (mapv (fn [[_ op]] (-normalize-op op)) ops))
 
-(defn parse [expression]
-  "Parse an expression and return the normalized operations"
-  (let [result (parser expression)
-        failure? (insta/failure? result)]
-    (if failure?
-      result
-      (normalize-ops result))))
-
-(defn parse-or-fail [expression]
-  (-> expression parser normalize-ops))
-
-(defn parse [expression]
+(defn parse
   "Parse an expression and return the normalized operations or failure as a string"
+  [expression]
   (let [result (parser expression)
         failure? (insta/failure? result)]
     (if failure?
@@ -215,3 +207,6 @@
             error (with-out-str (println (insta/get-failure result)))]
         {:error error :failure failure})
       {:result (normalize-ops result)})))
+
+(defn parse-or-fail [expression]
+  (-> expression parser normalize-ops))

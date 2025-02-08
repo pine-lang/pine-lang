@@ -1,6 +1,5 @@
 (ns pine.ast.main
-  (:require [pine.parser :as parser]
-            [pine.ast.table :as table]
+  (:require [pine.ast.table :as table]
             [pine.ast.limit :as limit]
             [pine.db.main :as db]
             [pine.ast.where :as where]

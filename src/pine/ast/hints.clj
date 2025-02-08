@@ -1,14 +1,14 @@
 (ns pine.ast.hints
   (:require [clojure.string :as str]))
 
-(defn- filter-relations [token candidates]
+(defn- filter-relations
   "Given a partial token (which can be completed to a table) and all the
   candidate relations, we filter out the unrelated candidates"
+  [token candidates]
   (filter #(-> %1
                first
                clojure.string/lower-case
                (clojure.string/includes? token)) candidates))
-
 ;; ---------------------------------------------------------------------------
 ;; Table Hints
 ;; ---------------------------------------------------------------------------
@@ -21,23 +21,15 @@
               (for [schema schemas]
                 {:schema schema :table table})))))
 
-(defn table-hints [state token]
+(defn table-hints
   "No context - get all the tables matching the token"
+  [state token]
   (let [candidates (-> state :references :table)
         suggestions (filter-relations token candidates)]
     (create-hint-from-table state (->> suggestions keys distinct (sort-by count)))))
-
 ;; ---------------------------------------------------------------------------
 ;; Relation Hints
 ;; ---------------------------------------------------------------------------
-
-(defn- filter-candidates [token candidates]
-  "Given a partial token (which can be completed to a table) and all the
-  candidates, we filter out only the unrelated candidates"
-  (let [xs (filter #(clojure.string/includes? (clojure.string/lower-case %1) token) candidates)]
-    (->> xs
-         distinct
-         (sort-by count))))
 
 (defn- generate-expression [{:keys [schema table column parent]}]
   (str (if parent "of: " "") (if schema (str schema ".") "") table (if column (str " ." column) "")))

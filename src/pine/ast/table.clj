@@ -1,10 +1,11 @@
 (ns pine.ast.table
   (:require
-   [pine.db.main :as db]))
+   [clojure.string :as s]))
 
-(defn- join-helper [references t1 t2 a1 a2 c direction]
+(defn- join-helper
   "Find the references between the tables, get the columns for the first
   reference and return the pair of alias and columns that will be used for the join"
+  [references t1 t2 a1 a2 c direction]
   (when-let [refs (get-in references [:table t1 :referred-by t2 :via])] ;; get references for the tables
     (let [get-col-fn            (if c (fn [_] c) (fn [xs] (if xs (first xs) nil)))
           col                   (-> refs keys get-col-fn)
@@ -17,13 +18,12 @@
       (if (= direction :of)
         [a2 f-col :of a1 col]
         [a1 col :has a2 f-col]))))
-
 ;; TODO: use spec for the state value i.e. first arg
 (defn- join [{:keys [references aliases]} x y c parent]
   (let [a1 (x :alias)
         a2 (y :alias)
-        {t1 :table s1 :schema} (aliases a1)
-        {t2 :table s2 :schema} (aliases a2)
+        {t1 :table _ :schema} (aliases a1) ;; t1 :table s1
+        {t2 :table _ :schema} (aliases a2) ;; t2 :table s2
         result (or
                 ;; By default we narrow the results i.e.
                 ;; We get the children first and if a resultis not found, only
@@ -32,13 +32,13 @@
                 (join-helper references t2 t1 a2 a1 c :of))]
     result))
 
-(defn- update-joins [state current]
+(defn- update-joins
   "Use the tables in the state to create a join between the last 2 tables. The
   reason to get the tables from the state is that they have been assigned an
   alias. We only use the join column from the current value being processed."
+  [state current]
   (let [{:keys [join-column parent]} current
-        from-alias                   (state :context)
-        {:keys [tables join-map]}       state]
+        from-alias                   (state :context)]
     (cond
       (nil? from-alias) state
       :else (let [x (-> state :aliases (get from-alias))
@@ -46,9 +46,8 @@
               (-> state
                   (assoc-in [:join-map (x :alias) (current :alias)] join-result)
                   (update :joins conj [(x :alias) (current :alias) join-result]))))))
-
 (defn make-alias [s]
-  (let [words (if (not-empty s) (clojure.string/split s #"_") ["x"])
+  (let [words (if (not-empty s) (s/split s #"_") ["x"])
         initials (map #(subs % 0 1) words)]
     (apply str initials)))
 

@@ -1,6 +1,6 @@
 (ns pine.parser-test
-  (:require [clojure.test :refer :all]
-            [pine.parser :refer :all]
+  (:require [clojure.test :refer [deftest is testing]]
+            [pine.parser :refer [parse-or-fail]]
             [pine.data-types :as dt]))
 
 (defn- p [e]

@@ -1,6 +1,6 @@
 (ns pine.api
   (:require
-   [compojure.core :refer :all]
+   [compojure.core :refer [GET POST defroutes]]
    [compojure.route :as route]
    [ring.middleware.defaults :refer [wrap-defaults api-defaults]]
    [ring.middleware.json :refer [wrap-json-params wrap-json-response]]
@@ -68,13 +68,13 @@
 
 (defn test-connection [id]
   (let [result (db/run-query id {:query "SELECT NOW();"})]
-    {:connection-id id}))
+    {:connection-id id :time result}))
 
 (defn set-connection [id]
-  (do
-    (reset! db/connection-id id)
-    {:version version
-     :connection-id id}))
+  (reset! db/connection-id id)
+  (db/init-references id)
+  {:version version
+   :connection-id id})
 
 (defn connect [id]
   (try

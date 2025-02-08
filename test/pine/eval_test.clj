@@ -1,26 +1,24 @@
 (ns pine.eval-test
-  (:require [pine.eval :refer :all]
-            [clojure.test :refer :all]
+  (:require [clojure.test :refer [deftest is testing]]
             [pine.ast.main :as ast]
             [pine.parser :as parser]
             [pine.eval :as eval]
             [pine.data-types :as dt]))
 
-(defn- generate [expression]
+(defn- generate
   "Helper function to generate the sql"
+  [expression]
   (-> expression
       parser/parse
       :result
       (ast/generate :test)
       eval/build-query))
 
-(generate "")
-
 (deftest test-build--query
 
   (testing "qualify table"
-    (is (= "\"x\"" (q "x")))
-    (is (= "\"x\".\"y\"" (q "x" "y"))))
+    (is (= "\"x\"" (eval/q "x")))
+    (is (= "\"x\".\"y\"" (eval/q "x" "y"))))
 
   (testing "No expression"
     (is (= {:query "",
