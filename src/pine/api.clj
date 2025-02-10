@@ -71,10 +71,8 @@
     {:connection-id id :time result}))
 
 (defn set-connection [id]
-  (reset! db/connection-id id)
-  (db/init-references id)
   {:version version
-   :connection-id id})
+   :connection-id (db/set-connection id)})
 
 (defn connect [id]
   (try
@@ -102,12 +100,16 @@
   (POST "/api/v1/connections/:id/connect" [id]
     (-> id connect response))
 
+  (GET "/api/v1/connection/stats" []
+    (-> {:connection-count (db/get-connection-count @db/connection-id)
+         :version version
+         :time (str (java.time.LocalDateTime/now))} response))
+
   (POST "/api/v1/eval" [expression] (->> expression api-eval response))
   ;; pine-mode.el
   (POST "/api/v1/build-with-params" [expression] (->> expression api-build :query response))
   ;; default case
   (route/not-found "Not Found"))
-
 (def app
   (-> app-routes
       (wrap-json-params {:keywords? true})

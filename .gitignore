@@ -4,3 +4,6 @@ target
 .cpcache
 .clj-kondo
 .lsp
+.calva
+.nrepl-port
+scratch.clj

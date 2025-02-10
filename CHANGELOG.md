@@ -4,6 +4,19 @@ log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [0.16.0] - 2025-02-09
+### Added
+- Support for connection stats which contain the number of db connections.
+```
+GET /connection/stats
+
+{
+  "connection-count": 10,
+  "time": "2025-02-10T01:49:53.808120858"
+}
+```
+
+
 
 ## [0.15.0] - 2025-02-02
 ### Added
