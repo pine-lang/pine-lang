@@ -14,7 +14,11 @@
    [pine.db.connections :as connections]
    ;; Encode arrays and json results in API responses
    [cheshire.generate :refer [add-encoder encode-str]]
-   [pine.version :as v]))
+   [pine.version :as v])
+  (:import [java.util TimeZone]))
+
+;; Set default timezone to UTC
+(TimeZone/setDefault (TimeZone/getTimeZone "UTC"))
 
 ;; array/json encoding
 (add-encoder org.postgresql.util.PGobject encode-str)
@@ -49,7 +53,8 @@
         (if error result
             {:connection-id connection-name
              :version version
-             :time (db/run-query (state :connection-id) {:query "SELECT NOW() AT TIME ZONE 'UTC' AS utc, NOW() AS db;"})
+            ;;  :time (db/run-query (state :connection-id) {:query "SELECT NOW() as now, NOW() AT TIME ZONE 'UTC' AS utc;"})
+            ;;  :server_time (str (java.time.Instant/now))
              :result (eval/run-query state)}))
       (catch Exception e {:connection-id connection-name
                           :error (.getMessage e)}))))
@@ -70,13 +75,13 @@
   (let [result (db/run-query id {:query "SELECT NOW();"})]
     {:connection-id id :time result}))
 
-(defn set-connection [id]
+(defn set-connection-pool [id]
   {:version version
    :connection-id (db/set-connection id)})
 
 (defn connect [id]
   (try
-    (-> id test-connection :connection-id set-connection)
+    (-> id test-connection :connection-id set-connection-pool)
     (catch Exception e {:error (.getMessage e)})))
 
 (defn wrap-logger
@@ -95,7 +100,7 @@
   (GET "/api/v1/connections" [] (-> @connections/pools response))
   (POST "/api/v1/connections" req
     (let [connection (get-in req [:params])]
-      (-> {:connection-id (connections/add-connection connection)} response)))
+      (-> {:connection-id (connections/add-connection-pool connection)} response)))
 
   (POST "/api/v1/connections/:id/connect" [id]
     (-> id connect response))

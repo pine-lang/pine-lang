@@ -42,13 +42,8 @@
 (defn get-connection-name [id]
   (-> id get-connection-pool make-connection-id))
 
-(defn add-connection [connection]
+(defn add-connection-pool [connection]
   (let [pool (create-pool connection)
         id (make-connection-id pool)]
     (swap! pools assoc id pool)
     id))
-
-(defn close-connection [id]
-  (when-let [pool (@pools id)]
-    (.close pool)
-    (swap! pools dissoc id)))
