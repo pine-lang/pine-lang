@@ -92,7 +92,7 @@
 (defroutes app-routes
   (POST "/api/v1/build" [expression] (->> expression api-build response))
   (GET "/api/v1/connection" [] (-> (get-connection) response))
-  (GET "/api/v1/connections" [] (-> @connections/connections response))
+  (GET "/api/v1/connections" [] (-> @connections/pools response))
   (POST "/api/v1/connections" req
     (let [connection (get-in req [:params])]
       (-> {:connection-id (connections/add-connection connection)} response)))
