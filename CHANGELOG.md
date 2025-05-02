@@ -4,6 +4,12 @@ log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 
 ## [Unreleased]
 
+
+## [0.17.0] - 2025-05-03
+### Fixed
+- Using database connection pooling
+- Using UTC dates
+
 ## [0.16.0] - 2025-02-09
 ### Added
 - Support for connection stats which contain the number of db connections.

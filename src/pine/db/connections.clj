@@ -1,32 +1,49 @@
-(ns pine.db.connections)
+(ns pine.db.connections
+  (:require
+   [clojure.string :as s])
+  (:import
+   (com.zaxxer.hikari HikariConfig HikariDataSource)))
 
-(defn get-env [var default]
-  (or (System/getenv var) default))
+(defn- create-hikari-config [config]
+  (doto (HikariConfig.)
+    (.setJdbcUrl (str "jdbc:postgresql://" (:host config) ":" (:port config) "/" (:dbname config)))
+    (.setUsername (:user config))
+    (.setPassword (:password config))
+    (.setSchema (:schema config))
+    (.setMaximumPoolSize 1)      ; Only need one connection
+    (.setMinimumIdle 1)          ; Keep one idle connection
+    (.setIdleTimeout 600000)     ; 10 minutes idle timeout
+    (.setConnectionTimeout 10000) ; 10 seconds connection timeout
+    (.setMaxLifetime 3600000)    ; 1 hour max lifetime
+    (.setAutoCommit false)       ; Disable auto-commit
+    (.setReadOnly true)))        ; Read-only mode for now
 
-;; handle port
-(def connections "Database connections"
-  (atom {:default {:host (get-env "DB_HOST" nil)
-                   :dbtype (get-env "DB_TYPE" "postgres")
-                   :port (get-env "DB_PORT" 5432)
-                   :dbname (get-env "DB_NAME" nil)
-                   :user (get-env "DB_USER" nil)
-                   :password (get-env "DB_PASSWORD" nil)
-                   :schema (get-env "DB_SCHEMA" nil)}}))
+(defn create-pool [config]
+  (let [config (merge {:dbtype "postgres" :port 5432} config)]
+    (when (some nil? (vals (select-keys config [:host :dbname :user :password])))
+      (throw (ex-info "Missing required database configuration" {:config config})))
+    (HikariDataSource. (create-hikari-config config))))
 
-(defn get-connection [id]
-  (let [connection (@connections id)]
-    (if connection
-      connection
+(def pools "Database connection pools" (atom {}))
+
+(defn get-connection-pool [id]
+  (let [pool-or-fn (@pools id)]
+    (if pool-or-fn
+      (if (fn? pool-or-fn)
+        (let [pool (pool-or-fn)]
+          (swap! pools assoc id pool)
+          pool)
+        pool-or-fn)
       (throw (ex-info "Connection not found" {:id id})))))
 
-(defn make-connection-id [connection]
-  (str (connection :host) ":" (connection :port)))
+(defn make-connection-id [pool]
+  (-> pool .getJdbcUrl (s/split #"/") (nth 2)))
 
 (defn get-connection-name [id]
-  (-> id get-connection make-connection-id))
+  (-> id get-connection-pool make-connection-id))
 
-(defn add-connection [connection]
-  (let [id (make-connection-id connection)]
-    (swap! connections assoc id connection)
-    (prn connections)
+(defn add-connection-pool [connection]
+  (let [pool (create-pool connection)
+        id (make-connection-id pool)]
+    (swap! pools assoc id pool)
     id))

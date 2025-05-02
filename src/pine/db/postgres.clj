@@ -5,7 +5,7 @@
 
 (defn- get-foreign-keys
   "Get the foreign keys from the database."
-  [config]
+  [pool]
   (prn (format "Loading all references..."))
   (let [opts {:as-arrays? true}
         sql "SELECT
@@ -24,7 +24,8 @@ JOIN pg_namespace fn ON fn.oid = f.relnamespace
 JOIN pg_attribute fa ON fa.attnum = ANY(con.confkey) AND fa.attrelid = f.oid
 WHERE con.contype = 'f'
 "]
-    (rest (jdbc/query config sql opts))))
+    (with-open [conn (.getConnection pool)]
+      (rest (jdbc/query {:connection conn} sql opts)))))
 
 (defn- index-foreign-keys [foreign-keys]
   (reduce (fn [acc [schema table col f-schema f-table f-col]]
@@ -67,7 +68,7 @@ WHERE con.contype = 'f'
 
 (defn- get-columns
   "Get the columns for all tables"
-  [config]
+  [pool]
   (prn (format "Loading all columns..."))
   (let [opts {:as-arrays? true}
         sql "SELECT
@@ -80,7 +81,8 @@ WHERE con.contype = 'f'
   is_nullable,
   column_default
 FROM information_schema.columns"]
-    (rest (jdbc/query config sql opts))))
+    (with-open [conn (.getConnection pool)]
+      (rest (jdbc/query {:connection conn} sql opts)))))
 
 (defn- index-columns [acc columns]
   (reduce (fn [acc [schema table col _pos type _len nullable default]]
@@ -106,9 +108,9 @@ FROM information_schema.columns"]
 (defn get-references-helper
   "Return the foreign keys. TODO: also return the columns."
   [id]
-  (let [connection (connections/get-connection id)
-        columns (get-columns connection)
-        foreign-keys (get-foreign-keys connection)]
+  (let [pool (connections/get-connection-pool id)
+        columns (get-columns pool)
+        foreign-keys (get-foreign-keys pool)]
     [foreign-keys columns]))
 
 (defn get-indexed-references [id]
@@ -123,10 +125,11 @@ FROM information_schema.columns"]
     (catch Exception _e x)))
 
 (defn run-query [id query]
-  (let [connection (@connections/connections id)
+  (let [pool (connections/get-connection-pool id)
         {:keys [query params]} query
         params (map try-cast-to-uuid params)
         _ (prn (format "Running query: %s" query))
-        result (jdbc/query connection (cons query params) {:as-arrays? true :identifiers identity})
+        result (with-open [conn (.getConnection pool)]
+                 (jdbc/query {:connection conn} (cons query params) {:as-arrays? true :identifiers identity}))
         _ (prn "Done!")]
     result))
