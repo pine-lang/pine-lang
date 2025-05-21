@@ -4,6 +4,19 @@ log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Changed
+- Default limit is removed for `count:` and `delete:` operations.
+- For `count:` operations, the `with` SQL clause is used to build the nested query e.g.
+
+```pine
+company | count:
+```
+
+is evaluated to:
+
+```sql
+WITH x AS (SELECT * FROM "public"."company") SELECT COUNT(*) FROM x;
+```
 
 ## [0.17.0] - 2025-05-03
 ### Fixed

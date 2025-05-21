@@ -31,9 +31,12 @@
            (generate "company"))))
 
   (testing "Count"
-    (is (= {:query "SELECT COUNT(*) FROM ( SELECT \"c_0\".* FROM \"company\" AS \"c_0\" LIMIT 250 )",
+    (is (= {:query "WITH x AS ( SELECT \"c_0\".* FROM \"company\" AS \"c_0\" ) SELECT COUNT(*) FROM x",
             :params nil}
-           (generate "company | count:"))))
+           (generate "company | count:")))
+    (is (= {:query "WITH x AS ( SELECT \"c_0\".* FROM \"company\" AS \"c_0\" LIMIT 100 ) SELECT COUNT(*) FROM x",
+            :params nil}
+           (generate "company | limit: 100 | count:"))))
 
   (testing "Condition : ="
     (is (= {:query "SELECT \"c_0\".* FROM \"company\" AS \"c_0\" WHERE \"c_0\".\"name\" = ? LIMIT 250",
@@ -123,7 +126,7 @@
            (generate "company as c | employee as e | s: c.id, e.*"))))
 
   (testing "delete action"
-    (is (= {:query "DELETE FROM \"company\" WHERE \"id\" IN ( SELECT \"c_0\".\"id\" FROM \"company\" AS \"c_0\" LIMIT 250 )",
+    (is (= {:query "DELETE FROM \"company\" WHERE \"id\" IN ( SELECT \"c_0\".\"id\" FROM \"company\" AS \"c_0\" )",
             :params nil}
            (generate "company | delete! .id"))))
 

@@ -68,7 +68,7 @@
                                                                     (= (:type value) :column) (let [[a col] (:value value)] (q a col))
                                                                     :else "?")))))))
         order (build-order-clause state)
-        limit (str "LIMIT " (or limit 250))
+        limit (when limit (str "LIMIT " limit))
         query (s/join " " (filter some? [select from join where-clause order limit]))
         params (when (not-empty where)
                  (->> where
@@ -80,7 +80,7 @@
 
 (defn build-count-query [state]
   (let [{:keys [query params]} (build-select-query state)]
-    {:query (str "SELECT COUNT(*) FROM ( " query " )")
+    {:query (str "WITH x AS ( " query " ) SELECT COUNT(*) FROM x")
      :params params}))
 
 (defn build-delete-query [state]
@@ -100,8 +100,7 @@
       (= type :count) (build-count-query state)
       ;; no op
       (= type :delete) {:query " /* No SQL. Evaluate the pine expression for results */ "}
-      :else (build-select-query state))))
-
+      :else (build-select-query (update state :limit #(or % 250))))))
 (defn formatted-query [{:keys [query params]}]
   (let [replacer (fn [s param]
                    (let [v (:value param)
