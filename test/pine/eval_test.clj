@@ -63,11 +63,9 @@
     (is (= {:query "SELECT \"c\".* FROM \"company\" AS \"c\" WHERE \"c\".\"name\" != \"c\".\"country\" LIMIT 250",
             :params (map dt/string [])}
            (generate "company as c | name != c.country")))
-    ;; aliasing for both the columns is not supported yet
-    ;;
-    ;; (is (= {:query "SELECT c.* FROM \"company\" AS \"c\" WHERE \"c\".\"name\" != \"c\".\"country\" LIMIT 250",
-    ;;         :params (map dt/string [])}
-    ;;        (generate "company as c | c.name != c.country")))
+    (is (= {:query "SELECT \"c\".* FROM \"company\" AS \"c\" WHERE \"c\".\"name\" != \"c\".\"country\" LIMIT 250",
+            :params (map dt/string [])}
+           (generate "company as c | c.name != c.country")))
     )
 
   (testing "Condition : NULL"

@@ -4,6 +4,12 @@ log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Added
+- Column aliases are supported in conditions e.g.
+```
+tenant as t | company | where: t.id = 'xxx'
+```
+
 ### Changed
 - Default limit is removed for `count:` and `delete:` operations.
 - For `count:` operations, the `with` SQL clause is used to build the nested query e.g.

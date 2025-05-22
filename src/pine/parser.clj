@@ -122,23 +122,50 @@
 
 (defn- parse-condition [condition]
   (match condition
-    [:condition [:symbol column] [:equals] [:number value]]                                    {:type :where :value [column "=" (dt/number value)]}
-    [:condition [:symbol column] [:equals] [:null]]                                            {:type :where :value [column "IS" (dt/symbol "NULL")]}
-    [:condition [:symbol column] [:equals] [:column [:symbol c]]]                              {:type :where :value [column "=" (dt/column c)]}
-    [:condition [:symbol column] [:equals] [:column [:alias [:symbol a]] [:symbol c]]]         {:type :where :value [column "=" (dt/column a c)]}
-    [:condition [:symbol column] [:equals] [:string & characters]]                             {:type :where :value [column "=" (parse-characters characters)]}
-    [:condition [:symbol column] [:does-not-equal] [:number value]]                            {:type :where :value [column "!=" (dt/number value)]}
-    [:condition [:symbol column] [:does-not-equal] [:null]]                                    {:type :where :value [column "IS NOT" (dt/symbol "NULL")]}
-    [:condition [:symbol column] [:does-not-equal] [:column [:symbol c]]]                      {:type :where :value [column "!=" (dt/column c)]}
-    [:condition [:symbol column] [:does-not-equal] [:column [:alias [:symbol a]] [:symbol c]]] {:type :where :value [column "!=" (dt/column a c)]}
-    [:condition [:symbol column] [:does-not-equal] [:string & characters]]                     {:type :where :value [column "!=" (parse-characters characters)]}
-    [:condition [:symbol column] [:is] [:null]]                                                {:type :where :value [column "IS" (dt/symbol "NULL")]}
-    [:condition [:symbol column] [:is-not] [:null]]                                            {:type :where :value [column "IS NOT" (dt/symbol "NULL")]}
-    [:condition [:symbol column] [:like] [:string & characters]]                               {:type :where :value [column "LIKE" (parse-characters characters)]}
-    [:condition [:symbol column] [:in] & strings]                                              {:type :where :value [column "IN" (map parse-strings strings)]}
-    [:condition [:symbol column] [:not-in] & strings]                                          {:type :where :value [column "NOT IN" (map parse-strings strings)]}
-    [:condition [:symbol column] [:equals] [:boolean b]]                                       {:type :where :value [column "=" (dt/symbol b)]}
-    [:condition [:symbol column] [:does-not-equal] [:boolean b]]                               {:type :where :value [column "!=" (dt/symbol b)]}
+    ;; Equals operations
+    [:condition [:column [:symbol column]]                      [:equals] [:number value]]                                    {:type :where :value [(dt/column column) "=" (dt/number value)]}
+    [:condition [:column [:alias [:symbol a]] [:symbol column]] [:equals] [:number value]]                                    {:type :where :value [(dt/column a column) "=" (dt/number value)]}
+    [:condition [:column [:symbol column]]                      [:equals] [:null]]                                            {:type :where :value [(dt/column column) "IS" (dt/symbol "NULL")]}
+    [:condition [:column [:alias [:symbol a]] [:symbol column]] [:equals] [:null]]                                            {:type :where :value [(dt/column a column) "IS" (dt/symbol "NULL")]}
+    [:condition [:column [:symbol column]]                      [:equals] [:column [:symbol c]]]                              {:type :where :value [(dt/column column) "=" (dt/column c)]}
+    [:condition [:column [:alias [:symbol a]] [:symbol column]] [:equals] [:column [:symbol c]]]                              {:type :where :value [(dt/column a column) "=" (dt/column c)]}
+    [:condition [:column [:symbol column]]                      [:equals] [:column [:alias [:symbol a]] [:symbol c]]]         {:type :where :value [(dt/column column) "=" (dt/column a c)]}
+    [:condition [:column [:alias [:symbol a]] [:symbol column]] [:equals] [:column [:alias [:symbol a2]] [:symbol c]]]        {:type :where :value [(dt/column a column) "=" (dt/column a2 c)]}
+    [:condition [:column [:symbol column]]                      [:equals] [:string & characters]]                             {:type :where :value [(dt/column column) "=" (parse-characters characters)]}
+    [:condition [:column [:alias [:symbol a]] [:symbol column]] [:equals] [:string & characters]]                             {:type :where :value [(dt/column a column) "=" (parse-characters characters)]}
+    [:condition [:column [:symbol column]]                      [:equals] [:boolean b]]                                       {:type :where :value [(dt/column column) "=" (dt/symbol b)]}
+    [:condition [:column [:alias [:symbol a]] [:symbol column]] [:equals] [:boolean b]]                                       {:type :where :value [(dt/column a column) "=" (dt/symbol b)]}
+
+    ;; Not equals operations
+    [:condition [:column [:symbol column]]                      [:does-not-equal] [:number value]]                             {:type :where :value [(dt/column column) "!=" (dt/number value)]}
+    [:condition [:column [:alias [:symbol a]] [:symbol column]] [:does-not-equal] [:number value]]                             {:type :where :value [(dt/column a column) "!=" (dt/number value)]}
+    [:condition [:column [:symbol column]]                      [:does-not-equal] [:null]]                                     {:type :where :value [(dt/column column) "IS NOT" (dt/symbol "NULL")]}
+    [:condition [:column [:alias [:symbol a]] [:symbol column]] [:does-not-equal] [:null]]                                     {:type :where :value [(dt/column a column) "IS NOT" (dt/symbol "NULL")]}
+    [:condition [:column [:symbol column]]                      [:does-not-equal] [:column [:symbol c]]]                       {:type :where :value [(dt/column column) "!=" (dt/column c)]}
+    [:condition [:column [:alias [:symbol a]] [:symbol column]] [:does-not-equal] [:column [:symbol c]]]                       {:type :where :value [(dt/column a column) "!=" (dt/column c)]}
+    [:condition [:column [:symbol column]]                      [:does-not-equal] [:column [:alias [:symbol a]] [:symbol c]]]  {:type :where :value [(dt/column column) "!=" (dt/column a c)]}
+    [:condition [:column [:alias [:symbol a]] [:symbol column]] [:does-not-equal] [:column [:alias [:symbol a2]] [:symbol c]]] {:type :where :value [(dt/column a column) "!=" (dt/column a2 c)]}
+    [:condition [:column [:symbol column]]                      [:does-not-equal] [:string & characters]]                      {:type :where :value [(dt/column column) "!=" (parse-characters characters)]}
+    [:condition [:column [:alias [:symbol a]] [:symbol column]] [:does-not-equal] [:string & characters]]                      {:type :where :value [(dt/column a column) "!=" (parse-characters characters)]}
+    [:condition [:column [:symbol column]]                      [:does-not-equal] [:boolean b]]                                {:type :where :value [(dt/column column) "!=" (dt/symbol b)]}
+    [:condition [:column [:alias [:symbol a]] [:symbol column]] [:does-not-equal] [:boolean b]]                                {:type :where :value [(dt/column a column) "!=" (dt/symbol b)]}
+
+    ;; IS NULL operations
+    [:condition [:column [:symbol column]]                      [:is] [:null]]                                                {:type :where :value [(dt/column column) "IS" (dt/symbol "NULL")]}
+    [:condition [:column [:alias [:symbol a]] [:symbol column]] [:is] [:null]]                                                {:type :where :value [(dt/column a column) "IS" (dt/symbol "NULL")]}
+    [:condition [:column [:symbol column]]                      [:is-not] [:null]]                                            {:type :where :value [(dt/column column) "IS NOT" (dt/symbol "NULL")]}
+    [:condition [:column [:alias [:symbol a]] [:symbol column]] [:is-not] [:null]]                                            {:type :where :value [(dt/column a column) "IS NOT" (dt/symbol "NULL")]}
+
+    ;; LIKE operations
+    [:condition [:column [:symbol column]]                      [:like] [:string & characters]]                               {:type :where :value [(dt/column column) "LIKE" (parse-characters characters)]}
+    [:condition [:column [:alias [:symbol a]] [:symbol column]] [:like] [:string & characters]]                               {:type :where :value [(dt/column a column) "LIKE" (parse-characters characters)]}
+
+    ;; IN operations
+    [:condition [:column [:symbol column]]                      [:in] & strings]                                              {:type :where :value [(dt/column column) "IN" (map parse-strings strings)]}
+    [:condition [:column [:alias [:symbol a]] [:symbol column]] [:in] & strings]                                              {:type :where :value [(dt/column a column) "IN" (map parse-strings strings)]}
+    [:condition [:column [:symbol column]]                      [:not-in] & strings]                                          {:type :where :value [(dt/column column) "NOT IN" (map parse-strings strings)]}
+    [:condition [:column [:alias [:symbol a]] [:symbol column]] [:not-in] & strings]                                          {:type :where :value [(dt/column a column) "NOT IN" (map parse-strings strings)]}
+
     :else                (throw (ex-info "Unknown condition in WHERE operation"      {:_ condition}))))
 
 (defmethod -normalize-op :WHERE [[_ payload]]

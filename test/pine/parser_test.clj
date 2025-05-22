@@ -78,33 +78,32 @@
     (is (= [{:type :limit, :value 10}]  (p "10"))))
 
   (testing "Parse `where` expressions"
-    (is (= [{:type :where, :value ["name" "=" (dt/string "John Doe")]}]       (p "where: name='John Doe'")))
-    (is (= [{:type :where, :value ["name" "=" (dt/string "John Doe")]}]       (p "w: name='John Doe'")))
-    (is (= [{:type :where, :value ["name" "=" (dt/string "John Doe")]}]       (p "name = 'John Doe'")))
-    (is (= [{:type :where, :value ["name" "=" (dt/string "John Doe")]}]       (p "name='John Doe'")))
-    (is (= [{:type :where, :value ["name" "LIKE" (dt/string "John%")]}]       (p "name like 'John%'")))
-    (is (= [{:type :where, :value ["age" "IS" (dt/symbol "NULL")]}]           (p "age is null")))
-    (is (= [{:type :where, :value ["age" "IS" (dt/symbol "NULL")]}]           (p "age = null")))
-    (is (= [{:type :where, :value ["age" "IS NOT" (dt/symbol "NULL")]}]       (p "age is not null")))
-    (is (= [{:type :where, :value ["age" "=" (dt/number "24")]}]              (p "age = 24")))
-    (is (= [{:type :where, :value ["age" "!=" (dt/number "24")]}]             (p "age != 24")))
-    (is (= [{:type :where, :value ["name" "=" (dt/column "first_name")]}]     (p "name = first_name")))
-    (is (= [{:type :where, :value ["name" "=" (dt/column "x" "first_name")]}] (p "name = x.first_name")))
-    (is (= [{:type :where, :value ["public" "=" (dt/symbol "true")]}]         (p "public = true")))
-    (is (= [{:type :where, :value ["public" "=" (dt/symbol "false")]}]        (p "public = false")))
-    (is (= [{:type :where, :value ["public" "!=" (dt/symbol "false")]}]       (p "public != false")))
-    ;; aliasing for both the columns is not supported yet
-    ;; (is (= [{:type :where, :value ["name" "=" (dt/column "x" "first_name")]}] (p "x.name = x.first_name")))
+    (is (= [{:type :where, :value [(dt/column "name") "=" (dt/string "John Doe")]}]                       (p "where: name='John Doe'")))
+    (is (= [{:type :where, :value [(dt/column "name") "=" (dt/string "John Doe")]}]                       (p "w: name='John Doe'")))
+    (is (= [{:type :where, :value [(dt/column "name") "=" (dt/string "John Doe")]}]                       (p "name = 'John Doe'")))
+    (is (= [{:type :where, :value [(dt/column "name") "=" (dt/string "John Doe")]}]                       (p "name='John Doe'")))
+    (is (= [{:type :where, :value [(dt/column "name") "LIKE" (dt/string "John%")]}]                       (p "name like 'John%'")))
+    (is (= [{:type :where, :value [(dt/column "age") "IS" (dt/symbol "NULL")]}]                           (p "age is null")))
+    (is (= [{:type :where, :value [(dt/column "age") "IS" (dt/symbol "NULL")]}]                           (p "age = null")))
+    (is (= [{:type :where, :value [(dt/column "age") "IS NOT" (dt/symbol "NULL")]}]                       (p "age is not null")))
+    (is (= [{:type :where, :value [(dt/column "age") "=" (dt/number "24")]}]                              (p "age = 24")))
+    (is (= [{:type :where, :value [(dt/column "age") "!=" (dt/number "24")]}]                             (p "age != 24")))
+    (is (= [{:type :where, :value [(dt/column "name") "=" (dt/column "first_name")]}]                     (p "name = first_name")))
+    (is (= [{:type :where, :value [(dt/column "name") "=" (dt/column "x" "first_name")]}]                 (p "name = x.first_name")))
+    (is (= [{:type :where, :value [(dt/column "public") "=" (dt/symbol "true")]}]                         (p "public = true")))
+    (is (= [{:type :where, :value [(dt/column "public") "=" (dt/symbol "false")]}]                        (p "public = false")))
+    (is (= [{:type :where, :value [(dt/column "public") "!=" (dt/symbol "false")]}]                       (p "public != false")))
+    (is (= [{:type :where, :value [(dt/column "x" "name") "=" (dt/column "x" "first_name")]}] (p "x.name = x.first_name")))
     )
 
   (testing "Parse `where` `or` expressions"
-    (is (= [{:type :where, :value ["name" "=" (dt/string "John Doe")]}]       (p "w: name='John Doe', age=24 "))))
+    (is (= [{:type :where, :value [(dt/column "name") "=" (dt/string "John Doe")]}]       (p "w: name='John Doe', age=24 "))))
 
   (testing "Parse `where` `in` expressions"
-    (is (= [{:type :where, :value ["age" "IN" [(dt/string "24")]]}]                  (p "age in ('24')")))
-    (is (= [{:type :where, :value ["age" "IN" [(dt/string "24")]]}]                  (p "age in ('24' ) ")))
-    (is (= [{:type :where, :value ["age" "IN" [(dt/string "24") (dt/string "36")]]}] (p "age in (  '24' ,'36' )")))
-    (is (= [{:type :where, :value ["age" "IN" [(dt/string "24") (dt/string "36")]]}] (p "age in ('24' '36')"))))
+    (is (= [{:type :where, :value [(dt/column "age") "IN" [(dt/string "24")]]}]                  (p "age in ('24')")))
+    (is (= [{:type :where, :value [(dt/column "age") "IN" [(dt/string "24")]]}]                  (p "age in ('24' ) ")))
+    (is (= [{:type :where, :value [(dt/column "age") "IN" [(dt/string "24") (dt/string "36")]]}] (p "age in (  '24' ,'36' )")))
+    (is (= [{:type :where, :value [(dt/column "age") "IN" [(dt/string "24") (dt/string "36")]]}] (p "age in ('24' '36')"))))
 
   (testing "Parse `order-partial` expressions"
     (is (= [{:type :order-partial, :value []}]                                  (p "order:")))
@@ -126,4 +125,3 @@
 
   (testing "Parse No Operation expressions"
     (is (= [{:value {:table "company"}, :type :table} {:type :delete, :value nil}] (p "company | d:")))))
-

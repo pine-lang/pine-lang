@@ -33,12 +33,13 @@ count-op          := <"count:">
 <parent>        := "of:"  <ws*> symbol+ | "of:"  <ws*> symbol <"."> symbol+ | symbol+ "^" | symbol <"."> symbol+ "^"
 
 conditions      := condition (<","> <ws*> condition)*
-condition       := symbol <ws*> operator <ws*> (column|string|number|boolean|null) | condition-in
-<condition-in>  := symbol <ws*> (in  | not-in) <ws*>  <"("> strings* <")">
+condition       := column <ws*> operator <ws*> (column|string|number|boolean|null) | condition-in
+<condition-in>  := column <ws*> (in  | not-in) <ws*>  <"("> strings* <")">
 <strings>       := <ws*> string <ws*> <",">?
 
 aliased-columns := aliased-column (<","> <ws*> aliased-column)*
 aliased-column  := column <ws*> | column <ws+> as-alias <ws*> | alias <"."> star
+<as-alias>         := <"as"> <ws+> alias
 
 order-columns := order-column (<","> <ws*> order-column)*
 order-column  := column | column <ws+> ("desc"|"asc")
@@ -48,7 +49,6 @@ hint-column     := <"."> symbol
 columns            := column (<","> <ws*> column)*
 column             := qualified-symbol
 <qualified-symbol> := symbol | alias <"."> symbol
-<as-alias>         := <"as"> <ws+> alias
 
 alias    := symbol
 
