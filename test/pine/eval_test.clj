@@ -136,3 +136,9 @@
   (testing "string"
     (is (= "\nSELECT \"c_0\".* FROM \"company\" AS \"c_0\" WHERE \"c_0\".\"name\" = 'Acme Inc.' LIMIT 250;\n"
            (-> "company | where: name='Acme Inc.'" generate eval/formatted-query)))))
+
+(testing "group"
+  (is (= {:query "SELECT status, COUNT(status) FROM \"email\" AS \"e_0\" GROUP BY status LIMIT 250",
+          :params nil}
+         (generate "email | group: status => count")))
+  )

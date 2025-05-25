@@ -118,4 +118,10 @@
     (is (= {:column "*"} (generate :count "company | count:"))))
 
   (testing "Generate ast for `delete`"
-    (is (= {:column "id"} (generate :delete "company | delete! .id")))))
+    (is (= {:column "id"} (generate :delete "company | delete! .id"))))
+
+  (testing "Generate ast for `group`"
+    (is (= {:columns {:column "status"} :functions ["count"]} (generate :group "company | group: status => count")))
+    (is (= {:columns {:alias "e" :column "status"} :functions ["count"]} (generate :group "email as e | group: e.status => count")))
+    )
+  )

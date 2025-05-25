@@ -93,8 +93,7 @@
     (is (= [{:type :where, :value [(dt/column "public") "=" (dt/symbol "true")]}]                         (p "public = true")))
     (is (= [{:type :where, :value [(dt/column "public") "=" (dt/symbol "false")]}]                        (p "public = false")))
     (is (= [{:type :where, :value [(dt/column "public") "!=" (dt/symbol "false")]}]                       (p "public != false")))
-    (is (= [{:type :where, :value [(dt/column "x" "name") "=" (dt/column "x" "first_name")]}] (p "x.name = x.first_name")))
-    )
+    (is (= [{:type :where, :value [(dt/column "x" "name") "=" (dt/column "x" "first_name")]}] (p "x.name = x.first_name"))))
 
   (testing "Parse `where` `or` expressions"
     (is (= [{:type :where, :value [(dt/column "name") "=" (dt/string "John Doe")]}]       (p "w: name='John Doe', age=24 "))))
@@ -124,4 +123,18 @@
     (is (= [{:type :delete-action, :value {:column "id"}}] (p "delete! .id"))))
 
   (testing "Parse No Operation expressions"
-    (is (= [{:value {:table "company"}, :type :table} {:type :delete, :value nil}] (p "company | d:")))))
+    (is (= [{:value {:table "company"}, :type :table} {:type :delete, :value nil}] (p "company | d:"))))
+
+  (testing "Parse `group` expressions"
+    (is (= [{:type :group, :value {:columns [{:column "status"}], :functions ["count"]}}]
+           (p "group: status => count")))
+    (is (= [{:type :group, :value {:columns [{:column "status"}], :functions ["count", "sum"]}}]
+           (p "group: status => count, sum")))
+    (is (= [{:type :group, :value {:columns [{:column "name"} {:column "status"}], :functions ["count"]}}]
+           (p "group: name, status => count")))
+
+    ;; with aliases
+    (is (= [{:type :group, :value {:columns [{:alias "x", :column "status"}], :functions ["count"]}}]
+           (p "group: x.status  => count"))))
+
+  )

@@ -69,6 +69,7 @@
 ;; -----------------------
 
 (defn- -normalize-column [column]
+  (println "COLUMN" column)
   (match column
     [:aliased-column [:column [:symbol c]]]                                            {:column c}
     [:aliased-column [:column [:alias [:symbol a]] [:symbol c]]]                       {:alias a :column c}
@@ -196,6 +197,18 @@
 
 (defmethod -normalize-op :COUNT [[_ [_ _payload]]]
   {:type :count :value {:column "*"}})
+
+;; -----
+;; GROUP
+;; -----
+
+(defmethod -normalize-op :GROUP [[_ payload]]
+  (match payload
+    [:group-args [:aliased-columns & columns] [:aggregate-functions [:aggregate-function function-name]]]
+    {:type :group
+     :value {:columns (mapv -normalize-column columns)
+             :functions [function-name]}}
+    :else (throw (ex-info "Unknown GROUP operation" {:_ payload}))))
 
 ;; -----
 ;; DELETE

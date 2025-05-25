@@ -1,14 +1,16 @@
 (ns pine.ast.main
-  (:require [pine.ast.table :as table]
-            [pine.ast.limit :as limit]
-            [pine.db.main :as db]
-            [pine.ast.where :as where]
-            [pine.ast.hints :as hints]
-            [pine.ast.select :as select]
-            [pine.ast.from :as from]
-            [pine.ast.order :as order]
-            [pine.ast.count :as pine-count]
-            [pine.ast.delete-action :as delete-action]))
+  (:require
+   [pine.ast.count :as pine-count]
+   [pine.ast.delete-action :as delete-action]
+   [pine.ast.from :as from]
+   [pine.ast.group :as group]
+   [pine.ast.hints :as hints]
+   [pine.ast.limit :as limit]
+   [pine.ast.order :as order]
+   [pine.ast.select :as select]
+   [pine.ast.table :as table]
+   [pine.ast.where :as where]
+   [pine.db.main :as db]))
 
 (def state {;; pre
             ;; - connection
@@ -57,6 +59,7 @@
     :limit (limit/handle state value)
     :where (where/handle state value)
     :from (from/handle state value)
+    :group (group/handle state value)
     :order (order/handle state value)
     :order-partial (order/handle state value)
     :count (pine-count/handle state value)

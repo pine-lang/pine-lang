@@ -1,6 +1,6 @@
 OPERATIONS := <ws*> OPERATION <ws*> (<"|"> <ws*> OPERATION <ws*>)*
 
-OPERATION    := SELECT-PARTIAL | SELECT | TABLE | WHERE | LIMIT| FROM | ORDER-PARTIAL | ORDER | COUNT | DELETE-ACTION | DELETE
+OPERATION    := SELECT-PARTIAL | SELECT | TABLE | WHERE | LIMIT| FROM | ORDER-PARTIAL | ORDER | COUNT | DELETE-ACTION | DELETE | GROUP
 
 
 TABLE             := table (<ws+> hint-column)? (<ws+> as-alias)?
@@ -19,14 +19,22 @@ DELETE-ACTION     := <delete-action-op> hint-column
 DELETE            := <delete-op>
 COUNT             := <count-op>
 
+GROUP             := <group-op>         group-args
+
 select-op         := (<"select:"> | <"s:">) <ws*>
 where-op          := (<"where:">  | <"w:">) <ws*>
 limit-op          := (<"limit:">  | <"l:">) <ws*>
 from-op           := (<"from:">   | <"f:">) <ws*>
 order-op          := (<"order:">  | <"o:">) <ws*>
+group-op          := (<"group:">  | <"g:">) <ws*>
 delete-action-op  := (<"delete!"> | <"d!">) <ws*>
 delete-op         := (<"delete:"> | <"d:">) <ws*>
 count-op          := <"count:">
+
+
+group-args          := aliased-columns <ws*> <"=>"> <ws*> aggregate-functions
+aggregate-functions := aggregate-function (<","> <ws*> aggregate-function)*
+aggregate-function  := "count" | "string_agg" | "sum" | "avg" | "min" | "max"
 
 <table>         := child | parent | symbol* | symbol <"."> symbol*
 <child>         := "has:" <ws*> symbol+ | "has:" <ws*> symbol <"."> symbol+
