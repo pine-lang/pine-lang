@@ -98,6 +98,7 @@
       (= (-> state :current) "x_0") {:query "" :params nil}
       (= type :delete-action) (build-delete-query state)
       (= type :count) (build-count-query state)
+      (= type :group) (build-select-query state)
       ;; no op
       (= type :delete) {:query " /* No SQL. Evaluate the pine expression for results */ "}
       :else (build-select-query (update state :limit #(or % 250))))))

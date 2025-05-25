@@ -135,6 +135,4 @@
 
     ;; with aliases
     (is (= [{:type :group, :value {:columns [{:alias "x", :column "status"}], :functions ["count"]}}]
-           (p "group: x.status  => count"))))
-
-  )
+           (p "group: x.status  => count")))))

@@ -65,8 +65,7 @@
            (generate "company as c | name != c.country")))
     (is (= {:query "SELECT \"c\".* FROM \"company\" AS \"c\" WHERE \"c\".\"name\" != \"c\".\"country\" LIMIT 250",
             :params (map dt/string [])}
-           (generate "company as c | c.name != c.country")))
-    )
+           (generate "company as c | c.name != c.country"))))
 
   (testing "Condition : NULL"
     (is (= {:query "SELECT \"c_0\".* FROM \"company\" AS \"c_0\" WHERE \"c_0\".\"deleted_at\" IS NULL LIMIT 250",
@@ -140,5 +139,4 @@
 (testing "group"
   (is (= {:query "SELECT status, COUNT(status) FROM \"email\" AS \"e_0\" GROUP BY status LIMIT 250",
           :params nil}
-         (generate "email | group: status => count")))
-  )
+         (generate "email | group: status => count"))))

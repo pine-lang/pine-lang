@@ -9,14 +9,13 @@
   ([expression]
    (generate identity expression))
   ([type expression]
-   (-> expression
-       parser/parse
-       :result
-       (ast/generate :test)
-       type)))
-
-(defn- generate-joins [expression]
-  (generate #(select-keys % [:join-map :joins]) expression))
+   (let [ast (-> expression
+                 parser/parse
+                 :result
+                 (ast/generate :test))]
+     (if (sequential? type)
+       (mapv #(get ast %) type)
+       (get ast type)))))
 
 (deftest test-ast
 
@@ -81,38 +80,38 @@
            (generate :where "company as c | country in ('PK', 'DK')"))))
 
   (testing "Generate ast for `join` where there is no relation"
-    (is (= {:join-map {"a_0" {"b_1" nil}} :joins [["a_0" "b_1" nil]]}
-           (generate-joins "a | b")))
-    (is (= {:join-map {"a_0" {"b_1" nil}} :joins [["a_0" "b_1" nil]]}
-           (generate-joins "a | b .a_id"))))
+    (is (= [{"a_0" {"b_1" nil}} [["a_0" "b_1" nil]]]
+           (generate [:join-map :joins] "a | b")))
+    (is (= [{"a_0" {"b_1" nil}} [["a_0" "b_1" nil]]]
+           (generate [:join-map :joins] "a | b .a_id"))))
 
   (testing "Generate ast for `join` where there is a relation"
-    (is (= {:join-map {"c_0" {"e_1" ["c_0" "id" :has "e_1" "company_id"]}} :joins [["c_0" "e_1" ["c_0" "id" :has "e_1" "company_id"]]]}
-           (generate-joins "company | employee")))
-    (is (= {:join-map {"c_0" {"e_1" ["c_0" "id" :has "e_1" "company_id"]}} :joins [["c_0" "e_1" ["c_0" "id" :has "e_1" "company_id"]]]}
-           (generate-joins "company | employee .company_id")))
-    (is (= {:join-map {"c_0" {"e_1" ["c_0" nil :has "e_1" nil]}}, :joins [["c_0" "e_1" ["c_0" nil :has "e_1" nil]]]}
-           (generate-joins "company | employee .employee_id"))) ;; trying with incorrect id
+    (is (= [{"c_0" {"e_1" ["c_0" "id" :has "e_1" "company_id"]}} [["c_0" "e_1" ["c_0" "id" :has "e_1" "company_id"]]]]
+           (generate [:join-map :joins] "company | employee")))
+    (is (= [{"c_0" {"e_1" ["c_0" "id" :has "e_1" "company_id"]}} [["c_0" "e_1" ["c_0" "id" :has "e_1" "company_id"]]]]
+           (generate [:join-map :joins] "company | employee .company_id")))
+    (is (= [{"c_0" {"e_1" ["c_0" nil :has "e_1" nil]}}, [["c_0" "e_1" ["c_0" nil :has "e_1" nil]]]]
+           (generate [:join-map :joins] "company | employee .employee_id"))) ;; trying with incorrect id
     )
   (testing "Generate ast for `join` where there is ambiguity"
-    (is (= {:join-map {"e_0" {"d_1" ["e_0" "id" :has "d_1" "created_by"]}}, :joins [["e_0" "d_1" ["e_0" "id" :has "d_1" "created_by"]]]}
-           (generate-joins "employee | document .created_by")))
-    (is (= {:join-map {"e_0" {"d_1" ["e_0" "id" :has "d_1" "employee_id"]}}, :joins [["e_0" "d_1" ["e_0" "id" :has "d_1" "employee_id"]]]}
-           (generate-joins "employee | document .employee_id"))))
+    (is (= [{"e_0" {"d_1" ["e_0" "id" :has "d_1" "created_by"]}} [["e_0" "d_1" ["e_0" "id" :has "d_1" "created_by"]]]]
+           (generate [:join-map :joins] "employee | document .created_by")))
+    (is (= [{"e_0" {"d_1" ["e_0" "id" :has "d_1" "employee_id"]}} [["e_0" "d_1" ["e_0" "id" :has "d_1" "employee_id"]]]]
+           (generate [:join-map :joins] "employee | document .employee_id"))))
 
   (testing "Generate ast for `join` using self join"
     ;; By default, we narrow the results
     ;; i.e. we join with the child
-    (is (= {:join-map {"e_0" {"e_1" ["e_0" "id" :has "e_1" "reports_to"]}} :joins [["e_0" "e_1" ["e_0" "id" :has "e_1" "reports_to"]]]}
-           (generate-joins "employee | employee")))
-    (is (= {:join-map {"e_0" {"e_1" ["e_0" "id" :has "e_1" "reports_to"]}} :joins [["e_0" "e_1" ["e_0" "id" :has "e_1" "reports_to"]]]}
-           (generate-joins "employee | employee .reports_to")))
+    (is (= [{"e_0" {"e_1" ["e_0" "id" :has "e_1" "reports_to"]}} [["e_0" "e_1" ["e_0" "id" :has "e_1" "reports_to"]]]]
+           (generate [:join-map :joins] "employee | employee")))
+    (is (= [{"e_0" {"e_1" ["e_0" "id" :has "e_1" "reports_to"]}} [["e_0" "e_1" ["e_0" "id" :has "e_1" "reports_to"]]]]
+           (generate [:join-map :joins] "employee | employee .reports_to")))
 
     ;; However, we can exlicitly saw that the table is a parent using the `^` character
-    (is (= {:join-map {"e_0" {"e_1" ["e_0" "reports_to" :of "e_1" "id"]}} :joins [["e_0" "e_1" ["e_0" "reports_to" :of "e_1" "id"]]]}
-           (generate-joins "employee | employee^")))
-    (is (= {:join-map {"e_0" {"e_1" ["e_0" "reports_to" :of "e_1" "id"]}} :joins [["e_0" "e_1" ["e_0" "reports_to" :of "e_1" "id"]]]}
-           (generate-joins "employee | employee^ .reports_to"))))
+    (is (= [{"e_0" {"e_1" ["e_0" "reports_to" :of "e_1" "id"]}} [["e_0" "e_1" ["e_0" "reports_to" :of "e_1" "id"]]]]
+           (generate [:join-map :joins] "employee | employee^")))
+    (is (= [{"e_0" {"e_1" ["e_0" "reports_to" :of "e_1" "id"]}} [["e_0" "e_1" ["e_0" "reports_to" :of "e_1" "id"]]]]
+           (generate [:join-map :joins] "employee | employee^ .reports_to"))))
 
   (testing "Generate ast for `count`"
     (is (= {:column "*"} (generate :count "company | count:"))))
@@ -121,7 +120,6 @@
     (is (= {:column "id"} (generate :delete "company | delete! .id"))))
 
   (testing "Generate ast for `group`"
-    (is (= {:columns {:column "status"} :functions ["count"]} (generate :group "company | group: status => count")))
-    (is (= {:columns {:alias "e" :column "status"} :functions ["count"]} (generate :group "email as e | group: e.status => count")))
-    )
-  )
+    (is (= [[{:alias "c" :column "status" :index 1} {:alias nil :column "count(1)"}]
+            [{:alias "c" :column "status" :index 1}]]
+           (generate [:columns :group] "company as c | group: c.status => count")))))

@@ -27,7 +27,7 @@
             :join-map        {}           ;; Map of aliases of the joined tables e.g. { "u" { "c" [".. relation .."]}}
             :where           []           ;; e.g. [ "name" "=" "john" ]
             :order           []           ;; e.g. [{ :alias "u" :column "name" :direction "DESC" }]
-
+            :group           []           ;; e.g. [{ :alias "u" :column "name" }]
             ;; state
             :index           0
             :operation       {:type  nil
