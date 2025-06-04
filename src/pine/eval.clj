@@ -31,9 +31,9 @@
      (s/join
       ", "
       (map (fn [{:keys [column alias column-alias symbol]}]
-             (let [c (if (empty? column) 
-                      (if alias (str (q alias) "." symbol) symbol)
-                      (q alias column))]
+             (let [c (if (empty? column)
+                       (if alias (str (q alias) "." symbol) symbol)
+                       (q alias column))]
                (if column-alias (str c " AS " (q column-alias)) c))) columns))
      select-all
      " FROM")))

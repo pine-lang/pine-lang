@@ -1,4 +1,4 @@
-(ns pine.ast.group 
+(ns pine.ast.group
   (:require
    [clojure.string :as s]))
 
