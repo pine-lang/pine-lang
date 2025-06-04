@@ -4,7 +4,13 @@ log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [0.18.0] - 2025-06-04
 ### Added
+- Support for `group` operation:
+```
+email | group: status => count
+```
+
 - Column aliases are supported in conditions e.g.
 ```
 tenant as t | company | where: t.id = 'xxx'
