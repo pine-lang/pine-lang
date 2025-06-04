@@ -122,6 +122,11 @@
             :params nil}
            (generate "company as c | employee as e | s: c.id, e.*"))))
 
+  (testing "group"
+    (is (= {:query "SELECT \"e_0\".\"status\", COUNT(1) FROM \"email\" AS \"e_0\" GROUP BY \"e_0\".\"status\"",
+            :params nil}
+           (generate "email | group: status => count"))))
+
   (testing "delete action"
     (is (= {:query "DELETE FROM \"company\" WHERE \"id\" IN ( SELECT \"c_0\".\"id\" FROM \"company\" AS \"c_0\" )",
             :params nil}
@@ -135,8 +140,3 @@
   (testing "string"
     (is (= "\nSELECT \"c_0\".* FROM \"company\" AS \"c_0\" WHERE \"c_0\".\"name\" = 'Acme Inc.' LIMIT 250;\n"
            (-> "company | where: name='Acme Inc.'" generate eval/formatted-query)))))
-
-(testing "group"
-  (is (= {:query "SELECT status, COUNT(status) FROM \"email\" AS \"e_0\" GROUP BY status LIMIT 250",
-          :params nil}
-         (generate "email | group: status => count"))))

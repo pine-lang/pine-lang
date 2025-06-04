@@ -24,14 +24,16 @@
 (defn- build-columns-clause [{:keys [operation columns current]}]
   (let [type (-> operation :type)
         select-all (cond
-                     (contains? #{:select :delete-action} type) ""
+                     (contains? #{:select :delete-action :group} type) ""
                      :else (str (if (seq columns) ", " "") (q current) ".*"))]
     (str
      "SELECT "
      (s/join
       ", "
       (map (fn [{:keys [column alias column-alias symbol]}]
-             (let [c (if (empty? column) (str (q alias) "." symbol) (q alias column))]
+             (let [c (if (empty? column) 
+                      (if alias (str (q alias) "." symbol) symbol)
+                      (q alias column))]
                (if column-alias (str c " AS " (q column-alias)) c))) columns))
      select-all
      " FROM")))
@@ -50,6 +52,15 @@
   [vs]
   (filter #(not (or (= (:type %) :symbol) (= (:type %) :column))) vs))
 
+(defn- build-group-clause [{:keys [group]}]
+  (if (empty? group) nil
+      (str
+       "GROUP BY "
+       (s/join
+        ", "
+        (map (fn [{:keys [alias column]}]
+               (q alias column)) group)))))
+
 (defn build-select-query [state]
   (let [{:keys [tables _columns limit where aliases]} state
         from         (let [{a :alias} (first tables)
@@ -67,9 +78,10 @@
                                                                     (= (:type value) :symbol) (:value value)
                                                                     (= (:type value) :column) (let [[a col] (:value value)] (q a col))
                                                                     :else "?")))))))
+        group (build-group-clause state)
         order (build-order-clause state)
         limit (when limit (str "LIMIT " limit))
-        query (s/join " " (filter some? [select from join where-clause order limit]))
+        query (s/join " " (filter some? [select from join where-clause group order limit]))
         params (when (not-empty where)
                  (->> where
                       (map (fn [[_a _col _op value]] (if (coll? value) value [value])))

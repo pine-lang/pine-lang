@@ -1,4 +1,6 @@
-(ns pine.ast.group)
+(ns pine.ast.group 
+  (:require
+   [clojure.string :as s]))
 
 (defn handle [state value]
   (let [i (state :index)
@@ -7,8 +9,7 @@
                           (assoc :alias (or (:alias %1) current))
                           (assoc :index i))
                      (:columns value))
-        ;; TODO: This needs to return a column that shouldn't be quoted
-        fn-columns (map (fn [name] {:alias nil :column (str name "(1)")}) (:functions value))]
+        fn-columns (map (fn [name] {:symbol (str (s/upper-case name) "(1)")}) (:functions value))]
     (-> state
         (assoc :columns (into fn-columns columns)) ;; set the columns to be aggregated
         (update :group into columns))))

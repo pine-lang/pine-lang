@@ -120,6 +120,6 @@
     (is (= {:column "id"} (generate :delete "company | delete! .id"))))
 
   (testing "Generate ast for `group`"
-    (is (= [[{:alias "c" :column "status" :index 1} {:alias nil :column "count(1)"}]
+    (is (= [[{:alias "c" :column "status" :index 1} {:symbol "COUNT(1)"}]
             [{:alias "c" :column "status" :index 1}]]
            (generate [:columns :group] "company as c | group: c.status => count")))))
