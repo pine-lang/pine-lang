@@ -4,6 +4,13 @@ log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [0.19.0] - 2025-06-21
+### Added
+- Support for casting columns in conditions e.g.
+```
+company | where: id like '9cd%' ::text
+```
+
 ## [0.18.0] - 2025-06-04
 ### Added
 - Support for `group` operation:
