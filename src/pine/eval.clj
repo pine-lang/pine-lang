@@ -71,10 +71,10 @@
         where-clause (when (not-empty where)
                        (str "WHERE "
                             (s/join " AND "
-                                    (for [[a col op value] where]
-                                      (if (or (= op "IN") (= op "NOT IN"))
-                                        (str (q a col) " " op " (" (s/join ", " (repeat (count value) "?"))  ")")
-                                        (str (q a col) " " op " " (cond
+                                    (for [[alias col cast operator value] where]
+                                      (if (or (= operator "IN") (= operator "NOT IN"))
+                                        (str (q alias col) " " operator " (" (s/join ", " (repeat (count value) "?"))  ")")
+                                        (str (q alias col) (when cast (str "::" cast)) " " operator " " (cond
                                                                     (= (:type value) :symbol) (:value value)
                                                                     (= (:type value) :column) (let [[a col] (:value value)] (q a col))
                                                                     :else "?")))))))
@@ -84,7 +84,7 @@
         query (s/join " " (filter some? [select from join where-clause group order limit]))
         params (when (not-empty where)
                  (->> where
-                      (map (fn [[_a _col _op value]] (if (coll? value) value [value])))
+                      (map (fn [[_alias _col _cast _operator value]] (if (coll? value) value [value])))
                       remove-symbols
                       flatten))]
 

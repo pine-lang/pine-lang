@@ -13,5 +13,12 @@
   (t :symbol x))
 
 (defn column
-  ([column] (t :column [nil column]))
-  ([alias column] (t :column [alias column])))
+  "Create a column data type. Optionally provide a cast."
+  ([column] (t :column [nil column nil]))
+  ([column cast] (t :column [nil column cast]))
+  ([alias column cast] (t :column [alias column cast])))
+
+(defn aliased-column
+  "Create an aliased column data type. Optionally provide a cast."
+  ([alias column] (t :column [alias column nil]))
+  ([alias column cast] (t :column [alias column cast])))

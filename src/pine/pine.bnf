@@ -40,10 +40,12 @@ aggregate-function  := "count" | "string_agg" | "sum" | "avg" | "min" | "max"
 <child>         := "has:" <ws*> symbol+ | "has:" <ws*> symbol <"."> symbol+
 <parent>        := "of:"  <ws*> symbol+ | "of:"  <ws*> symbol <"."> symbol+ | symbol+ "^" | symbol <"."> symbol+ "^"
 
-conditions      := condition (<","> <ws*> condition)*
-condition       := column <ws*> operator <ws*> (column|string|number|boolean|null) | condition-in
-<condition-in>  := column <ws*> (in  | not-in) <ws*>  <"("> strings* <")">
-<strings>       := <ws*> string <ws*> <",">?
+conditions          := condition (<","> <ws*> condition)*
+condition           := column <ws*> (condition-default|condition-in) (<ws*> cast)?
+<condition-default> := operator <ws*> (column|string|number|boolean|null)
+<condition-in>      := (in  | not-in) <ws*>  <"("> strings* <")">
+cast                := <"::"> ("text")
+<strings>           := <ws*> string <ws*> <",">?
 
 aliased-columns := aliased-column (<","> <ws*> aliased-column)*
 aliased-column  := column <ws*> | column <ws+> as-alias <ws*> | alias <"."> star

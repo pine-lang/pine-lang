@@ -89,14 +89,19 @@
     (is (= [{:type :where, :value [(dt/column "age") "=" (dt/number "24")]}]                              (p "age = 24")))
     (is (= [{:type :where, :value [(dt/column "age") "!=" (dt/number "24")]}]                             (p "age != 24")))
     (is (= [{:type :where, :value [(dt/column "name") "=" (dt/column "first_name")]}]                     (p "name = first_name")))
-    (is (= [{:type :where, :value [(dt/column "name") "=" (dt/column "x" "first_name")]}]                 (p "name = x.first_name")))
+    (is (= [{:type :where, :value [(dt/column "name") "=" (dt/aliased-column "x" "first_name")]}]                 (p "name = x.first_name")))
     (is (= [{:type :where, :value [(dt/column "public") "=" (dt/symbol "true")]}]                         (p "public = true")))
     (is (= [{:type :where, :value [(dt/column "public") "=" (dt/symbol "false")]}]                        (p "public = false")))
     (is (= [{:type :where, :value [(dt/column "public") "!=" (dt/symbol "false")]}]                       (p "public != false")))
-    (is (= [{:type :where, :value [(dt/column "x" "name") "=" (dt/column "x" "first_name")]}] (p "x.name = x.first_name"))))
+    (is (= [{:type :where, :value [(dt/column "name") "=" (dt/aliased-column "x" "first_name")]}]             (p "name = x.first_name")))
+    (is (= [{:type :where, :value [(dt/aliased-column "x" "name") "=" (dt/aliased-column "x" "first_name")]}] (p "x.name = x.first_name"))))
 
   (testing "Parse `where` `or` expressions"
     (is (= [{:type :where, :value [(dt/column "name") "=" (dt/string "John Doe")]}]       (p "w: name='John Doe', age=24 "))))
+
+  ;; in progress - the case isn't being processed at the moment
+  (testing "Parse `where` expressions with type hinting"
+    (is (= [{:type :where, :value [(dt/column "name" "text") "=" (dt/string "John Doe")]}]       (p "w: name = 'John Doe' ::text"))))
 
   (testing "Parse `where` `in` expressions"
     (is (= [{:type :where, :value [(dt/column "age") "IN" [(dt/string "24")]]}]                  (p "age in ('24')")))
@@ -136,3 +141,12 @@
     ;; with aliases
     (is (= [{:type :group, :value {:columns [{:alias "x", :column "status"}], :functions ["count"]}}]
            (p "group: x.status  => count")))))
+
+
+
+;; working on parsing this properly
+(p "w: name = 'John Doe' ::text")
+
+
+
+(p "name = x.first_name")
