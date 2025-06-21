@@ -120,7 +120,7 @@
 (defn- parse-characters [characters] {:type :string :value (apply str characters)})
 (defn- parse-strings [[_ & characters]] (parse-characters characters))
 
-(defn- extract-column-info 
+(defn- extract-column-info
   [column-pattern]
   (match column-pattern
     [:column [:symbol column]] {:alias nil :column column}
@@ -153,16 +153,16 @@
     ;; Equals operations
     [:condition column-pattern [:equals] [:number value]]
     (make-condition column-pattern "=" (dt/number value))
-    
+
     [:condition column-pattern [:equals] [:null]]
     (make-condition column-pattern "IS" (dt/symbol "NULL"))
-    
+
     [:condition column-pattern [:equals] [:string & characters]]
     (make-condition column-pattern "=" (parse-characters characters))
-    
+
     [:condition column-pattern [:equals] [:string & characters] [:cast cast-type]]
     (make-condition column-pattern "=" (parse-characters characters) cast-type)
-    
+
     [:condition column-pattern [:equals] [:boolean b]]
     (make-condition column-pattern "=" (dt/symbol b))
 
@@ -173,16 +173,16 @@
     ;; Not equals operations
     [:condition column-pattern [:does-not-equal] [:number value]]
     (make-condition column-pattern "!=" (dt/number value))
-    
+
     [:condition column-pattern [:does-not-equal] [:null]]
     (make-condition column-pattern "IS NOT" (dt/symbol "NULL"))
-    
+
     [:condition column-pattern [:does-not-equal] [:string & characters]]
     (make-condition column-pattern "!=" (parse-characters characters))
-    
+
     [:condition column-pattern [:does-not-equal] [:string & characters] [:cast cast-type]]
     (make-condition column-pattern "!=" (parse-characters characters) cast-type)
-    
+
     [:condition column-pattern [:does-not-equal] [:boolean b]]
     (make-condition column-pattern "!=" (dt/symbol b))
 
@@ -193,21 +193,21 @@
     ;; IS NULL operations
     [:condition column-pattern [:is] [:null]]
     (make-condition column-pattern "IS" (dt/symbol "NULL"))
-    
+
     [:condition column-pattern [:is-not] [:null]]
     (make-condition column-pattern "IS NOT" (dt/symbol "NULL"))
 
     ;; LIKE operations
     [:condition column-pattern [:like] [:string & characters]]
     (make-condition column-pattern "LIKE" (parse-characters characters))
-    
+
     [:condition column-pattern [:like] [:string & characters] [:cast cast-type]]
     (make-condition column-pattern "LIKE" (parse-characters characters) cast-type)
 
     ;; IN operations
     [:condition column-pattern [:in] & strings]
     (make-condition column-pattern "IN" (map parse-strings strings))
-    
+
     [:condition column-pattern [:not-in] & strings]
     (make-condition column-pattern "NOT IN" (map parse-strings strings))
 

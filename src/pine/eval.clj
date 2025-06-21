@@ -75,9 +75,9 @@
                                       (if (or (= operator "IN") (= operator "NOT IN"))
                                         (str (q alias col) " " operator " (" (s/join ", " (repeat (count value) "?"))  ")")
                                         (str (q alias col) (when cast (str "::" cast)) " " operator " " (cond
-                                                                    (= (:type value) :symbol) (:value value)
-                                                                    (= (:type value) :column) (let [[a col] (:value value)] (q a col))
-                                                                    :else "?")))))))
+                                                                                                          (= (:type value) :symbol) (:value value)
+                                                                                                          (= (:type value) :column) (let [[a col] (:value value)] (q a col))
+                                                                                                          :else "?")))))))
         group (build-group-clause state)
         order (build-order-clause state)
         limit (when limit (str "LIMIT " limit))

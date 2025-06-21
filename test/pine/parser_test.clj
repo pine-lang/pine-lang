@@ -142,11 +142,7 @@
     (is (= [{:type :group, :value {:columns [{:alias "x", :column "status"}], :functions ["count"]}}]
            (p "group: x.status  => count")))))
 
-
-
 ;; working on parsing this properly
 (p "w: name = 'John Doe' ::text")
-
-
 
 (p "name = x.first_name")

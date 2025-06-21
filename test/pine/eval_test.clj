@@ -30,7 +30,6 @@
             :params nil}
            (generate "company"))))
 
-
   (testing "Count"
     (is (= {:query "WITH x AS ( SELECT \"c_0\".* FROM \"company\" AS \"c_0\" ) SELECT COUNT(*) FROM x",
             :params nil}
