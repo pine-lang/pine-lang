@@ -27,7 +27,7 @@
     (is (= [{:schema "public" :table "user" :alias "u_0" :parent nil  :join-column nil}]
            (generate :tables "public.user")))
     (is (= [{:schema "public" :table "user" :alias "u_0" :parent true  :join-column nil}]
-           (generate :tables "public.user^"))))
+           (generate :tables "public.user :parent"))))
 
   (testing "Generate ast for `from`"
     (is (= "c"
@@ -111,9 +111,9 @@
 
     ;; However, we can exlicitly saw that the table is a parent using the `^` character
     (is (= [{"e_0" {"e_1" ["e_0" "reports_to" :of "e_1" "id"]}} [["e_0" "e_1" ["e_0" "reports_to" :of "e_1" "id"]]]]
-           (generate [:join-map :joins] "employee | employee^")))
+           (generate [:join-map :joins] "employee | employee :parent")))
     (is (= [{"e_0" {"e_1" ["e_0" "reports_to" :of "e_1" "id"]}} [["e_0" "e_1" ["e_0" "reports_to" :of "e_1" "id"]]]]
-           (generate [:join-map :joins] "employee | employee^ .reports_to"))))
+           (generate [:join-map :joins] "employee | employee :parent .reports_to"))))
 
   (testing "Generate ast for `count`"
     (is (= {:column "*"} (generate :count "company | count:"))))
