@@ -19,7 +19,7 @@
         [a2 f-col :of a1 col]
         [a1 col :has a2 f-col]))))
 ;; TODO: use spec for the state value i.e. first arg
-(defn- join [{:keys [references aliases]} x y c parent]
+(defn- join-tables [{:keys [references aliases]} x y c parent]
   (let [a1 (x :alias)
         a2 (y :alias)
         {t1 :table _ :schema} (aliases a1) ;; t1 :table s1
@@ -37,15 +37,15 @@
   reason to get the tables from the state is that they have been assigned an
   alias. We only use the join column from the current value being processed."
   [state current]
-  (let [{:keys [join-column parent]} current
+  (let [{:keys [join-column parent join]} current
         from-alias                   (state :context)]
     (cond
       (nil? from-alias) state
       :else (let [x (-> state :aliases (get from-alias))
-                  join-result (join state x current join-column parent)]
+                  join-result (join-tables state x current join-column parent)]
               (-> state
                   (assoc-in [:join-map (x :alias) (current :alias)] join-result)
-                  (update :joins conj [(x :alias) (current :alias) join-result]))))))
+                  (update :joins conj [(x :alias) (current :alias) join-result join]))))))
 (defn make-alias [s]
   (let [words (if (not-empty s) (s/split s #"_") ["x"])
         initials (map #(subs % 0 1) words)]
@@ -54,9 +54,9 @@
 ;; todo: spec for the :value for a :table
 (defn handle [state value]
   (let [index (state :index)
-        {:keys [table alias schema parent join-column]} value
+        {:keys [table alias schema parent join-column join]} value
         a (or alias (str (make-alias table) "_" (state :table-count)))
-        current {:schema schema :table table :alias a :parent parent :join-column join-column}]
+        current {:schema schema :table table :alias a :parent parent :join-column join-column :join join}]
     (-> state
         ;; pre
         (assoc  :context (state :current))

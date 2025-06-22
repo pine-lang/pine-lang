@@ -33,7 +33,7 @@ count-op          := <"count:">
 
 <table>           := symbol* | symbol* <"."> symbol*
 table-mods        := (<ws+> table-mod)*
-table-mod         := <":"> ("parent"|"child") | as-alias | hint-column
+table-mod         := <":"> ("parent"|"child"|"left"|"right") | as-alias | hint-column
 
 group-args          := aliased-columns <ws*> <"=>"> <ws*> aggregate-functions
 aggregate-functions := aggregate-function (<","> <ws*> aggregate-function)*

@@ -11,10 +11,11 @@
 
 (defn- build-join-clause [{:keys [tables joins aliases]}]
   (when (not-empty (rest tables))
-    (let [join-statements (map (fn [[_from-alias to-alias relation]]
+    (let [join-statements (map (fn [[_from-alias to-alias relation join]]
                                  (let [[a1 t1 _ a2 t2] relation
-                                       {to-table :table to-schema :schema} (get aliases to-alias)]
-                                   (str "JOIN " (q to-schema to-table) " AS " (q to-alias)
+                                       {to-table :table to-schema :schema} (get aliases to-alias)
+                                       join-keyword (if join (str join " JOIN") "JOIN")]
+                                   (str join-keyword " " (q to-schema to-table) " AS " (q to-alias)
                                         " ON " (q a1 t1)
                                         " = " (q a2 t2))))
                                ;; (reverse joins)

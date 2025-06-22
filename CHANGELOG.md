@@ -4,6 +4,15 @@ log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [0.20.0] - 2025-06-22
+### Added
+
+- Specify join types i.e. `LEFT JOIN` or `RIGHT JOIN`:
+```
+x | y :left
+x | y :right
+```
+
 ### Breaking
 - Syntax for specifying parent and child relations is changed (introduced in `0.6.0`). This avoids the need for backtracking.
 ```

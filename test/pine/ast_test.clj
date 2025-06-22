@@ -20,14 +20,24 @@
 (deftest test-ast
 
   (testing "Generate ast for `tables`"
-    (is (= [{:schema nil :table "company" :alias "c" :parent nil :join-column nil}]
+    (is (= [{:schema nil :table "company" :alias "c" :parent nil :join-column nil :join nil}]
            (generate :tables "company as c")))
-    (is (= [{:schema nil :table "user" :alias "u_0" :parent nil  :join-column nil}]
+    (is (= [{:schema nil :table "user" :alias "u_0" :parent nil  :join-column nil :join nil}]
            (generate :tables "user")))
-    (is (= [{:schema "public" :table "user" :alias "u_0" :parent nil  :join-column nil}]
+    (is (= [{:schema "public" :table "user" :alias "u_0" :parent nil  :join-column nil :join nil}]
            (generate :tables "public.user")))
-    (is (= [{:schema "public" :table "user" :alias "u_0" :parent true  :join-column nil}]
+    (is (= [{:schema "public" :table "user" :alias "u_0" :parent true  :join-column nil :join nil}]
            (generate :tables "public.user :parent"))))
+
+  (testing "Generate ast for `tables` with join types"
+    (is (= [{:schema nil :table "user" :alias "u_0" :parent nil :join-column nil :join "LEFT"}]
+           (generate :tables "user :left")))
+    (is (= [{:schema nil :table "user" :alias "u_0" :parent nil :join-column nil :join "RIGHT"}]
+           (generate :tables "user :right")))
+    (is (= [{:schema "public" :table "user" :alias "u_0" :parent nil :join-column nil :join "LEFT"}]
+           (generate :tables "public.user :left")))
+    (is (= [{:schema "public" :table "user" :alias "u_0" :parent nil :join-column nil :join "RIGHT"}]
+           (generate :tables "public.user :right"))))
 
   (testing "Generate ast for `from`"
     (is (= "c"
@@ -82,37 +92,37 @@
            (generate :where "company as c | country in ('PK', 'DK')"))))
 
   (testing "Generate ast for `join` where there is no relation"
-    (is (= [{"a_0" {"b_1" nil}} [["a_0" "b_1" nil]]]
+    (is (= [{"a_0" {"b_1" nil}} [["a_0" "b_1" nil nil]]]
            (generate [:join-map :joins] "a | b")))
-    (is (= [{"a_0" {"b_1" nil}} [["a_0" "b_1" nil]]]
+    (is (= [{"a_0" {"b_1" nil}} [["a_0" "b_1" nil nil]]]
            (generate [:join-map :joins] "a | b .a_id"))))
 
   (testing "Generate ast for `join` where there is a relation"
-    (is (= [{"c_0" {"e_1" ["c_0" "id" :has "e_1" "company_id"]}} [["c_0" "e_1" ["c_0" "id" :has "e_1" "company_id"]]]]
+    (is (= [{"c_0" {"e_1" ["c_0" "id" :has "e_1" "company_id"]}} [["c_0" "e_1" ["c_0" "id" :has "e_1" "company_id"] nil]]]
            (generate [:join-map :joins] "company | employee")))
-    (is (= [{"c_0" {"e_1" ["c_0" "id" :has "e_1" "company_id"]}} [["c_0" "e_1" ["c_0" "id" :has "e_1" "company_id"]]]]
+    (is (= [{"c_0" {"e_1" ["c_0" "id" :has "e_1" "company_id"]}} [["c_0" "e_1" ["c_0" "id" :has "e_1" "company_id"] nil]]]
            (generate [:join-map :joins] "company | employee .company_id")))
-    (is (= [{"c_0" {"e_1" ["c_0" nil :has "e_1" nil]}}, [["c_0" "e_1" ["c_0" nil :has "e_1" nil]]]]
+    (is (= [{"c_0" {"e_1" ["c_0" nil :has "e_1" nil]}}, [["c_0" "e_1" ["c_0" nil :has "e_1" nil] nil]]]
            (generate [:join-map :joins] "company | employee .employee_id"))) ;; trying with incorrect id
     )
   (testing "Generate ast for `join` where there is ambiguity"
-    (is (= [{"e_0" {"d_1" ["e_0" "id" :has "d_1" "created_by"]}} [["e_0" "d_1" ["e_0" "id" :has "d_1" "created_by"]]]]
+    (is (= [{"e_0" {"d_1" ["e_0" "id" :has "d_1" "created_by"]}} [["e_0" "d_1" ["e_0" "id" :has "d_1" "created_by"] nil]]]
            (generate [:join-map :joins] "employee | document .created_by")))
-    (is (= [{"e_0" {"d_1" ["e_0" "id" :has "d_1" "employee_id"]}} [["e_0" "d_1" ["e_0" "id" :has "d_1" "employee_id"]]]]
+    (is (= [{"e_0" {"d_1" ["e_0" "id" :has "d_1" "employee_id"]}} [["e_0" "d_1" ["e_0" "id" :has "d_1" "employee_id"] nil]]]
            (generate [:join-map :joins] "employee | document .employee_id"))))
 
   (testing "Generate ast for `join` using self join"
     ;; By default, we narrow the results
     ;; i.e. we join with the child
-    (is (= [{"e_0" {"e_1" ["e_0" "id" :has "e_1" "reports_to"]}} [["e_0" "e_1" ["e_0" "id" :has "e_1" "reports_to"]]]]
+    (is (= [{"e_0" {"e_1" ["e_0" "id" :has "e_1" "reports_to"]}} [["e_0" "e_1" ["e_0" "id" :has "e_1" "reports_to"] nil]]]
            (generate [:join-map :joins] "employee | employee")))
-    (is (= [{"e_0" {"e_1" ["e_0" "id" :has "e_1" "reports_to"]}} [["e_0" "e_1" ["e_0" "id" :has "e_1" "reports_to"]]]]
+    (is (= [{"e_0" {"e_1" ["e_0" "id" :has "e_1" "reports_to"]}} [["e_0" "e_1" ["e_0" "id" :has "e_1" "reports_to"] nil]]]
            (generate [:join-map :joins] "employee | employee .reports_to")))
 
     ;; However, we can exlicitly saw that the table is a parent using the `^` character
-    (is (= [{"e_0" {"e_1" ["e_0" "reports_to" :of "e_1" "id"]}} [["e_0" "e_1" ["e_0" "reports_to" :of "e_1" "id"]]]]
+    (is (= [{"e_0" {"e_1" ["e_0" "reports_to" :of "e_1" "id"]}} [["e_0" "e_1" ["e_0" "reports_to" :of "e_1" "id"] nil]]]
            (generate [:join-map :joins] "employee | employee :parent")))
-    (is (= [{"e_0" {"e_1" ["e_0" "reports_to" :of "e_1" "id"]}} [["e_0" "e_1" ["e_0" "reports_to" :of "e_1" "id"]]]]
+    (is (= [{"e_0" {"e_1" ["e_0" "reports_to" :of "e_1" "id"]}} [["e_0" "e_1" ["e_0" "reports_to" :of "e_1" "id"] nil]]]
            (generate [:join-map :joins] "employee | employee :parent .reports_to"))))
 
   (testing "Generate ast for `count`"

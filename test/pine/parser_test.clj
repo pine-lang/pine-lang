@@ -46,6 +46,31 @@
     (is (= [{:type :table, :value {:schema "public" :table "user" :alias "u" :join-column "other_id" :parent false}}] (p "public.user .other_id as u :child")))
     (is (= [{:type :table, :value {:schema "public" :table "user" :alias "u" :join-column "other_id" :parent true}}]  (p "public.user .other_id as u :parent"))))
 
+  (testing "Parse `table` expressions with join types"
+    ;; table
+    (is (= [{:type :table, :value {:table "user" :join "LEFT"}}]                 (p "user :left")))
+    (is (= [{:type :table, :value {:table "user" :join "RIGHT"}}]                (p "user :right")))
+
+    ;; schema.table
+    (is (= [{:type :table, :value {:table "user" :schema "public" :join "LEFT"}}] (p "public.user :left")))
+    (is (= [{:type :table, :value {:table "user" :schema "public" :join "RIGHT"}}] (p "public.user :right")))
+
+    ;; schema.table alias
+    (is (= [{:type :table, :value {:table "user" :schema "public" :join "LEFT" :alias "u"}}] (p "public.user as u :left")))
+    (is (= [{:type :table, :value {:table "user" :schema "public" :join "RIGHT" :alias "u"}}] (p "public.user as u :right")))
+
+    ;; table .column
+    (is (= [{:type :table, :value {:table "user" :join "LEFT" :join-column "other_id"}}]     (p "user .other_id :left")))
+    (is (= [{:type :table, :value {:table "user" :join "RIGHT" :join-column "other_id"}}]    (p "user .other_id :right")))
+
+    ;; schema.table .column
+    (is (= [{:type :table, :value {:schema "public" :table "user" :join-column "other_id" :join "LEFT"}}]           (p "public.user .other_id :left")))
+    (is (= [{:type :table, :value {:schema "public" :table "user" :join-column "other_id" :join "RIGHT"}}]          (p "public.user .other_id :right")))
+
+    ;; schema.table alias .column
+    (is (= [{:type :table, :value {:schema "public" :table "user" :alias "u" :join-column "other_id" :join "LEFT"}}] (p "public.user .other_id as u :left")))
+    (is (= [{:type :table, :value {:schema "public" :table "user" :alias "u" :join-column "other_id" :join "RIGHT"}}] (p "public.user .other_id as u :right"))))
+
   (testing "Parse `from` expressions"
     (is (= [{:type :from, :value {:alias "u"}}] (p "from: u"))))
 

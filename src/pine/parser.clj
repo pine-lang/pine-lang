@@ -23,6 +23,10 @@
               [:table-mod "parent"] (assoc acc :parent true)
               [:table-mod "child"] (assoc acc :parent false)
 
+              ;; Join type modifiers
+              [:table-mod "left"] (assoc acc :join "LEFT")
+              [:table-mod "right"] (assoc acc :join "RIGHT")
+
               ;; Alias modifier
               [:table-mod [:alias [:symbol alias]]] (assoc acc :alias alias)
 

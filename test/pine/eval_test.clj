@@ -97,6 +97,17 @@
             :params nil}
            (generate "x.company | y.employee | z.document"))))
 
+  (testing "Joins with join types"
+    (is (= {:query "SELECT \"e_1\".* FROM \"company\" AS \"c_0\" LEFT JOIN \"employee\" AS \"e_1\" ON \"c_0\".\"id\" = \"e_1\".\"company_id\" LIMIT 250",
+            :params nil}
+           (generate "company | employee :left")))
+    (is (= {:query "SELECT \"e_1\".* FROM \"company\" AS \"c_0\" RIGHT JOIN \"employee\" AS \"e_1\" ON \"c_0\".\"id\" = \"e_1\".\"company_id\" LIMIT 250",
+            :params nil}
+           (generate "company | employee :right")))
+    (is (= {:query "SELECT \"d_2\".* FROM \"x\".\"company\" AS \"c_0\" LEFT JOIN \"y\".\"employee\" AS \"e_1\" ON \"c_0\".\"id\" = \"e_1\".\"company_id\" RIGHT JOIN \"z\".\"document\" AS \"d_2\" ON \"e_1\".\"id\" = \"d_2\".\"employee_id\" LIMIT 250",
+            :params nil}
+           (generate "x.company | y.employee :left | z.document :right"))))
+
   (testing "Joins with a context"
     (is (= {:query "SELECT \"d_2\".* FROM \"x\".\"company\" AS \"c\" JOIN \"y\".\"employee\" AS \"e_1\" ON \"c\".\"id\" = \"e_1\".\"company_id\" JOIN \"z\".\"document\" AS \"d_2\" ON \"c\".\"id\" = \"d_2\".\"company_id\" LIMIT 250",
             :params nil}
