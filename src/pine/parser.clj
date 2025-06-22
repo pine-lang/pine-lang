@@ -23,13 +23,11 @@
     [:TABLE [:symbol table]]                                        {:type :table, :value {:table table}}
     [:TABLE "has:" [:symbol table]]                                 {:type :table, :value {:table table :parent false}}
     [:TABLE "of:" [:symbol table]]                                  {:type :table, :value {:table table :parent true}}
-    [:TABLE [:symbol table] "^"]                                    {:type :table, :value {:table table :parent true}}
 
     ;; schema.table
     [:TABLE [:symbol schema] [:symbol table]]                       {:type :table, :value {:table table :schema schema}}
     [:TABLE "has:" [:symbol schema] [:symbol table]]                {:type :table, :value {:table table :schema schema :parent false}}
     [:TABLE "of:" [:symbol schema] [:symbol table]]                 {:type :table, :value {:table table :schema schema :parent true}}
-    [:TABLE [:symbol schema] [:symbol table] "^"]                   {:type :table, :value {:table table :schema schema :parent true}}
 
     ;; table aliaas
     [:TABLE [:symbol table] [:alias [:symbol a]]]                   {:type :table, :value {:table table :alias a}}
@@ -38,25 +36,21 @@
     [:TABLE  [:symbol schema] [:symbol table] [:alias [:symbol a]]]        {:type :table, :value {:schema schema :table table :alias a}}
     [:TABLE  "has:" [:symbol schema] [:symbol table] [:alias [:symbol a]]] {:type :table, :value {:schema schema :table table :alias a :parent false}}
     [:TABLE  "of:" [:symbol schema] [:symbol table] [:alias [:symbol a]]]  {:type :table, :value {:schema schema :table table :alias a :parent true}}
-    [:TABLE [:symbol schema] [:symbol table] "^" [:alias [:symbol a]]]     {:type :table, :value {:schema schema :table table :alias a :parent true}}
 
     ;; table .column
     [:TABLE [:symbol table] [:hint-column [:symbol column]]]              {:type :table, :value {:table table :join-column column}}
     [:TABLE "has:" [:symbol table] [:hint-column [:symbol column]]]       {:type :table, :value {:table table :join-column column :parent false}}
     [:TABLE "of:" [:symbol table] [:hint-column [:symbol column]]]        {:type :table, :value {:table table :join-column column :parent true}}
-    [:TABLE [:symbol table] "^" [:hint-column [:symbol column]]]          {:type :table, :value {:table table :join-column column :parent true}}
 
     ;; schema.table .column
     [:TABLE [:symbol schema] [:symbol table] [:hint-column [:symbol column]]]         {:type :table, :value {:schema schema :table table :join-column column}}
     [:TABLE "has:" [:symbol schema] [:symbol table] [:hint-column [:symbol column]]]  {:type :table, :value {:schema schema :table table :join-column column :parent false}}
     [:TABLE "of:" [:symbol schema] [:symbol table] [:hint-column [:symbol column]]]   {:type :table, :value {:schema schema :table table :join-column column :parent true}}
-    [:TABLE [:symbol schema] [:symbol table] "^" [:hint-column [:symbol column]]]     {:type :table, :value {:schema schema :table table :join-column column :parent true}}
 
     ;; schema.table .column alias
     [:TABLE [:symbol schema] [:symbol table] [:hint-column [:symbol column]] [:alias [:symbol a]]]         {:type :table, :value {:schema schema :table table :join-column column :alias a}}
     [:TABLE "has:" [:symbol schema] [:symbol table] [:hint-column [:symbol column]] [:alias [:symbol a]]]  {:type :table, :value {:schema schema :table table :join-column column :alias a :parent false}}
     [:TABLE "of:" [:symbol schema] [:symbol table] [:hint-column [:symbol column]] [:alias [:symbol a]]]   {:type :table, :value {:schema schema :table table :join-column column :alias a :parent true}}
-    [:TABLE [:symbol schema] [:symbol table] "^" [:hint-column [:symbol column]] [:alias [:symbol a]]]     {:type :table, :value {:schema schema :table table :join-column column :alias a :parent true}}
 
     ;; Empty table
     [:TABLE]                                                        {:type :table, :value {:table ""}}

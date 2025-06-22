@@ -38,7 +38,7 @@ aggregate-function  := "count" | "string_agg" | "sum" | "avg" | "min" | "max"
 
 <table>         := child | parent | symbol* | symbol <"."> symbol*
 <child>         := "has:" <ws*> symbol+ | "has:" <ws*> symbol <"."> symbol+
-<parent>        := "of:"  <ws*> symbol+ | "of:"  <ws*> symbol <"."> symbol+ | symbol+ "^" | symbol <"."> symbol+ "^"
+<parent>        := "of:"  <ws*> symbol+ | "of:"  <ws*> symbol <"."> symbol+
 
 conditions          := condition (<","> <ws*> condition)*
 condition           := column <ws*> (condition-default|condition-in) (<ws*> cast)?

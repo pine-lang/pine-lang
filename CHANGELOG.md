@@ -4,6 +4,9 @@ log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Breaking
+- `^` is removed from the syntax to specific the directionality of the join. (This was introduced in `0.6.0`)
+
 ## [0.19.0] - 2025-06-21
 ### Added
 - Support for casting columns in conditions e.g.
