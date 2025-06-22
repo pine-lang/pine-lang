@@ -5,7 +5,18 @@ log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 ## [Unreleased]
 
 ### Breaking
-- `^` is removed from the syntax to specific the directionality of the join. (This was introduced in `0.6.0`)
+- Syntax for specifying parent and child relations is changed (introduced in `0.6.0`). This avoids the need for backtracking.
+```
+x | of: y
+x | has: y
+```
+is now:
+```
+x | y :parent
+x | y :child
+```
+
+- `^` is removed from the syntax to specific the directionality of the join. (introduced in `0.6.0`)
 
 ## [0.19.0] - 2025-06-21
 ### Added

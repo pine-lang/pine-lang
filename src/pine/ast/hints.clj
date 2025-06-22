@@ -31,8 +31,11 @@
 ;; Relation Hints
 ;; ---------------------------------------------------------------------------
 
-(defn- generate-expression [{:keys [schema table column parent]}]
-  (str (if parent "of: " "") (if schema (str schema ".") "") table (if column (str " ." column) "")))
+(defn- generate-expression [{:keys [schema table column parent alias]}]
+  (str (if schema (str schema ".") "") table
+       (if alias (str " as " alias) "")
+       (if column (str " ." column) "")
+       (if parent " :parent" "")))
 
 ;; via-details look like:
 ;; ["z"  "document"      "created_by"  :refers-to   "y"  "employee" "id"]

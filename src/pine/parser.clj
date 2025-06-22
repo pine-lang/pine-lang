@@ -16,47 +16,39 @@
 ;; FROM
 ;; ----
 
+(defn- make-table [table-info modifiers]
+  (reduce (fn [acc modifier]
+            (match modifier
+              ;; Direction modifiers
+              [:table-mod "parent"] (assoc acc :parent true)
+              [:table-mod "child"] (assoc acc :parent false)
+
+              ;; Alias modifier
+              [:table-mod [:alias [:symbol alias]]] (assoc acc :alias alias)
+
+              ;; Hint column modifier
+              [:table-mod [:hint-column [:symbol column]]] (assoc acc :join-column column)
+
+              ;; Unknown modifier - ignore
+              _ acc))
+          table-info
+          modifiers))
+
 (defmethod -normalize-op :TABLE [payload]
   (match payload
-
-         ;; table
-    [:TABLE [:symbol table]]                                        {:type :table, :value {:table table}}
-    [:TABLE "has:" [:symbol table]]                                 {:type :table, :value {:table table :parent false}}
-    [:TABLE "of:" [:symbol table]]                                  {:type :table, :value {:table table :parent true}}
-
-    ;; schema.table
-    [:TABLE [:symbol schema] [:symbol table]]                       {:type :table, :value {:table table :schema schema}}
-    [:TABLE "has:" [:symbol schema] [:symbol table]]                {:type :table, :value {:table table :schema schema :parent false}}
-    [:TABLE "of:" [:symbol schema] [:symbol table]]                 {:type :table, :value {:table table :schema schema :parent true}}
-
-    ;; table aliaas
-    [:TABLE [:symbol table] [:alias [:symbol a]]]                   {:type :table, :value {:table table :alias a}}
-
-    ;; schema.table alias
-    [:TABLE  [:symbol schema] [:symbol table] [:alias [:symbol a]]]        {:type :table, :value {:schema schema :table table :alias a}}
-    [:TABLE  "has:" [:symbol schema] [:symbol table] [:alias [:symbol a]]] {:type :table, :value {:schema schema :table table :alias a :parent false}}
-    [:TABLE  "of:" [:symbol schema] [:symbol table] [:alias [:symbol a]]]  {:type :table, :value {:schema schema :table table :alias a :parent true}}
-
-    ;; table .column
-    [:TABLE [:symbol table] [:hint-column [:symbol column]]]              {:type :table, :value {:table table :join-column column}}
-    [:TABLE "has:" [:symbol table] [:hint-column [:symbol column]]]       {:type :table, :value {:table table :join-column column :parent false}}
-    [:TABLE "of:" [:symbol table] [:hint-column [:symbol column]]]        {:type :table, :value {:table table :join-column column :parent true}}
-
-    ;; schema.table .column
-    [:TABLE [:symbol schema] [:symbol table] [:hint-column [:symbol column]]]         {:type :table, :value {:schema schema :table table :join-column column}}
-    [:TABLE "has:" [:symbol schema] [:symbol table] [:hint-column [:symbol column]]]  {:type :table, :value {:schema schema :table table :join-column column :parent false}}
-    [:TABLE "of:" [:symbol schema] [:symbol table] [:hint-column [:symbol column]]]   {:type :table, :value {:schema schema :table table :join-column column :parent true}}
-
-    ;; schema.table .column alias
-    [:TABLE [:symbol schema] [:symbol table] [:hint-column [:symbol column]] [:alias [:symbol a]]]         {:type :table, :value {:schema schema :table table :join-column column :alias a}}
-    [:TABLE "has:" [:symbol schema] [:symbol table] [:hint-column [:symbol column]] [:alias [:symbol a]]]  {:type :table, :value {:schema schema :table table :join-column column :alias a :parent false}}
-    [:TABLE "of:" [:symbol schema] [:symbol table] [:hint-column [:symbol column]] [:alias [:symbol a]]]   {:type :table, :value {:schema schema :table table :join-column column :alias a :parent true}}
-
     ;; Empty table
-    [:TABLE]                                                        {:type :table, :value {:table ""}}
+    [:TABLE [:table-mods]] {:type :table :value {:table ""}}
+
+    ;; Schema.table
+    [:TABLE [:symbol schema] [:symbol table] [:table-mods & modifiers]]
+    {:type :table :value (make-table {:schema schema :table table} modifiers)}
+
+    ;; Only table
+    [:TABLE [:symbol table] [:table-mods & modifiers]]
+    {:type :table :value (make-table {:table table} modifiers)}
 
     :else
-    (throw (ex-info "Unknown RESOURCE operation" {:_ payload}))))
+    (throw (ex-info "Unknown TABLE operation" {:_ payload}))))
 
 ;; -----------------------
 ;; SELECT / SELECT-PARTIAL

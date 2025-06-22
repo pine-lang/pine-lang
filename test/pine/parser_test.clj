@@ -23,28 +23,28 @@
   (testing "Parse `table` expressions with directionality"
 
     ;; table
-    (is (= [{:type :table, :value {:table "user" :parent false}}]                 (p "has: user")))
-    (is (= [{:type :table, :value {:table "user" :parent true}}]                  (p "of: user")))
+    (is (= [{:type :table, :value {:table "user" :parent false}}]                 (p "user :child")))
+    (is (= [{:type :table, :value {:table "user" :parent true}}]                  (p "user :parent")))
 
     ;; schema.table
-    (is (= [{:type :table, :value {:table "user" :schema "public" :parent false}}] (p "has: public.user")))
-    (is (= [{:type :table, :value {:table "user" :schema "public" :parent true}}]  (p "of: public.user")))
+    (is (= [{:type :table, :value {:table "user" :schema "public" :parent false}}] (p "public.user :child")))
+    (is (= [{:type :table, :value {:table "user" :schema "public" :parent true}}]  (p "public.user :parent")))
 
     ;; schema.table alias
-    (is (= [{:type :table, :value {:table "user" :schema "public" :parent false :alias "u"}}] (p "has: public.user as u")))
-    (is (= [{:type :table, :value {:table "user" :schema "public" :parent true :alias "u"}}]  (p "of: public.user as u")))
+    (is (= [{:type :table, :value {:table "user" :schema "public" :parent false :alias "u"}}] (p "public.user as u :child")))
+    (is (= [{:type :table, :value {:table "user" :schema "public" :parent true :alias "u"}}]  (p "public.user as u :parent")))
 
     ;; table .column
-    (is (= [{:type :table, :value {:table "user" :parent false :join-column "other_id"}}]     (p "has: user .other_id")))
-    (is (= [{:type :table, :value {:table "user" :parent true :join-column "other_id"}}]      (p "of: user .other_id")))
+    (is (= [{:type :table, :value {:table "user" :parent false :join-column "other_id"}}]     (p "user .other_id :child")))
+    (is (= [{:type :table, :value {:table "user" :parent true :join-column "other_id"}}]      (p "user .other_id :parent")))
 
     ;; schema.table .column
-    (is (= [{:type :table, :value {:schema "public" :table "user" :join-column "other_id" :parent false}}]           (p "has: public.user .other_id")))
-    (is (= [{:type :table, :value {:schema "public" :table "user" :join-column "other_id" :parent true}}]            (p "of: public.user .other_id")))
+    (is (= [{:type :table, :value {:schema "public" :table "user" :join-column "other_id" :parent false}}]           (p "public.user .other_id :child")))
+    (is (= [{:type :table, :value {:schema "public" :table "user" :join-column "other_id" :parent true}}]            (p "public.user .other_id :parent")))
 
     ;; schema.table alias .column
-    (is (= [{:type :table, :value {:schema "public" :table "user" :alias "u" :join-column "other_id" :parent false}}] (p "has: public.user .other_id as u ")))
-    (is (= [{:type :table, :value {:schema "public" :table "user" :alias "u" :join-column "other_id" :parent true}}]  (p "of: public.user .other_id as u "))))
+    (is (= [{:type :table, :value {:schema "public" :table "user" :alias "u" :join-column "other_id" :parent false}}] (p "public.user .other_id as u :child")))
+    (is (= [{:type :table, :value {:schema "public" :table "user" :alias "u" :join-column "other_id" :parent true}}]  (p "public.user .other_id as u :parent"))))
 
   (testing "Parse `from` expressions"
     (is (= [{:type :from, :value {:alias "u"}}] (p "from: u"))))

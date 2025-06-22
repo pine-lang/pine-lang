@@ -26,8 +26,7 @@
            (-> "company | e" gen :table)))
 
     (is (= [{:schema "x", :table "company" :column "company_id" :parent true
-             :pine "of: x.company .company_id"}]
-           ;; (gen "employee | co")
+             :pine "x.company .company_id :parent"}]
            (-> "employee | co" gen :table)))
 
     (is (= []
@@ -57,7 +56,7 @@
              :table "employee"
              :column "reports_to"
              :parent true
-             :pine "of: y.employee .reports_to"}
+             :pine "y.employee .reports_to :parent"}
             {:schema "y"
              :table "employee"
              :column "reports_to"
@@ -68,8 +67,8 @@
              :table "employee"
              :column "reports_to"
              :parent true
-             :pine "of: y.employee .reports_to"}]
-           (-> "employee | of: employee" gen :table))))
+             :pine "y.employee .reports_to :parent"}]
+           (-> "employee | employee :parent" gen :table))))
 
   (testing "Generate `select` hints with columns specified"
     (is (= []
