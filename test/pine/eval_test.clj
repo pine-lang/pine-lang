@@ -44,7 +44,16 @@
            (generate "company | where: name='Acme Inc.'")))
     (is (= {:query "SELECT \"c_0\".* FROM \"company\" AS \"c_0\" WHERE \"c_0\".\"name\" LIKE ? AND \"c_0\".\"country\" = ? LIMIT 250",
             :params (map dt/string ["Acme%", "PK"])}
-           (generate "company | where: name like 'Acme%' | country = 'PK'"))))
+           (generate "company | where: name like 'Acme%' | country = 'PK'")))
+    (is (= {:query "SELECT \"c_0\".* FROM \"company\" AS \"c_0\" WHERE \"c_0\".\"name\" NOT LIKE ? LIMIT 250",
+            :params (map dt/string ["Acme%"])}
+           (generate "company | where: name not like 'Acme%'")))
+    (is (= {:query "SELECT \"c_0\".* FROM \"company\" AS \"c_0\" WHERE \"c_0\".\"name\" ILIKE ? LIMIT 250",
+            :params (map dt/string ["acme%"])}
+           (generate "company | where: name ilike 'acme%'")))
+    (is (= {:query "SELECT \"c_0\".* FROM \"company\" AS \"c_0\" WHERE \"c_0\".\"name\" NOT ILIKE ? LIMIT 250",
+            :params (map dt/string ["acme%"])}
+           (generate "company | where: name not ilike 'acme%'"))))
 
   (testing "Condition : !="
     (is (= {:query "SELECT \"c_0\".* FROM \"company\" AS \"c_0\" WHERE \"c_0\".\"name\" != ? LIMIT 250",

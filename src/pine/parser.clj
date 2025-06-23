@@ -194,6 +194,27 @@
     [:condition column-pattern [:like] [:string & characters] [:cast cast-type]]
     (make-condition column-pattern "LIKE" (parse-characters characters) cast-type)
 
+    ;; NOT LIKE operations
+    [:condition column-pattern [:not-like] [:string & characters]]
+    (make-condition column-pattern "NOT LIKE" (parse-characters characters))
+
+    [:condition column-pattern [:not-like] [:string & characters] [:cast cast-type]]
+    (make-condition column-pattern "NOT LIKE" (parse-characters characters) cast-type)
+
+    ;; ILIKE operations
+    [:condition column-pattern [:ilike] [:string & characters]]
+    (make-condition column-pattern "ILIKE" (parse-characters characters))
+
+    [:condition column-pattern [:ilike] [:string & characters] [:cast cast-type]]
+    (make-condition column-pattern "ILIKE" (parse-characters characters) cast-type)
+
+    ;; NOT ILIKE operations
+    [:condition column-pattern [:not-ilike] [:string & characters]]
+    (make-condition column-pattern "NOT ILIKE" (parse-characters characters))
+
+    [:condition column-pattern [:not-ilike] [:string & characters] [:cast cast-type]]
+    (make-condition column-pattern "NOT ILIKE" (parse-characters characters) cast-type)
+
     ;; IN operations
     [:condition column-pattern [:in] & strings]
     (make-condition column-pattern "IN" (map parse-strings strings))

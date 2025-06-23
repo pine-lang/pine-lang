@@ -68,8 +68,11 @@ number   := #"[0-9]+"
 ws       := #"\s+"
 <char>   := #'[^\']'
 
-<operator>     := like | does-not-equal | equals | is | is-not
+<operator>     := like | not-like | ilike | not-ilike | does-not-equal | equals | is | is-not
 like           := <"like">
+not-like       := <"not"> <ws*> <"like">
+ilike          := <"ilike">
+not-ilike      := <"not"> <ws*> <"ilike">
 does-not-equal := <"!"> <ws*> <"=">
 equals         := <"=">
 is             := <"is">

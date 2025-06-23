@@ -89,7 +89,15 @@
     (is (= [["c" "name" nil "=" (dt/string "Acme")] ["c" "country" nil "=" (dt/string "PK")]]
            (generate :where "company as c | name = 'Acme' | country = 'PK'")))
     (is (= [["c" "country" nil "IN" [(dt/string "PK") (dt/string "DK")]]]
-           (generate :where "company as c | country in ('PK', 'DK')"))))
+           (generate :where "company as c | country in ('PK', 'DK')")))
+    (is (= [[nil "name" nil "LIKE" (dt/string "Acme%")]]
+           (generate :where "name like 'Acme%'")))
+    (is (= [[nil "name" nil "NOT LIKE" (dt/string "Acme%")]]
+           (generate :where "name not like 'Acme%'")))
+    (is (= [[nil "name" nil "ILIKE" (dt/string "acme%")]]
+           (generate :where "name ilike 'acme%'")))
+    (is (= [[nil "name" nil "NOT ILIKE" (dt/string "acme%")]]
+           (generate :where "name not ilike 'acme%'"))))
 
   (testing "Generate ast for `join` where there is no relation"
     (is (= [{"a_0" {"b_1" nil}} [["a_0" "b_1" nil nil]]]

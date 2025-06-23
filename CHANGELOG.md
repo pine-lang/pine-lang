@@ -4,6 +4,14 @@ log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Added
+- Support for `ilike`, `not like`, and `not ilike` operators:
+```
+company | where: name ilike 'acme%'
+company | where: name not like 'test%'
+company | where: name not ilike 'admin%'
+```
+
 ## [0.20.0] - 2025-06-22
 ### Added
 

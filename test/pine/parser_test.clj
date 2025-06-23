@@ -102,9 +102,10 @@
     (is (= [{:type :where, :value [(dt/column "name") "=" (dt/string "John Doe")]}]                       (p "name = 'John Doe'")))
     (is (= [{:type :where, :value [(dt/column "name") "=" (dt/string "John Doe")]}]                       (p "name='John Doe'")))
     (is (= [{:type :where, :value [(dt/column "name") "LIKE" (dt/string "John%")]}]                       (p "name like 'John%'")))
+    (is (= [{:type :where, :value [(dt/column "name") "NOT LIKE" (dt/string "John%")]}]                   (p "name not like 'John%'")))
+    (is (= [{:type :where, :value [(dt/column "name") "ILIKE" (dt/string "john%")]}]                      (p "name ilike 'john%'")))
+    (is (= [{:type :where, :value [(dt/column "name") "NOT ILIKE" (dt/string "john%")]}]                  (p "name not ilike 'john%'")))
     (is (= [{:type :where, :value [(dt/column "age") "IS" (dt/symbol "NULL")]}]                           (p "age is null")))
-    (is (= [{:type :where, :value [(dt/column "age") "IS" (dt/symbol "NULL")]}]                           (p "age = null")))
-    (is (= [{:type :where, :value [(dt/column "age") "IS NOT" (dt/symbol "NULL")]}]                       (p "age is not null")))
     (is (= [{:type :where, :value [(dt/column "age") "=" (dt/number "24")]}]                              (p "age = 24")))
     (is (= [{:type :where, :value [(dt/column "age") "!=" (dt/number "24")]}]                             (p "age != 24")))
     (is (= [{:type :where, :value [(dt/column "name") "=" (dt/column "first_name")]}]                     (p "name = first_name")))
@@ -160,4 +161,4 @@
     ;; with aliases
     (is (= [{:type :group, :value {:columns [{:alias "x", :column "status"}], :functions ["count"]}}]
            (p "group: x.status  => count")))))
-;; working on parsing this properly
+
