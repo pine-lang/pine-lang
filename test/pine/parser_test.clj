@@ -121,13 +121,20 @@
 
   ;; in progress - the case isn't being processed at the moment
   (testing "Parse `where` expressions with type hinting"
-    (is (= [{:type :where, :value [(dt/column "name" "text") "=" (dt/string "John Doe")]}]       (p "w: name = 'John Doe' ::text"))))
+    (is (= [{:type :where, :value [(dt/column "name" "text") "=" (dt/string "John Doe")]}]       (p "w: name = 'John Doe' ::text")))
+    (is (= [{:type :where, :value [(dt/column "id" "uuid") "=" (dt/string "123e4567-e89b-12d3-a456-426614174000")]}] (p "w: id = '123e4567-e89b-12d3-a456-426614174000' ::uuid"))))
 
   (testing "Parse `where` `in` expressions"
     (is (= [{:type :where, :value [(dt/column "age") "IN" [(dt/string "24")]]}]                  (p "age in ('24')")))
     (is (= [{:type :where, :value [(dt/column "age") "IN" [(dt/string "24")]]}]                  (p "age in ('24' ) ")))
     (is (= [{:type :where, :value [(dt/column "age") "IN" [(dt/string "24") (dt/string "36")]]}] (p "age in (  '24' ,'36' )")))
     (is (= [{:type :where, :value [(dt/column "age") "IN" [(dt/string "24") (dt/string "36")]]}] (p "age in ('24' '36')"))))
+
+  (testing "Parse `where` expressions with dates"
+    (is (= [{:type :where, :value [(dt/column "created_at") "=" (dt/date "2025-01-01")]}] (p "created_at = '2025-01-01'")))
+    (is (= [{:type :where, :value [(dt/column "created_at") "!=" (dt/date "2025-01-01")]}] (p "created_at != '2025-01-01'")))
+    (is (= [{:type :where, :value [(dt/column "created_at") ">" (dt/date "2025-01-01")]}] (p "created_at > '2025-01-01'")))
+    (is (= [{:type :where, :value [(dt/column "created_at") "<" (dt/date "2025-01-01")]}] (p "created_at < '2025-01-01'"))))
 
   (testing "Parse `order-partial` expressions"
     (is (= [{:type :order-partial, :value []}]                                  (p "order:")))

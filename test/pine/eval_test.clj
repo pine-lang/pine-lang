@@ -90,7 +90,10 @@
   (testing "Condition with cast"
     (is (= {:query "SELECT \"c_0\".* FROM \"company\" AS \"c_0\" WHERE \"c_0\".\"name\"::text = ? LIMIT 250",
             :params (map dt/string ["Acme Inc."])}
-           (generate "company | where: name = 'Acme Inc.' ::text"))))
+           (generate "company | where: name = 'Acme Inc.' ::text")))
+    (is (= {:query "SELECT \"c_0\".* FROM \"company\" AS \"c_0\" WHERE \"c_0\".\"id\"::uuid = ? LIMIT 250",
+            :params (map dt/string ["123e4567-e89b-12d3-a456-426614174000"])}
+           (generate "company | where: id = '123e4567-e89b-12d3-a456-426614174000' ::uuid"))))
 
   (testing "Joins"
     (is (= {:query "SELECT \"e_1\".* FROM \"company\" AS \"c_0\" JOIN \"employee\" AS \"e_1\" ON \"c_0\".\"id\" = \"e_1\".\"company_id\" LIMIT 250",
@@ -165,3 +168,17 @@
   (testing "string"
     (is (= "\nSELECT \"c_0\".* FROM \"company\" AS \"c_0\" WHERE \"c_0\".\"name\" = 'Acme Inc.' LIMIT 250;\n"
            (-> "company | where: name='Acme Inc.'" generate eval/formatted-query)))))
+
+(testing "Condition : date"
+  (is (= {:query "SELECT \"c_0\".* FROM \"company\" AS \"c_0\" WHERE \"c_0\".\"created_at\" = ? LIMIT 250",
+          :params (list (dt/date "2025-01-01"))}
+         (generate "company | where: created_at = '2025-01-01'")))
+  (is (= {:query "SELECT \"c_0\".* FROM \"company\" AS \"c_0\" WHERE \"c_0\".\"created_at\" != ? LIMIT 250",
+          :params (list (dt/date "2025-01-01"))}
+         (generate "company | where: created_at != '2025-01-01'")))
+  (is (= {:query "SELECT \"c_0\".* FROM \"company\" AS \"c_0\" WHERE \"c_0\".\"created_at\" > ? LIMIT 250",
+          :params (list (dt/date "2025-01-01"))}
+         (generate "company | where: created_at > '2025-01-01'")))
+  (is (= {:query "SELECT \"c_0\".* FROM \"company\" AS \"c_0\" WHERE \"c_0\".\"created_at\" < ? LIMIT 250",
+          :params (list (dt/date "2025-01-01"))}
+         (generate "company | where: created_at < '2025-01-01'"))))

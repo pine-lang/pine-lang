@@ -8,6 +8,9 @@
 (defn number [x]
   (t :number x))
 
+(defn date [x]
+  (t :date x))
+
 #_{:clj-kondo/ignore [:redefined-var]}
 (defn symbol [x]
   (t :symbol x))

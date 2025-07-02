@@ -156,6 +156,9 @@
     [:condition column-pattern [:equals] [:boolean b]]
     (make-condition column-pattern "=" (dt/symbol b))
 
+    [:condition column-pattern [:equals] [:date value]]
+    (make-condition column-pattern "=" (dt/date value))
+
     ;; Column-to-column equals
     [:condition column-pattern [:equals] rhs]
     (make-condition column-pattern "=" rhs)
@@ -175,6 +178,9 @@
 
     [:condition column-pattern [:does-not-equal] [:boolean b]]
     (make-condition column-pattern "!=" (dt/symbol b))
+
+    [:condition column-pattern [:does-not-equal] [:date value]]
+    (make-condition column-pattern "!=" (dt/date value))
 
     ;; Column-to-column not equals
     [:condition column-pattern [:does-not-equal] rhs]
@@ -214,6 +220,46 @@
 
     [:condition column-pattern [:not-ilike] [:string & characters] [:cast cast-type]]
     (make-condition column-pattern "NOT ILIKE" (parse-characters characters) cast-type)
+
+    ;; Greater than operations
+    [:condition column-pattern [:greater-than] [:number value]]
+    (make-condition column-pattern ">" (dt/number value))
+
+    [:condition column-pattern [:greater-than] [:string & characters]]
+    (make-condition column-pattern ">" (parse-characters characters))
+
+    [:condition column-pattern [:greater-than] [:date value]]
+    (make-condition column-pattern ">" (dt/date value))
+
+    ;; Less than operations
+    [:condition column-pattern [:less-than] [:number value]]
+    (make-condition column-pattern "<" (dt/number value))
+
+    [:condition column-pattern [:less-than] [:string & characters]]
+    (make-condition column-pattern "<" (parse-characters characters))
+
+    [:condition column-pattern [:less-than] [:date value]]
+    (make-condition column-pattern "<" (dt/date value))
+
+    ;; Greater than or equal operations
+    [:condition column-pattern [:greater-than-equal] [:number value]]
+    (make-condition column-pattern ">=" (dt/number value))
+
+    [:condition column-pattern [:greater-than-equal] [:string & characters]]
+    (make-condition column-pattern ">=" (parse-characters characters))
+
+    [:condition column-pattern [:greater-than-equal] [:date value]]
+    (make-condition column-pattern ">=" (dt/date value))
+
+    ;; Less than or equal operations
+    [:condition column-pattern [:less-than-equal] [:number value]]
+    (make-condition column-pattern "<=" (dt/number value))
+
+    [:condition column-pattern [:less-than-equal] [:string & characters]]
+    (make-condition column-pattern "<=" (parse-characters characters))
+
+    [:condition column-pattern [:less-than-equal] [:date value]]
+    (make-condition column-pattern "<=" (dt/date value))
 
     ;; IN operations
     [:condition column-pattern [:in] & strings]

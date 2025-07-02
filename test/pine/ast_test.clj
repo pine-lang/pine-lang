@@ -84,6 +84,8 @@
            (generate :where "company | name = 'Acme'")))
     (is (= [["c_0" "name" "text" "=" (dt/string "Acme")]]
            (generate :where "company | name = 'Acme' ::text")))
+    (is (= [["c_0" "id" "uuid" "=" (dt/string "123e4567-e89b-12d3-a456-426614174000")]]
+           (generate :where "company | id = '123e4567-e89b-12d3-a456-426614174000' ::uuid")))
     (is (= [["c" "name" nil "=" (dt/string "Acme")]]
            (generate :where "company as c | name = 'Acme'")))
     (is (= [["c" "name" nil "=" (dt/string "Acme")] ["c" "country" nil "=" (dt/string "PK")]]
@@ -98,6 +100,16 @@
            (generate :where "name ilike 'acme%'")))
     (is (= [[nil "name" nil "NOT ILIKE" (dt/string "acme%")]]
            (generate :where "name not ilike 'acme%'"))))
+
+  (testing "Generate ast for `where` with dates"
+    (is (= [[nil "created_at" nil "=" (dt/date "2025-01-01")]]
+           (generate :where "created_at = '2025-01-01'")))
+    (is (= [[nil "created_at" nil "!=" (dt/date "2025-01-01")]]
+           (generate :where "created_at != '2025-01-01'")))
+    (is (= [[nil "created_at" nil ">" (dt/date "2025-01-01")]]
+           (generate :where "created_at > '2025-01-01'")))
+    (is (= [[nil "created_at" nil "<" (dt/date "2025-01-01")]]
+           (generate :where "created_at < '2025-01-01'"))))
 
   (testing "Generate ast for `join` where there is no relation"
     (is (= [{"a_0" {"b_1" nil}} [["a_0" "b_1" nil nil]]]

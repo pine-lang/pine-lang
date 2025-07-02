@@ -4,12 +4,21 @@ log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [0.21.0] - 2025-07-02
+### Fixed
+- Docker image wasn't running.Updated the base image to `openjdk:11-jre-slim`
+
 ### Added
 - Support for `ilike`, `not like`, and `not ilike` operators:
 ```
 company | where: name ilike 'acme%'
 company | where: name not like 'test%'
 company | where: name not ilike 'admin%'
+```
+- Support for casting columns as `::uuid`
+- Support for dates in conditions e.g.
+```
+company | where: created_at > '2025-01-01' | created_at < '2026-01-01'
 ```
 
 ## [0.20.0] - 2025-06-22
