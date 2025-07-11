@@ -280,17 +280,17 @@
     ;; Just a column
     [:partial-condition [:column [:symbol column]]]
     {:column column}
-    
+
     [:partial-condition [:column [:alias [:symbol alias]] [:symbol column]]]
     {:alias alias :column column}
-    
+
     ;; Column + operator (no value)
     [:partial-condition [:column [:symbol column]] operator]
     {:column column :operator (first operator)}
-    
+
     [:partial-condition [:column [:alias [:symbol alias]] [:symbol column]] operator]
     {:alias alias :column column :operator (first operator)}
-    
+
     :else
     (throw (ex-info "Unknown partial condition" {:_ partial-condition}))))
 
@@ -299,22 +299,22 @@
     {:type :where-partial, :value {:complete-conditions [] :partial-condition nil}}
     (match payload
       ;; Just a partial condition
-      [:partial-condition & _] 
+      [:partial-condition & _]
       {:type :where-partial, :value {:complete-conditions [] :partial-condition (parse-partial-condition payload)}}
-      
+
       ;; Complete conditions only (this case might happen when the partial condition is missing)
       [:conditions & conditions]
-      {:type :where-partial, :value {:complete-conditions (mapv parse-condition conditions) 
-                                    :partial-condition nil}}
-      
+      {:type :where-partial, :value {:complete-conditions (mapv parse-condition conditions)
+                                     :partial-condition nil}}
+
       ;; Complex case: conditions followed by partial condition
       [conditions-part partial-condition-part]
       (if (= (first conditions-part) :conditions)
         {:type :where-partial, :value {:complete-conditions (mapv parse-condition (rest conditions-part))
-                                      :partial-condition (parse-partial-condition partial-condition-part)}}
+                                       :partial-condition (parse-partial-condition partial-condition-part)}}
         {:type :where-partial, :value {:complete-conditions []
-                                      :partial-condition (parse-partial-condition payload)}})
-      
+                                       :partial-condition (parse-partial-condition payload)}})
+
       :else (throw (ex-info "Unknown WHERE-PARTIAL operation" {:_ payload})))))
 
 ;; -----

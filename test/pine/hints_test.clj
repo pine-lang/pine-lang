@@ -105,12 +105,12 @@
     (is (= ["reports_to"  "company_id" "id"] (->> "y.employee | w:"        gen :where (map :column))))
     (is (= ["reports_to"  "company_id" "id"] (->> "y.employee | where:"    gen :where (map :column))))
     (is (= [{:column "id" :alias "c_0"}]     (->  "company | s: id | w:"   gen :where)))
-    
+
     ;; Test partial column filtering
     (is (= [{:column "id" :alias "c_0"}]     (->  "company | w: i"         gen :where)))
     (is (= []                                (->  "company | w: xyz"       gen :where)))
     (is (= ["company_id" "id"]               (->> "y.employee | w: id"     gen :where (map :column))))
-    
+
     ;; How to auto-complete the right hand side? Values or other columns?
     ;; Right now it shows the same hints as the left hand side
     ;; (is (= [{:column "id" :alias "c_0"}]     (->  "company | w: id ="      gen :where)))

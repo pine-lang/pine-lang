@@ -129,9 +129,9 @@
       ;; Has partial condition, filter based on it
       (if (and (:column partial-condition) (not (contains? partial-condition :operator)))
         ;; Just a column specified, filter hints for that column
-        (find-relevant-columns 
-          (generate-all-column-hints state current-alias) 
-          partial-condition)
+        (find-relevant-columns
+         (generate-all-column-hints state current-alias)
+         partial-condition)
         ;; Column + operator, show all columns for next condition
         (generate-all-column-hints state current-alias)))))
 

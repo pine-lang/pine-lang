@@ -170,22 +170,22 @@
            (generate :where "company | w: id =")))
 
     ;; Verify the operation structure for different where-partial cases
-    (is (= {:type :where-partial 
+    (is (= {:type :where-partial
             :value {:complete-conditions [] :partial-condition nil}}
            (generate :operation "company | w:")))
-    
-    (is (= {:type :where-partial 
+
+    (is (= {:type :where-partial
             :value {:complete-conditions [] :partial-condition {:column "id"}}}
            (generate :operation "company | w: id")))
-           
-    (is (= {:type :where-partial 
+
+    (is (= {:type :where-partial
             :value {:complete-conditions [] :partial-condition {:alias "c" :column "name"}}}
            (generate :operation "company as c | w: c.name")))
 
-    (is (= {:type :where-partial 
+    (is (= {:type :where-partial
             :value {:complete-conditions [] :partial-condition {:column "id" :operator :equals}}}
            (generate :operation "company | w: id =")))
-           
-    (is (= {:type :where-partial 
+
+    (is (= {:type :where-partial
             :value {:complete-conditions [] :partial-condition {:column "name" :operator :like}}}
            (generate :operation "company | w: name like")))))
