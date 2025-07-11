@@ -154,4 +154,38 @@
   (testing "Generate ast for `group`"
     (is (= [[{:alias "c" :column "status" :index 1} {:symbol "COUNT(1)"}]
             [{:alias "c" :column "status" :index 1}]]
-           (generate [:columns :group] "company as c | group: c.status => count")))))
+           (generate [:columns :group] "company as c | group: c.status => count"))))
+
+  (testing "Generate ast for `where-partial`"
+    ;; Empty where-partial should have no conditions in :where
+    (is (= []
+           (generate :where "company | w:")))
+
+    ;; Just partial column should have no conditions in :where  
+    (is (= []
+           (generate :where "company | w: i")))
+
+    ;; Column + operator should have no conditions in :where
+    (is (= []
+           (generate :where "company | w: id =")))
+
+    ;; Verify the operation structure for different where-partial cases
+    (is (= {:type :where-partial 
+            :value {:complete-conditions [] :partial-condition nil}}
+           (generate :operation "company | w:")))
+    
+    (is (= {:type :where-partial 
+            :value {:complete-conditions [] :partial-condition {:column "id"}}}
+           (generate :operation "company | w: id")))
+           
+    (is (= {:type :where-partial 
+            :value {:complete-conditions [] :partial-condition {:alias "c" :column "name"}}}
+           (generate :operation "company as c | w: c.name")))
+
+    (is (= {:type :where-partial 
+            :value {:complete-conditions [] :partial-condition {:column "id" :operator :equals}}}
+           (generate :operation "company | w: id =")))
+           
+    (is (= {:type :where-partial 
+            :value {:complete-conditions [] :partial-condition {:column "name" :operator :like}}}
+           (generate :operation "company | w: name like")))))

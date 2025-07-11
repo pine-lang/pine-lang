@@ -43,7 +43,7 @@
 
             ;; post
             ;; - hints
-            :hints          {:table [] :select [] :order []}})
+            :hints          {:table [] :select [] :order [] :where []}})
 
 (defn pre-handle [state connection-id ops-count]
   (-> state
@@ -58,6 +58,7 @@
     :table (table/handle state value)
     :limit (limit/handle state value)
     :where (where/handle state value)
+    :where-partial (where/handle-partial state value)
     :from (from/handle state value)
     :group (group/handle state value)
     :order (order/handle state value)

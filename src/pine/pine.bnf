@@ -1,6 +1,6 @@
 OPERATIONS := <ws*> OPERATION <ws*> (<"|"> <ws*> OPERATION <ws*>)*
 
-OPERATION    := SELECT-PARTIAL | SELECT | TABLE | WHERE | LIMIT| FROM | ORDER-PARTIAL | ORDER | COUNT | DELETE-ACTION | DELETE | GROUP
+OPERATION    := SELECT-PARTIAL | SELECT | TABLE | WHERE-PARTIAL | WHERE | LIMIT| FROM | ORDER-PARTIAL | ORDER | COUNT | DELETE-ACTION | DELETE | GROUP
 
 
 TABLE             := table table-mods
@@ -8,6 +8,7 @@ TABLE             := table table-mods
 SELECT-PARTIAL    := <select-op> aliased-columns? <",">?
 SELECT            := <select-op> aliased-columns
 
+WHERE-PARTIAL     := <where-op>         conditions <","> <ws*> partial-condition  |  <where-op> partial-condition  |  <where-op>
 WHERE             := <where-op>         conditions     |     conditions
 LIMIT             := <limit-op>         number         |     number
 FROM              := <from-op>          alias
@@ -42,6 +43,8 @@ aggregate-function  := "count" | "string_agg" | "sum" | "avg" | "min" | "max"
 
 conditions          := condition (<","> <ws*> condition)*
 condition           := column <ws*> (condition-default|condition-in) (<ws*> cast)?
+
+partial-condition   := column <ws*> operator <ws*> | column
 <condition-default> := operator <ws*> (column|string|number|boolean|null|date)
 <condition-in>      := (in  | not-in) <ws*>  <"("> strings* <")">
 cast                := <"::"> ("text"|"uuid")

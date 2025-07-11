@@ -112,7 +112,34 @@
             hints)
     hints))
 
+(defn generate-where-hints [state]
+  ;; Where conditions need custom logic unlike order/select partials because:
+  ;; - Order partial: simple exclude-already-selected logic works with generic generate-column-hints
+  ;; - Where partial: complex state-dependent filtering based on partial completion:
+  ;;   * `where:` → show all columns
+  ;;   * `w: i` → filter to columns matching "i" 
+  ;;   * `w: id =` → show all columns (ready for next condition)
+  (let [operation (state :operation)
+        where-data (get operation :value {})
+        partial-condition (:partial-condition where-data)
+        current-alias (state :current)]
+    (if (nil? partial-condition)
+      ;; No partial condition yet, show all columns
+      (generate-all-column-hints state current-alias)
+      ;; Has partial condition, filter based on it
+      (if (and (:column partial-condition) (not (contains? partial-condition :operator)))
+        ;; Just a column specified, filter hints for that column
+        (find-relevant-columns 
+          (generate-all-column-hints state current-alias) 
+          partial-condition)
+        ;; Column + operator, show all columns for next condition
+        (generate-all-column-hints state current-alias)))))
+
 (defn generate-column-hints [state columns]
+  ;; Generic column hints logic that works for most operations:
+  ;; - Complete operations (select, order, where): filter hints to match current column being typed
+  ;; - Partial operations (select-partial, order-partial): exclude already-selected columns
+  ;; - Note: where-partial needs custom logic (see generate-where-hints) due to complex state-dependent filtering
   (let [column (some-> columns reverse first)
         a (if (and (seq column)
                    (> (column :index) (state :current-index)))
@@ -121,12 +148,12 @@
         hints (generate-all-column-hints state a)
         type (-> state :operation :type)]
     (cond
-      ;; If the type is :select or :order and columns exist, filter hints using the columns
-      (and (or (= type :select) (= type :order)) column)
+      ;; If the type is :select, :order, or :where and columns exist, filter hints using the columns
+      (and (or (= type :select) (= type :order) (= type :where)) column)
       (find-relevant-columns hints column)
 
-      ;; If the type is :select-partial or :order-partial and columns exist
-      (and (or (= type :select-partial) (= type :order-partial)) columns)
+      ;; If the type is :select-partial, :order-partial, or :where-partial and columns exist
+      (and (or (= type :select-partial) (= type :order-partial) (= type :where-partial)) columns)
       (exclude-columns hints (filter #(= (:alias %) a) columns))
 
       ;; Otherwise, return all hints
@@ -140,7 +167,8 @@
                 :select-partial (generate-column-hints state (state :columns))
                 :order-partial (generate-column-hints state (state :order))
                 :order (generate-column-hints state (state :order))
-                ;; for :where-partial, we can also use the :select hints as we need to see the columns
+                :where-partial (generate-where-hints state)
+                :where (generate-all-column-hints state)
                 [])
-        type (case type :select-partial :select :order-partial :order type)]
+        type (case type :select-partial :select :order-partial :order :where-partial :where type)]
     (assoc-in state [:hints type] (or hints []))))

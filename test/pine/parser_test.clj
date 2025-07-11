@@ -136,6 +136,14 @@
     (is (= [{:type :where, :value [(dt/column "created_at") ">" (dt/date "2025-01-01")]}] (p "created_at > '2025-01-01'")))
     (is (= [{:type :where, :value [(dt/column "created_at") "<" (dt/date "2025-01-01")]}] (p "created_at < '2025-01-01'"))))
 
+  (testing "Parse `where-partial` expressions"
+    (is (= [{:type :where-partial, :value {:complete-conditions [] :partial-condition nil}}] (p "where:")))
+    (is (= [{:type :where-partial, :value {:complete-conditions [] :partial-condition nil}}] (p "w: ")))
+    (is (= [{:type :where-partial, :value {:complete-conditions [] :partial-condition {:column "id"}}}] (p "w: id")))
+    (is (= [{:type :where-partial, :value {:complete-conditions [] :partial-condition {:alias "u", :column "id"}}}] (p "w: u.id")))
+    (is (= [{:type :where-partial, :value {:complete-conditions [] :partial-condition {:column "id", :operator :equals}}}] (p "w: id =")))
+    (is (= [{:type :where-partial, :value {:complete-conditions [] :partial-condition {:column "id", :operator :like}}}] (p "w: id like"))))
+
   (testing "Parse `order-partial` expressions"
     (is (= [{:type :order-partial, :value []}]                                  (p "order:")))
     (is (= [{:type :order-partial, :value []}]                                  (p "o: ")))

@@ -4,6 +4,16 @@ log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [0.22.0] - 2025-07-12
+### Added
+- Column hints for `where:` operation, supporting partial expressions:
+```
+company | where:           # Shows all columns
+company | w: i             # Shows columns matching 'i' (like 'id')  
+company | w: id =          # Shows all columns after specifying column + operator
+y.employee | w: comp       # Shows columns matching 'comp' (like 'company_id')
+```
+
 ## [0.21.0] - 2025-07-02
 ### Fixed
 - Docker image wasn't running.Updated the base image to `openjdk:11-jre-slim`
