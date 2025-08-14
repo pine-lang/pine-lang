@@ -1,0 +1,40 @@
+services:
+  db:
+    image: postgres:15
+    container_name: pine_db
+    environment:
+      POSTGRES_USER: pine
+      POSTGRES_PASSWORD: pine
+      POSTGRES_DB: pine
+    ports:
+      - "5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+      - ./docker/db/init:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pine -d pine"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  pine:
+    image: ahmadnazir/pine:0.22.0
+    container_name: pine_server
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "33333:33333"
+
+  init:
+    image: curlimages/curl:8.7.1
+    container_name: pine_init
+    depends_on:
+      - pine
+    volumes:
+      - ./docker/init-pine.sh:/init-pine.sh:ro
+    command: ["/init-pine.sh"]
+    restart: "no"
+
+volumes:
+  db-data: 
