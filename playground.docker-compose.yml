@@ -1,5 +1,5 @@
 services:
-  db:
+  sample-db-ecommerce:
     image: postgres:15
     container_name: pine_db
     environment:
@@ -21,7 +21,7 @@ services:
     image: ahmadnazir/pine:0.22.0
     container_name: pine_server
     depends_on:
-      db:
+      sample-db-ecommerce:
         condition: service_healthy
     ports:
       - "33333:33333"

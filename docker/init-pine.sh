@@ -9,7 +9,7 @@ for i in $(seq 1 20); do
     CONNECTION_RESPONSE=$(curl -s -X POST "http://pine:33333/api/v1/connections" \
       -H "Content-Type: application/json" \
       -d "{
-        \"host\": \"db\",
+        \"host\": \"sample-db-ecommerce\",
         \"port\": 5432,
         \"dbname\": \"pine\",
         \"user\": \"pine\",

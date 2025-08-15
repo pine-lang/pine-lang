@@ -1,21 +1,18 @@
 -- E-commerce Platform Seed Data
 -- This provides realistic test data for a complete e-commerce system
 
--- First, let's create the e-commerce schema and tables
-CREATE SCHEMA IF NOT EXISTS ecommerce;
-
 -- Categories table
-CREATE TABLE IF NOT EXISTS ecommerce.categories (
+CREATE TABLE IF NOT EXISTS categories (
   id SERIAL PRIMARY KEY,
   name VARCHAR(100) NOT NULL,
   description TEXT,
-  parent_id INTEGER REFERENCES ecommerce.categories(id),
+  parent_id INTEGER REFERENCES categories(id),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   is_active BOOLEAN DEFAULT true
 );
 
 -- Customers table
-CREATE TABLE IF NOT EXISTS ecommerce.customers (
+CREATE TABLE IF NOT EXISTS customers (
   id SERIAL PRIMARY KEY,
   email VARCHAR(255) UNIQUE NOT NULL,
   first_name VARCHAR(100) NOT NULL,
@@ -29,9 +26,9 @@ CREATE TABLE IF NOT EXISTS ecommerce.customers (
 );
 
 -- Customer addresses table
-CREATE TABLE IF NOT EXISTS ecommerce.customer_addresses (
+CREATE TABLE IF NOT EXISTS customer_addresses (
   id SERIAL PRIMARY KEY,
-  customer_id INTEGER NOT NULL REFERENCES ecommerce.customers(id),
+  customer_id INTEGER NOT NULL REFERENCES customers(id),
   address_type VARCHAR(20) DEFAULT 'shipping', -- 'shipping', 'billing'
   street_address VARCHAR(255) NOT NULL,
   city VARCHAR(100) NOT NULL,
@@ -43,12 +40,12 @@ CREATE TABLE IF NOT EXISTS ecommerce.customer_addresses (
 );
 
 -- Products table
-CREATE TABLE IF NOT EXISTS ecommerce.products (
+CREATE TABLE IF NOT EXISTS products (
   id SERIAL PRIMARY KEY,
   sku VARCHAR(50) UNIQUE NOT NULL,
   name VARCHAR(255) NOT NULL,
   description TEXT,
-  category_id INTEGER REFERENCES ecommerce.categories(id),
+  category_id INTEGER REFERENCES categories(id),
   price DECIMAL(10,2) NOT NULL,
   cost_price DECIMAL(10,2),
   weight_grams INTEGER,
@@ -61,9 +58,9 @@ CREATE TABLE IF NOT EXISTS ecommerce.products (
 );
 
 -- Product inventory table
-CREATE TABLE IF NOT EXISTS ecommerce.product_inventory (
+CREATE TABLE IF NOT EXISTS product_inventory (
   id SERIAL PRIMARY KEY,
-  product_id INTEGER NOT NULL REFERENCES ecommerce.products(id),
+  product_id INTEGER NOT NULL REFERENCES products(id),
   quantity_available INTEGER NOT NULL DEFAULT 0,
   quantity_reserved INTEGER NOT NULL DEFAULT 0,
   reorder_level INTEGER DEFAULT 10,
@@ -73,10 +70,10 @@ CREATE TABLE IF NOT EXISTS ecommerce.product_inventory (
 );
 
 -- Orders table
-CREATE TABLE IF NOT EXISTS ecommerce.orders (
+CREATE TABLE IF NOT EXISTS orders (
   id SERIAL PRIMARY KEY,
   order_number VARCHAR(20) UNIQUE NOT NULL,
-  customer_id INTEGER NOT NULL REFERENCES ecommerce.customers(id),
+  customer_id INTEGER NOT NULL REFERENCES customers(id),
   status VARCHAR(20) DEFAULT 'pending', -- 'pending', 'confirmed', 'shipped', 'delivered', 'cancelled'
   subtotal DECIMAL(10,2) NOT NULL,
   tax_amount DECIMAL(10,2) DEFAULT 0,
@@ -84,8 +81,8 @@ CREATE TABLE IF NOT EXISTS ecommerce.orders (
   discount_amount DECIMAL(10,2) DEFAULT 0,
   total_amount DECIMAL(10,2) NOT NULL,
   currency VARCHAR(3) DEFAULT 'USD',
-  shipping_address_id INTEGER REFERENCES ecommerce.customer_addresses(id),
-  billing_address_id INTEGER REFERENCES ecommerce.customer_addresses(id),
+  shipping_address_id INTEGER REFERENCES customer_addresses(id),
+  billing_address_id INTEGER REFERENCES customer_addresses(id),
   payment_method VARCHAR(50),
   payment_status VARCHAR(20) DEFAULT 'pending', -- 'pending', 'paid', 'failed', 'refunded'
   notes TEXT,
@@ -96,10 +93,10 @@ CREATE TABLE IF NOT EXISTS ecommerce.orders (
 );
 
 -- Order items table
-CREATE TABLE IF NOT EXISTS ecommerce.order_items (
+CREATE TABLE IF NOT EXISTS order_items (
   id SERIAL PRIMARY KEY,
-  order_id INTEGER NOT NULL REFERENCES ecommerce.orders(id),
-  product_id INTEGER NOT NULL REFERENCES ecommerce.products(id),
+  order_id INTEGER NOT NULL REFERENCES orders(id),
+  product_id INTEGER NOT NULL REFERENCES products(id),
   quantity INTEGER NOT NULL,
   unit_price DECIMAL(10,2) NOT NULL,
   total_price DECIMAL(10,2) NOT NULL,
@@ -107,11 +104,11 @@ CREATE TABLE IF NOT EXISTS ecommerce.order_items (
 );
 
 -- Product reviews table
-CREATE TABLE IF NOT EXISTS ecommerce.product_reviews (
+CREATE TABLE IF NOT EXISTS product_reviews (
   id SERIAL PRIMARY KEY,
-  product_id INTEGER NOT NULL REFERENCES ecommerce.products(id),
-  customer_id INTEGER NOT NULL REFERENCES ecommerce.customers(id),
-  order_id INTEGER REFERENCES ecommerce.orders(id),
+  product_id INTEGER NOT NULL REFERENCES products(id),
+  customer_id INTEGER NOT NULL REFERENCES customers(id),
+  order_id INTEGER REFERENCES orders(id),
   rating INTEGER NOT NULL CHECK (rating >= 1 AND rating <= 5),
   title VARCHAR(255),
   review_text TEXT,
@@ -122,7 +119,7 @@ CREATE TABLE IF NOT EXISTS ecommerce.product_reviews (
 );
 
 -- Coupons table
-CREATE TABLE IF NOT EXISTS ecommerce.coupons (
+CREATE TABLE IF NOT EXISTS coupons (
   id SERIAL PRIMARY KEY,
   code VARCHAR(50) UNIQUE NOT NULL,
   name VARCHAR(255) NOT NULL,
@@ -141,7 +138,7 @@ CREATE TABLE IF NOT EXISTS ecommerce.coupons (
 -- Now let's insert realistic seed data
 
 -- Categories
-INSERT INTO ecommerce.categories (name, description, parent_id) VALUES
+INSERT INTO categories (name, description, parent_id) VALUES
 ('Electronics', 'Electronic devices and accessories', NULL),
 ('Computers', 'Laptops, desktops, and computer accessories', 1),
 ('Smartphones', 'Mobile phones and accessories', 1),
@@ -157,7 +154,7 @@ INSERT INTO ecommerce.categories (name, description, parent_id) VALUES
 ('Non-Fiction', 'Educational and informational books', 11);
 
 -- Customers
-INSERT INTO ecommerce.customers (email, first_name, last_name, phone, date_of_birth, loyalty_points) VALUES
+INSERT INTO customers (email, first_name, last_name, phone, date_of_birth, loyalty_points) VALUES
 ('john.doe@email.com', 'John', 'Doe', '+1-555-0101', '1985-03-15', 150),
 ('jane.smith@email.com', 'Jane', 'Smith', '+1-555-0102', '1990-07-22', 320),
 ('bob.johnson@email.com', 'Bob', 'Johnson', '+1-555-0103', '1978-11-08', 75),
@@ -168,7 +165,7 @@ INSERT INTO ecommerce.customers (email, first_name, last_name, phone, date_of_bi
 ('grace.davis@email.com', 'Grace', 'Davis', '+1-555-0108', '1988-04-25', 90);
 
 -- Customer addresses
-INSERT INTO ecommerce.customer_addresses (customer_id, address_type, street_address, city, state, postal_code, country, is_default) VALUES
+INSERT INTO customer_addresses (customer_id, address_type, street_address, city, state, postal_code, country, is_default) VALUES
 (1, 'shipping', '123 Main St', 'New York', 'NY', '10001', 'USA', true),
 (1, 'billing', '123 Main St', 'New York', 'NY', '10001', 'USA', true),
 (2, 'shipping', '456 Oak Ave', 'Los Angeles', 'CA', '90210', 'USA', true),
@@ -180,7 +177,7 @@ INSERT INTO ecommerce.customer_addresses (customer_id, address_type, street_addr
 (8, 'shipping', '258 Walnut Ave', 'San Diego', 'CA', '92101', 'USA', true);
 
 -- Products
-INSERT INTO ecommerce.products (sku, name, description, category_id, price, cost_price, weight_grams, dimensions_json, is_digital) VALUES
+INSERT INTO products (sku, name, description, category_id, price, cost_price, weight_grams, dimensions_json, is_digital) VALUES
 ('LAPTOP-001', 'MacBook Pro 16"', 'Apple MacBook Pro with M2 chip, 16GB RAM, 512GB SSD', 2, 2499.00, 1800.00, 2100, '{"length": 35.57, "width": 24.59, "height": 1.68}', false),
 ('LAPTOP-002', 'Dell XPS 13', 'Dell XPS 13 with Intel i7, 16GB RAM, 256GB SSD', 2, 1299.00, 950.00, 1200, '{"length": 29.6, "width": 19.9, "height": 1.17}', false),
 ('PHONE-001', 'iPhone 14 Pro', 'Apple iPhone 14 Pro 128GB in Space Black', 3, 999.00, 720.00, 206, '{"length": 14.79, "width": 7.15, "height": 0.79}', false),
@@ -195,7 +192,7 @@ INSERT INTO ecommerce.products (sku, name, description, category_id, price, cost
 ('EBOOK-001', 'Digital Marketing Guide', 'Complete guide to digital marketing strategies', 13, 29.99, 0.00, 0, '{}', true);
 
 -- Product inventory
-INSERT INTO ecommerce.product_inventory (product_id, quantity_available, quantity_reserved, reorder_level, last_restocked_at) VALUES
+INSERT INTO product_inventory (product_id, quantity_available, quantity_reserved, reorder_level, last_restocked_at) VALUES
 (1, 25, 2, 5, '2024-01-15 10:00:00'),
 (2, 18, 1, 5, '2024-01-10 14:30:00'),
 (3, 50, 5, 10, '2024-01-20 09:15:00'),
@@ -210,7 +207,7 @@ INSERT INTO ecommerce.product_inventory (product_id, quantity_available, quantit
 (12, 999999, 0, 0, NULL); -- Digital product
 
 -- Orders
-INSERT INTO ecommerce.orders (order_number, customer_id, status, subtotal, tax_amount, shipping_amount, discount_amount, total_amount, shipping_address_id, billing_address_id, payment_method, payment_status, created_at, shipped_at, delivered_at) VALUES
+INSERT INTO orders (order_number, customer_id, status, subtotal, tax_amount, shipping_amount, discount_amount, total_amount, shipping_address_id, billing_address_id, payment_method, payment_status, created_at, shipped_at, delivered_at) VALUES
 ('ORD-2024-001', 1, 'delivered', 2499.00, 199.92, 0.00, 0.00, 2698.92, 1, 2, 'credit_card', 'paid', '2024-01-15 10:30:00', '2024-01-16 09:00:00', '2024-01-18 14:30:00'),
 ('ORD-2024-002', 2, 'delivered', 598.00, 47.84, 15.99, 50.00, 611.83, 3, 3, 'paypal', 'paid', '2024-01-18 14:15:00', '2024-01-19 11:30:00', '2024-01-22 16:45:00'),
 ('ORD-2024-003', 3, 'shipped', 1299.00, 103.92, 0.00, 0.00, 1402.92, 4, 4, 'credit_card', 'paid', '2024-01-20 09:45:00', '2024-01-21 08:15:00', NULL),
@@ -221,7 +218,7 @@ INSERT INTO ecommerce.orders (order_number, customer_id, status, subtotal, tax_a
 ('ORD-2024-008', 7, 'delivered', 29.99, 2.40, 0.00, 0.00, 32.39, 8, 8, 'credit_card', 'paid', '2024-01-08 09:15:00', NULL, '2024-01-08 09:16:00'); -- Digital product
 
 -- Order items
-INSERT INTO ecommerce.order_items (order_id, product_id, quantity, unit_price, total_price) VALUES
+INSERT INTO order_items (order_id, product_id, quantity, unit_price, total_price) VALUES
 (1, 1, 1, 2499.00, 2499.00),
 (2, 5, 1, 349.00, 349.00),
 (2, 6, 1, 249.00, 249.00),
@@ -234,7 +231,7 @@ INSERT INTO ecommerce.order_items (order_id, product_id, quantity, unit_price, t
 (8, 12, 1, 29.99, 29.99);
 
 -- Product reviews
-INSERT INTO ecommerce.product_reviews (product_id, customer_id, order_id, rating, title, review_text, is_verified_purchase, helpful_count, created_at) VALUES
+INSERT INTO product_reviews (product_id, customer_id, order_id, rating, title, review_text, is_verified_purchase, helpful_count, created_at) VALUES
 (1, 1, 1, 5, 'Excellent laptop!', 'This MacBook Pro is amazing. Fast, reliable, and the screen quality is outstanding. Perfect for development work.', true, 12, '2024-01-20 15:30:00'),
 (5, 2, 2, 4, 'Great noise cancellation', 'These headphones have excellent noise cancellation. Sound quality is very good, but they can be a bit heavy for long sessions.', true, 8, '2024-01-25 10:15:00'),
 (6, 2, 2, 5, 'Perfect for workouts', 'Love these AirPods Pro! They stay in place during workouts and the noise cancellation is perfect for the gym.', true, 15, '2024-01-25 10:20:00'),
@@ -244,7 +241,7 @@ INSERT INTO ecommerce.product_reviews (product_id, customer_id, order_id, rating
 (12, 7, 8, 5, 'Very informative', 'This digital marketing guide is comprehensive and up-to-date. Great value for money and immediately applicable tips.', true, 9, '2024-01-10 11:45:00');
 
 -- Coupons
-INSERT INTO ecommerce.coupons (code, name, discount_type, discount_value, minimum_order_amount, maximum_discount_amount, usage_limit, used_count, valid_from, valid_until) VALUES
+INSERT INTO coupons (code, name, discount_type, discount_value, minimum_order_amount, maximum_discount_amount, usage_limit, used_count, valid_from, valid_until) VALUES
 ('WELCOME10', 'Welcome 10% Off', 'percentage', 10.00, 50.00, 100.00, 1000, 45, '2024-01-01 00:00:00', '2024-12-31 23:59:59'),
 ('SAVE50', 'Save $50 on Orders Over $500', 'fixed_amount', 50.00, 500.00, 50.00, 500, 23, '2024-01-01 00:00:00', '2024-06-30 23:59:59'),
 ('TECH20', '20% Off Electronics', 'percentage', 20.00, 100.00, 200.00, 200, 67, '2024-01-15 00:00:00', '2024-03-15 23:59:59'),
@@ -252,19 +249,19 @@ INSERT INTO ecommerce.coupons (code, name, discount_type, discount_value, minimu
 ('LOYALTY25', 'Loyalty Member 25% Off', 'percentage', 25.00, 200.00, 150.00, 100, 8, '2024-02-01 00:00:00', '2024-02-29 23:59:59');
 
 -- Create some useful indexes for better query performance
-CREATE INDEX IF NOT EXISTS idx_products_category ON ecommerce.products(category_id);
-CREATE INDEX IF NOT EXISTS idx_products_sku ON ecommerce.products(sku);
-CREATE INDEX IF NOT EXISTS idx_orders_customer ON ecommerce.orders(customer_id);
-CREATE INDEX IF NOT EXISTS idx_orders_status ON ecommerce.orders(status);
-CREATE INDEX IF NOT EXISTS idx_orders_created_at ON ecommerce.orders(created_at);
-CREATE INDEX IF NOT EXISTS idx_order_items_order ON ecommerce.order_items(order_id);
-CREATE INDEX IF NOT EXISTS idx_order_items_product ON ecommerce.order_items(product_id);
-CREATE INDEX IF NOT EXISTS idx_reviews_product ON ecommerce.product_reviews(product_id);
-CREATE INDEX IF NOT EXISTS idx_reviews_customer ON ecommerce.product_reviews(customer_id);
-CREATE INDEX IF NOT EXISTS idx_addresses_customer ON ecommerce.customer_addresses(customer_id);
+CREATE INDEX IF NOT EXISTS idx_products_category ON products(category_id);
+CREATE INDEX IF NOT EXISTS idx_products_sku ON products(sku);
+CREATE INDEX IF NOT EXISTS idx_orders_customer ON orders(customer_id);
+CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(status);
+CREATE INDEX IF NOT EXISTS idx_orders_created_at ON orders(created_at);
+CREATE INDEX IF NOT EXISTS idx_order_items_order ON order_items(order_id);
+CREATE INDEX IF NOT EXISTS idx_order_items_product ON order_items(product_id);
+CREATE INDEX IF NOT EXISTS idx_reviews_product ON product_reviews(product_id);
+CREATE INDEX IF NOT EXISTS idx_reviews_customer ON product_reviews(customer_id);
+CREATE INDEX IF NOT EXISTS idx_addresses_customer ON customer_addresses(customer_id);
 
 -- Create a view for order summaries (useful for testing complex queries)
-CREATE OR REPLACE VIEW ecommerce.order_summary AS
+CREATE OR REPLACE VIEW order_summary AS
 SELECT 
     o.id,
     o.order_number,
@@ -275,9 +272,9 @@ SELECT
     o.created_at,
     COUNT(oi.id) as item_count,
     STRING_AGG(p.name, ', ') as product_names
-FROM ecommerce.orders o
-JOIN ecommerce.customers c ON o.customer_id = c.id
-JOIN ecommerce.order_items oi ON o.id = oi.order_id
-JOIN ecommerce.products p ON oi.product_id = p.id
+FROM orders o
+JOIN customers c ON o.customer_id = c.id
+JOIN order_items oi ON o.id = oi.order_id
+JOIN products p ON oi.product_id = p.id
 GROUP BY o.id, c.first_name, c.last_name, c.email, o.order_number, o.status, o.total_amount, o.created_at
 ORDER BY o.created_at DESC; 
